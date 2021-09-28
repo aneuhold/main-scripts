@@ -1,0 +1,23 @@
+{
+  "name": "@aneuhold/main-scripts",
+  "version": "1.0.0",
+  "description": "Main scripts for use personally on any platform",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aneuhold/main-scripts.git"
+  },
+  "keywords": [
+    "Scripting",
+    "Node.js"
+  ],
+  "author": "Anton G. Neuhold Jr.",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/aneuhold/main-scripts/issues"
+  },
+  "homepage": "https://github.com/aneuhold/main-scripts#readme"
+}
