@@ -9,3 +9,7 @@ This is also deployed to [NPM here](https://www.npmjs.com/package/@aneuhold/main
 Each command starts with `tb`. That stands for Tiny Box but that isn't really important 😛.
 
 - `tb test` Just emits a test echo to see if the package is working.
+
+## `package.json` Commands
+
+- `yarn pushpub` will do a `git push` then increment the patch number by one then publish the package to npm

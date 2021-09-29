@@ -4,7 +4,7 @@
   "description": "Main scripts for use personally on any platform",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "pushpub": "git push && npm version patch && npm publish --access public"
   },
   "repository": {
     "type": "git",
