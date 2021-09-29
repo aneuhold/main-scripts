@@ -10,6 +10,13 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
 
 - `tb test` Just emits a test echo to see if the package is working.
 
+### Testing New Commands
+
+To test new commands, you can write the command, then use the `npm run refresh` command. This will install the commands globally and uninstall any previous version if it was there.
+
+Note that you don't need to worry about uninstalling the commands, because whenever running any `tb` command it will check the local version against the version on npm and update if needed. 
+
 ## `package.json` Commands
 
-- `yarn pushpub` will do a `git push` then increment the patch number by one then publish the package to npm
+- `npm run pushpub` will do a `git push` then increment the patch number by one then publish the package to npm. It seems that this needs to be done with npm so that it uses the right credentials.
+- `npm run refresh` can be used for testing new commands. It will uninstall any previous global version of this package and then install the local version.
