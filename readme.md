@@ -20,3 +20,4 @@ Note that you don't need to worry about uninstalling the commands, because whene
 
 - `npm run pushpub` will do a `git push` then increment the patch number by one then publish the package to npm. It seems that this needs to be done with npm so that it uses the right credentials.
 - `npm run refresh` can be used for testing new commands. It will uninstall any previous global version of this package and then install the local version.
+- `yarn add <package-name>` Use yarn to add packages preferably.

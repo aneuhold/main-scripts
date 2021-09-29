@@ -23,5 +23,8 @@
   "homepage": "https://github.com/aneuhold/main-scripts#readme",
   "bin": {
     "tb": "./index.js"
+  },
+  "dependencies": {
+    "yargs": "^17.2.1"
   }
 }
