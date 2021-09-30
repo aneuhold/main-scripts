@@ -4,7 +4,7 @@ This repo contains the main scripts I use on any OS (besides mobile... for now?)
 
 This is also deployed to [NPM here](https://www.npmjs.com/package/@aneuhold/main-scripts).
 
-## Commands
+## ✅ Commands
 
 Each command starts with `tb`. That stands for Tiny Box but that isn't really important 😛.
 
@@ -15,6 +15,14 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
 To test new commands, you can write the command, then use the `npm run refresh` command. This will install the commands globally and uninstall any previous version if it was there.
 
 Note that you don't need to worry about uninstalling the commands, because whenever running any `tb` command it will check the local version against the version on npm and update if needed. 
+
+### 🚧 Commands to be Built
+
+- `tb scaffold node` Scaffolds a node project. Ideas on steps are below:
+  - Intialize git and ask for a repo link and all that (setup a dedicated step / js file for this because it will be re-used)
+  - Initialize npm (package.json)
+  - Create README.md
+  - Setup ESLINT with JSON config then update the config with specific values if needed
 
 ## `package.json` Commands
 
