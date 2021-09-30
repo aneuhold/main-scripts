@@ -13,7 +13,7 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
 
 ### Testing New Commands
 
-To test new commands, you can write the command, then use the `npm run refresh` command. This will install the commands globally and uninstall any previous version if it was there.
+To test new commands, you can write the command, then use the `npm run refresh` command if you want to try it globally. This will install the commands globally and uninstall any previous version if it was there. Otherwise, you can just save your work and it will automatically use the latest commands if you're current working directory is in the root of this repo. 
 
 Note that you don't need to worry about uninstalling the commands, because whenever running any `tb` command it will check the local version against the version on npm and update if needed. 
 
