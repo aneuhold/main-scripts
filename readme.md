@@ -18,6 +18,11 @@ Note that you don't need to worry about uninstalling the commands, because whene
 
 ### 🚧 Commands to be Built
 
+A key feature that is needed as a top priority is to have each command see if it needs to update this package, then go through with that update. So an example flow could be:
+- Check if an update exists on npm and if it does
+- Call a different shell or ps1 file separately maybe?
+
+- `tb update allthethings` Updates everything it can find globally, but not locally? Might need a better name.
 - `tb scaffold node` Scaffolds a node project. Ideas on steps are below:
   - Intialize git and ask for a repo link and all that (setup a dedicated step / js file for this because it will be re-used)
   - Initialize npm (package.json)
