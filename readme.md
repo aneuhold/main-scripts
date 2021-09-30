@@ -8,6 +8,7 @@ This is also deployed to [NPM here](https://www.npmjs.com/package/@aneuhold/main
 
 Each command starts with `tb`. That stands for Tiny Box but that isn't really important 😛.
 
+- `tb help` Will emit all the commands and their options
 - `tb test` Just emits a test echo to see if the package is working.
 
 ### Testing New Commands
