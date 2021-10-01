@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/aneuhold/main-scripts#readme",
   "bin": {
-    "tb": "./src/index.js"
+    "tb": "./lib/src/index.js"
   },
   "files": [
     "lib/**/*"
