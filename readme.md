@@ -11,6 +11,7 @@ install them automatically if needed.
 
 - `tb help` Will emit all the commands and their options
 - `tb test` Just emits a test echo to see if the package is working.
+- `tb update` Will force update this package.
 
 ### Testing New Commands
 

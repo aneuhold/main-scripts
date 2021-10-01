@@ -5,7 +5,7 @@ const { name: PACKAGE_NAME } = require("../../package.json");
  * Triggers an update of this package.
  */
 function triggerUpdate() {
-  exec(`npm update -g ${PACKAGE_NAME}`);
+  exec(`~./startup.sh update`);
 }
 
 /**
@@ -20,8 +20,6 @@ function triggerUpdate() {
  */
 function updateIfNeeded(args) {
   // Need to check if the version has already been checked today
-  
-
   exec(`npm outdated -g ${PACKAGE_NAME}`, (err, stdout, stderr) => {
     if (err) {
       console.log(
@@ -46,4 +44,7 @@ function updateIfNeeded(args) {
   });
 }
 
-module.exports = updateIfNeeded;
+module.exports = {
+  triggerUpdate,
+  updateIfNeeded
+};
