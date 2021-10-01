@@ -25,6 +25,10 @@ To test new commands, you can write the command, then use the `npm run refresh` 
   - Initialize npm (package.json)
   - Create README.md
   - Setup ESLINT with JSON config then update the config with specific values if needed
+  - Add Typescript and the tsconfig.json file
+  - Add prettier and the .prettierrc.json file
+  - Update the tsconfig.json to match what is in this project at the moment probably.
+  - Setup the build command in the package.json
 
 ## `package.json` Commands
 
