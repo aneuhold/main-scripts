@@ -35,3 +35,15 @@ To test new commands, you can write the command, then use the `npm run refresh` 
 - `npm run pushpub` will build then do a `git push` then increment the patch number by one then publish the package to npm. It seems that this needs to be done with npm so that it uses the right credentials.
 - `npm run refresh` can be used for testing new commands. It will uninstall any previous global version of this package and then install the local version.
 - `yarn add <package-name>` Use yarn to add packages preferably.
+
+## Build Process
+
+This consists of the following steps:
+
+- Delete the `./lib` folder
+- Generate the files with TypeScript into the `./lib` folder, including `package.json` because it uses that in some parts of the code. 
+
+## Publish Process
+
+- Runs the [build process](#build-process)
+- Packs the files only including the the `./lib` folder and the [default things included](https://docs.npmjs.com/cli/v7/using-npm/developers). This does mean that the `package.json` is going to be in the package twice. But that is okay because the `package.json` that is in the `lib` folder will only be used to reference values. It isn't used for commands or locations of any anything. 
