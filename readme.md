@@ -6,7 +6,8 @@ This is also deployed to [NPM here](https://www.npmjs.com/package/@aneuhold/main
 
 ## ✅ Commands
 
-Each command starts with `tb`. That stands for Tiny Box but that isn't really important 😛.
+Each command starts with `tb`. That stands for Tiny Box but that isn't really important 😛. Whenever running a command it will check for updates to this package once a day, and
+install them automatically if needed.
 
 - `tb help` Will emit all the commands and their options
 - `tb test` Just emits a test echo to see if the package is working.
@@ -15,13 +16,7 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
 
 To test new commands, you can write the command, then use the `npm run refresh` command if you want to try it globally. This will install the commands globally and uninstall any previous version if it was there. Otherwise, you can just save your work and it will automatically use the latest commands if you're current working directory is in the root of this repo. 
 
-Note that you don't need to worry about uninstalling the commands, because whenever running any `tb` command it will check the local version against the version on npm and update if needed. 
-
 ### 🚧 Commands to be Built
-
-A key feature that is needed as a top priority is to have each command see if it needs to update this package, then go through with that update. So an example flow could be:
-- Check if an update exists on npm and if it does
-- Call a different shell or ps1 file separately maybe?
 
 - `tb update allthethings` Updates everything it can find globally, but not locally? Might need a better name.
 - `tb scaffold node` Scaffolds a node project. Ideas on steps are below:
