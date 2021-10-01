@@ -45,5 +45,5 @@ This consists of the following steps:
 
 ## Publish Process
 
-- Runs the [build process](#build-process)
+- Run the [build process](#build-process)
 - Packs the files only including the the `./lib` folder and the [default things included](https://docs.npmjs.com/cli/v7/using-npm/developers). This does mean that the `package.json` is going to be in the package twice. But that is okay because the `package.json` that is in the `lib` folder will only be used to reference values. It isn't used for commands or locations of any anything. 

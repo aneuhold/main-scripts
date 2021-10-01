@@ -92,8 +92,4 @@
   "include": [
     "./src"
   ],
-  "exclude": [
-    // Excluding package.json so that it doesn't copy it over to the lib folder
-    "./package.json"
-  ]
 }
