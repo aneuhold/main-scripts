@@ -28,6 +28,11 @@
         "ts": "never",
         "js": "never"
       }
+    ],
+    // Disabling no emtpy function because it seems to be needed for using yargs
+    "no-empty-function": "off",
+    "@typescript-eslint/no-empty-function": [
+      "off"
     ]
   },
   "settings": {
