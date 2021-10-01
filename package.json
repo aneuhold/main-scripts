@@ -4,9 +4,9 @@
   "description": "Main scripts for use personally on any platform",
   "main": "index.js",
   "scripts": {
-    "pushpub": "git push && npm version patch && npm publish --access public",
-    "refresh": "npm uninstall -g @aneuhold/main-scripts && npm i -g",
-    "build": "rimraf ./lib && tsc"
+    "pushpub": "npm run build && npm version patch && git push && npm publish --access public",
+    "refresh": "npm run build && npm uninstall -g @aneuhold/main-scripts && npm i -g",
+    "build": "tsc"
   },
   "type": "commonjs",
   "repository": {
