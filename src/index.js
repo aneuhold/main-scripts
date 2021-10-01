@@ -14,7 +14,7 @@ yargs(hideBin(process.argv))
     "Echos a test response to make sure the library is working",
     () => {},
     (argv) => {
-      console.info(`You entered? :${JSON.stringify(argv)}`);
+      console.info(`You entered the following args :${JSON.stringify(argv)}`);
     }
   )
   .command(
@@ -22,6 +22,7 @@ yargs(hideBin(process.argv))
     "Forces an update for this package",
     () => {},
     () => {
+      console.log("Forcing update...");
       triggerUpdate();
     }
   )

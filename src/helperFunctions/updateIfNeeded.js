@@ -5,7 +5,22 @@ const { name: PACKAGE_NAME } = require("../../package.json");
  * Triggers an update of this package.
  */
 function triggerUpdate() {
-  exec(`~./startup.sh update`);
+  console.log("Executing forced update...");
+  exec(`~/startup.sh update mainscripts`, (err, stdout, stderr) => {
+    if (err) {
+      console.log(
+        `💀 There was an error executing the "exec" function: ${err.message}`
+      );
+      return;
+    }
+    if (stderr) {
+      console.log(
+        `💀 There was an error executing the forced update: ${stderr}`
+      );
+      return;
+    }
+    console.log(stdout);
+  });
 }
 
 /**
@@ -20,6 +35,7 @@ function triggerUpdate() {
  */
 function updateIfNeeded(args) {
   // Need to check if the version has already been checked today
+  console.log(args);
   exec(`npm outdated -g ${PACKAGE_NAME}`, (err, stdout, stderr) => {
     if (err) {
       console.log(
