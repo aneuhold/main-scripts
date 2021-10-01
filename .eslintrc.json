@@ -18,7 +18,16 @@
     "prettier"
   ],
   "rules": {
-    "no-console": "off"
+    "no-console": "off",
+    "import/extensions": [
+      "warn",
+      "always",
+      // Set the specific extensions you want excluded from warning on imports
+      // here.
+      {
+        "ts": "never"
+      }
+    ]
   },
   "settings": {
     "import/resolver": {

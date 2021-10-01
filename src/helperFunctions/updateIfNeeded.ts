@@ -1,7 +1,7 @@
 import { exec } from "child_process";
 import { name as PACKAGE_NAME } from "../../package.json";
 import Store, { KEYS } from "../Store";
-import { datesAreOnSameDay } from "./dateFunctions";
+import datesAreOnSameDay from "./dateFunctions";
 
 /**
  * Triggers an update of this package.
