@@ -6,7 +6,7 @@ import { datesAreOnSameDay } from "./dateFunctions";
 /**
  * Triggers an update of this package.
  */
-export function triggerUpdate(args: string[]) {
+export function triggerUpdate(args: string[]): void {
   console.log("Executing forced update...");
   exec(`~/startup.sh update mainscripts`, (err, stdout, stderr) => {
     if (err) {
@@ -47,7 +47,7 @@ async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
  *
  * @param {string[]} args the arguments provided by the user
  */
-export async function updateIfNeeded(args: string[]) {
+export async function updateIfNeeded(args: string[]): Promise<void> {
   // Check if the check has already happened today
   if (await hasAlreadyBeenUpdatedToday()) {
     return;
