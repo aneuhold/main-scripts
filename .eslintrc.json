@@ -21,11 +21,12 @@
     "no-console": "off",
     "import/extensions": [
       "warn",
-      "always",
+      "ignorePackages",
       // Set the specific extensions you want excluded from warning on imports
       // here.
       {
-        "ts": "never"
+        "ts": "never",
+        "js": "never"
       }
     ]
   },

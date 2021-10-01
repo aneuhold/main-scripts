@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
-import { updateIfNeeded, triggerUpdate } from "./helperFunctions/updateIfNeeded";
+import {
+  updateIfNeeded,
+  triggerUpdate,
+} from "./helperFunctions/updateIfNeeded";
 
 updateIfNeeded(process.argv);
 
