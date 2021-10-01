@@ -3,28 +3,6 @@ import { name as PACKAGE_NAME } from "../../package.json";
 import Store, { KEYS } from "../Store";
 import datesAreOnSameDay from "./dateFunctions";
 
-/**
- * Triggers an update of this package.
- */
-export function triggerUpdate(args: string[]): void {
-  console.log("Executing forced update...");
-  exec(`~/startup.sh update mainscripts`, (err, stdout, stderr) => {
-    if (err) {
-      console.log(
-        `💀 There was an error executing the "exec" function: ${err.message}`
-      );
-      return;
-    }
-    if (stderr) {
-      console.log(
-        `💀 There was an error executing the forced update: ${stderr}`
-      );
-      return;
-    }
-    console.log(stdout);
-  });
-}
-
 async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
   const lastCheckDate = await Store.get<Date>(KEYS.lastUpdateCheckDate);
   if (!lastCheckDate) {
@@ -35,6 +13,41 @@ async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
     return true;
   }
   return false;
+}
+
+function convertArgsToString(args: string[]): string {
+  // Remove first two because those are not the actual args
+  const argsThatMatter = args.splice(0, 2);
+  // Join on a space
+  return argsThatMatter.join(" ");
+}
+
+/**
+ * Triggers an update of this package.
+ */
+export function triggerUpdate(args: string[]): void {
+  console.log("Executing forced update...");
+  if (hasAlreadyBeenUpdatedToday()) {
+    return;
+  }
+  exec(
+    `~/startup.sh update mainscripts ${convertArgsToString(args)}`,
+    (err, stdout, stderr) => {
+      if (err) {
+        console.log(
+          `💀 There was an error executing the "exec" function: ${err.message}`
+        );
+        return;
+      }
+      if (stderr) {
+        console.log(
+          `💀 There was an error executing the forced update: ${stderr}`
+        );
+        return;
+      }
+      console.log(stdout);
+    }
+  );
 }
 
 /**
