@@ -6,7 +6,10 @@ import {
   triggerUpdate,
 } from "./helperFunctions/updateIfNeeded";
 
-updateIfNeeded(process.argv);
+// Execute in an async fashion before any commands are ran
+(async () => {
+  await updateIfNeeded(process.argv);
+})();
 
 /**
  * Sets up all of the top-level commands and their options

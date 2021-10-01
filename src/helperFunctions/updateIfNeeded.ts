@@ -1,12 +1,12 @@
 import { exec } from "child_process";
 import { name as PACKAGE_NAME } from "../../package.json";
-import Store, { KEYS } from "../Store";
+import Store from "../Store";
 import datesAreOnSameDay from "./dateFunctions";
 
 async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
-  const lastCheckDate = await Store.get<Date>(KEYS.lastUpdateCheckDate);
+  const lastCheckDate = await Store.get("lastUpdateCheckDate");
   if (!lastCheckDate) {
-    await Store.set(KEYS.lastUpdateCheckDate, new Date());
+    await Store.set("lastUpdateCheckDate", new Date());
     return false;
   }
   if (datesAreOnSameDay(lastCheckDate, new Date())) {
