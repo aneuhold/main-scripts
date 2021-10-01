@@ -30,11 +30,10 @@ async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
   if (!lastCheckDate) {
     await Store.set(KEYS.lastUpdateCheckDate, new Date());
     return false;
-  } else if (datesAreOnSameDay(lastCheckDate, new Date())) {
+  } if (datesAreOnSameDay(lastCheckDate, new Date())) {
     return true;
-  } else {
-    return false
-  }
+  } 
+  return false;
 }
 
 /**
