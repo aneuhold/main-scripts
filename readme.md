@@ -15,7 +15,7 @@ install them automatically if needed.
 
 ### Testing New Commands
 
-To test new commands, you can write the command, then use the `npm run refresh` command if you want to try it globally. This will install the commands globally and uninstall any previous version if it was there. Otherwise, you can just save your work and it will automatically use the latest commands if you're current working directory is in the root of this repo. 
+To test new commands, you can write the command, then use the `npm run refresh` command if you want to try it globally. This will install the commands globally and uninstall any previous version if it was there. After this is done, it will have a link to the directory with this package for running commands. So you need to run `yarn build` for it to update the commands becuase it runs out of the `lib` directory when node gets a hold of it. 
 
 ### 🚧 Commands to be Built
 
@@ -28,6 +28,6 @@ To test new commands, you can write the command, then use the `npm run refresh` 
 
 ## `package.json` Commands
 
-- `npm run pushpub` will do a `git push` then increment the patch number by one then publish the package to npm. It seems that this needs to be done with npm so that it uses the right credentials.
+- `npm run pushpub` will build then do a `git push` then increment the patch number by one then publish the package to npm. It seems that this needs to be done with npm so that it uses the right credentials.
 - `npm run refresh` can be used for testing new commands. It will uninstall any previous global version of this package and then install the local version.
 - `yarn add <package-name>` Use yarn to add packages preferably.
