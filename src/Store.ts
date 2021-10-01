@@ -1,4 +1,5 @@
 import { writeFile, readFile, access } from "fs/promises";
+import { existsSync, fstat, mkdirSync } from "fs";
 
 /**
  * The database store path. This is relative to the root of the project
@@ -30,10 +31,16 @@ class Store {
 
   private static async getDb(): Promise<StoreDb> {
     try {
+      console.log(`Checking to see if ${DB_PATH} exists`);
       await access(DB_PATH);
+      console.log(`${DB_PATH} exists...`);
       return JSON.parse(await readFile(DB_PATH, "utf-8"));
     } catch {
       // DB doesn't exist, so write the file first.
+      console.log("Creating the database...");
+      if (!existsSync("./localData")) {
+        mkdirSync("./localData");
+      }
       await writeFile(DB_PATH, "{}", { flag: "w+" });
       return {};
     }
@@ -46,14 +53,22 @@ class Store {
    * @param value the value to assign to the key
    */
   static async set(key: keyof StoreDb, value: any): Promise<void> {
-    Store.checkDb();
+    await Store.checkDb();
     Store.db[key] = value;
-    Store.writeDb(Store.db);
+    await Store.writeDb(Store.db);
   }
 
   static async get(key: keyof StoreDb): Promise<any> {
-    Store.checkDb();
+    await Store.checkDb();
     return Store.db[key];
+  }
+
+  static async getLastCheckedDate(): Promise<Date> {
+    await Store.checkDb();
+    if (Store.db.lastUpdateCheckDate) {
+      return new Date(Store.db.lastUpdateCheckDate);
+    }
+    throw new Error(`Store.db.lastUpdateCheckData did not have a value`);
   }
 }
 

@@ -4,7 +4,7 @@ import Store from "../Store";
 import datesAreOnSameDay from "./dateFunctions";
 
 async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
-  const lastCheckDate = await Store.get("lastUpdateCheckDate");
+  const lastCheckDate = await Store.getLastCheckedDate();
   if (!lastCheckDate) {
     await Store.set("lastUpdateCheckDate", new Date());
     return false;
@@ -27,9 +27,6 @@ function convertArgsToString(args: string[]): string {
  */
 export async function triggerUpdate(args: string[]): Promise<void> {
   console.log("Executing forced update...");
-  if (await hasAlreadyBeenUpdatedToday()) {
-    return;
-  }
   exec(
     `~/startup.sh update mainscripts ${convertArgsToString(args)}`,
     (err, stdout, stderr) => {
