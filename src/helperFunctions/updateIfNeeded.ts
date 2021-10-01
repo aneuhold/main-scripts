@@ -1,7 +1,7 @@
 import { exec } from "child_process";
 import { name as PACKAGE_NAME } from "../../package.json";
-import Store, { KEYS } from '../Store';
-import { datesAreOnSameDay } from './dateFunctions';
+import Store, { KEYS } from "../Store";
+import { datesAreOnSameDay } from "./dateFunctions";
 
 /**
  * Triggers an update of this package.
@@ -30,9 +30,10 @@ async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
   if (!lastCheckDate) {
     await Store.set(KEYS.lastUpdateCheckDate, new Date());
     return false;
-  } if (datesAreOnSameDay(lastCheckDate, new Date())) {
+  }
+  if (datesAreOnSameDay(lastCheckDate, new Date())) {
     return true;
-  } 
+  }
   return false;
 }
 
