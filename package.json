@@ -25,6 +25,9 @@
   "bin": {
     "tb": "./src/index.js"
   },
+  "files": [
+    "lib/**/*"
+  ],
   "dependencies": {
     "leveldown": "^6.1.0",
     "levelup": "^5.0.1",

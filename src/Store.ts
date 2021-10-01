@@ -1,8 +1,11 @@
-import levelup, { LevelUp } from "levelup";
-import leveldown, { LevelDown } from "leveldown";
-import { AbstractIterator } from "abstract-leveldown";
+import levelup from "levelup";
+import leveldown from "leveldown";
 
 const dbPath = `../localData/storedb`;
+
+export const KEYS = {
+  lastUpdateCheckDate: "lastUpdateCheckDate"
+}
 
 /**
  * Represents the secondary storage data store for the scripts. Think of it as
@@ -13,18 +16,7 @@ class Store {
    * Holds the database from the key-value store provider. The provider of which
    * can be changed later if wanted.
    */
-  private static db: LevelUp<LevelDown, AbstractIterator<string, any>>;
-
-  /**
-   * Builds an instance of the Store.
-   * 
-   * This can be built many times, without worry for performance.
-   */
-  constructor() {
-    if (!Store.db) {
-      Store.db = levelup(leveldown(dbPath));
-    }
-  }
+  private static db = levelup(leveldown(dbPath)); 
 
   /**
    * Sets a value.
@@ -32,13 +24,15 @@ class Store {
    * @param {string} key the name of the key
    * @param {any} value the value to assign to the key 
    */
-  async set(key: string, value: any) {
+  static async set(key: string, value: any) {
     await Store.db.put(key, value);
   }
 
-  async get(key: string) {
-    return await Store.db.get(key);
+  static async get<T>(key: string): Promise<T> {
+    // Casting it like this so that it can return a specified type through the
+    // generic.
+    return await (Store.db.get(key) as unknown) as T;
   }
 }
 
-module.exports = Store;
+export default Store;
