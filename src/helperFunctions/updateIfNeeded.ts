@@ -25,9 +25,9 @@ function convertArgsToString(args: string[]): string {
 /**
  * Triggers an update of this package.
  */
-export function triggerUpdate(args: string[]): void {
+export async function triggerUpdate(args: string[]): Promise<void> {
   console.log("Executing forced update...");
-  if (hasAlreadyBeenUpdatedToday()) {
+  if (await hasAlreadyBeenUpdatedToday()) {
     return;
   }
   exec(
