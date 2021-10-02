@@ -4,8 +4,10 @@ import Store from '../Store';
 import datesAreOnSameDay from './dateFunctions';
 import { logFailure, logSuccess } from './logger';
 
-async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
-  const lastCheckDate = await Store.getLastCheckedDate();
+async function hasAlreadyBeenUpdatedToday(
+  verboseLoggingEnabled?: boolean
+): Promise<boolean> {
+  const lastCheckDate = await Store.getLastCheckedDate(verboseLoggingEnabled);
   if (!lastCheckDate) {
     await Store.set('lastUpdateCheckDate', new Date().toString());
     return false;
@@ -43,9 +45,12 @@ export async function triggerUpdate(args: string[]): Promise<void> {
  *
  * @param {string[]} args the arguments provided by the user
  */
-export async function updateIfNeeded(args: string[]): Promise<void> {
+export async function updateIfNeeded(
+  args: string[],
+  verboseLoggingEnabled?: boolean
+): Promise<void> {
   // Check if the check has already happened today
-  if (await hasAlreadyBeenUpdatedToday()) {
+  if (await hasAlreadyBeenUpdatedToday(verboseLoggingEnabled)) {
     return;
   }
   const { didComplete, output } = await execCmd(

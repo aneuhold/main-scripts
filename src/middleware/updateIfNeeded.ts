@@ -13,7 +13,7 @@ const updateIfNeededMiddleware: MiddlewareFunction<unknown> = (argv) => {
     console.log('ℹ️  Verbose logging enabled...');
   }
   (async () => {
-    await updateIfNeeded(argv._ as string[]);
+    await updateIfNeeded(argv._ as string[], !!argv.verbose);
   })();
 };
 

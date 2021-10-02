@@ -23,21 +23,29 @@ class Store {
     await writeFile(DB_PATH, JSON.stringify(updatedDb), { flag: 'w+' });
   }
 
-  private static async checkDb() {
+  private static async checkDb(verboseLoggingEnabled?: boolean) {
     if (!Store.db) {
-      Store.db = await Store.getDb();
+      Store.db = await Store.getDb(verboseLoggingEnabled);
     }
   }
 
-  private static async getDb(): Promise<StoreDb> {
+  private static async getDb(
+    verboseLoggingEnabled?: boolean
+  ): Promise<StoreDb> {
     try {
-      console.log(`Checking to see if ${DB_PATH} exists`);
+      if (verboseLoggingEnabled) {
+        console.log(`Checking to see if ${DB_PATH} exists`);
+      }
       await access(DB_PATH);
-      console.log(`${DB_PATH} exists...`);
+      if (verboseLoggingEnabled) {
+        console.log(`${DB_PATH} exists...`);
+      }
       return JSON.parse(await readFile(DB_PATH, 'utf-8'));
     } catch {
       // DB doesn't exist, so write the file first.
-      console.log('Creating the database...');
+      if (verboseLoggingEnabled) {
+        console.log('Creating the database...');
+      }
       if (!existsSync('./localData')) {
         mkdirSync('./localData');
       }
@@ -54,22 +62,26 @@ class Store {
    */
   static async set<T extends keyof StoreDb>(
     key: T,
-    value: StoreDb[T]
+    value: StoreDb[T],
+    verboseLoggingEnabled?: boolean
   ): Promise<void> {
-    await Store.checkDb();
+    await Store.checkDb(verboseLoggingEnabled);
     Store.db[key] = value;
     await Store.writeDb(Store.db);
   }
 
   static async get<T extends keyof StoreDb>(
-    key: T
+    key: T,
+    verboseLoggingEnabled?: boolean
   ): Promise<StoreDb[T] | null> {
-    await Store.checkDb();
+    await Store.checkDb(verboseLoggingEnabled);
     return Store.db[key];
   }
 
-  static async getLastCheckedDate(): Promise<Date> {
-    await Store.checkDb();
+  static async getLastCheckedDate(
+    verboseLoggingEnabled?: boolean
+  ): Promise<Date> {
+    await Store.checkDb(verboseLoggingEnabled);
     if (Store.db.lastUpdateCheckDate) {
       return new Date(Store.db.lastUpdateCheckDate);
     }
