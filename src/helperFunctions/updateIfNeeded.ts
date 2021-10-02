@@ -2,20 +2,13 @@ import execCmd from './cmd';
 import { name as PACKAGE_NAME } from '../../package.json';
 import Store from '../Store';
 import datesAreOnSameDay from './dateFunctions';
-import { logFailure, logInfo, logSuccess } from './logger';
+import Log from './logger';
 
-async function hasAlreadyBeenUpdatedToday(
-  verboseLoggingEnabled?: boolean
-): Promise<boolean> {
-  const lastCheckDate = await Store.getLastCheckedDate(verboseLoggingEnabled);
-  if (verboseLoggingEnabled) {
-    logInfo(`lastCheckDate is: ${lastCheckDate}`);
-  }
-  logInfo('did this get logged?');
+async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
+  const lastCheckDate = await Store.getLastCheckedDate();
+  Log.verbose.info(`lastCheckDate is: ${lastCheckDate}`);
   if (!lastCheckDate) {
-    if (verboseLoggingEnabled) {
-      logInfo("Last check date wasn't there yet, adding that now...");
-    }
+    Log.verbose.info("Last check date wasn't there yet, adding that now...");
     await Store.set('lastUpdateCheckDate', new Date().toString());
     return false;
   }
@@ -23,9 +16,7 @@ async function hasAlreadyBeenUpdatedToday(
     await Store.set('lastUpdateCheckDate', new Date().toString());
     return true;
   }
-  if (verboseLoggingEnabled) {
-    logInfo('Last check date was before today...');
-  }
+  Log.verbose.info('Last check date was before today...');
   await Store.set('lastUpdateCheckDate', new Date().toString());
   return false;
 }
@@ -57,15 +48,12 @@ export async function triggerUpdate(args: string[]): Promise<void> {
  *
  * @param {string[]} args the arguments provided by the user
  */
-export async function updateIfNeeded(
-  args: string[],
-  verboseLoggingEnabled?: boolean
-): Promise<void> {
+export async function updateIfNeeded(args: string[]): Promise<void> {
   // Check if the check has already happened today
-  if (await hasAlreadyBeenUpdatedToday(verboseLoggingEnabled)) {
-    if (verboseLoggingEnabled) {
-      logInfo('Package update has already been checked today. Continuing...');
-    }
+  if (await hasAlreadyBeenUpdatedToday()) {
+    Log.verbose.info(
+      'Package update has already been checked today. Continuing...'
+    );
     return;
   }
   const { didComplete, output } = await execCmd(
@@ -74,10 +62,9 @@ export async function updateIfNeeded(
   if (didComplete) {
     const updateIsNeeded = output.length !== 0;
     if (updateIsNeeded) {
-      logFailure('Update is needed. Installing update now...');
+      Log.failure('Update is needed. Installing update now...');
       triggerUpdate(args);
-    } else if (verboseLoggingEnabled) {
-      logSuccess(`Package is up to date. Continuing...`);
     }
+    Log.verbose.success(`Package is up to date. Continuing...`);
   }
 }

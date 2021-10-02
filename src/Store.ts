@@ -1,6 +1,6 @@
 import { writeFile, readFile, access } from 'fs/promises';
 import { existsSync, mkdirSync } from 'fs';
-import { logInfo } from './helperFunctions/logger';
+import Log from './helperFunctions/logger';
 
 /**
  * The database store path. This is relative to the root of the project
@@ -20,44 +20,29 @@ class Store {
    */
   private static db: StoreDb;
 
-  private static async writeDb(
-    updatedDb: StoreDb,
-    verboseLoggingEnabled?: boolean
-  ) {
-    if (verboseLoggingEnabled) {
-      logInfo('Attempting to write to the store db file...');
-    }
+  private static async writeDb(updatedDb: StoreDb) {
+    Log.verbose.info('Attempting to write to the store db file...');
     const result = await writeFile(DB_PATH, JSON.stringify(updatedDb), {
       flag: 'w+',
     });
-    if (verboseLoggingEnabled) {
-      logInfo(`Wrote to the db file with result of: ${result}`);
-    }
+    Log.verbose.info(`Wrote to the db file with result of: ${result}`);
   }
 
-  private static async checkDb(verboseLoggingEnabled?: boolean) {
+  private static async checkDb() {
     if (!Store.db) {
-      Store.db = await Store.getDb(verboseLoggingEnabled);
+      Store.db = await Store.getDb();
     }
   }
 
-  private static async getDb(
-    verboseLoggingEnabled?: boolean
-  ): Promise<StoreDb> {
+  private static async getDb(): Promise<StoreDb> {
     try {
-      if (verboseLoggingEnabled) {
-        console.log(`Checking to see if ${DB_PATH} exists`);
-      }
+      Log.verbose.info(`Checking to see if ${DB_PATH} exists`);
       await access(DB_PATH);
-      if (verboseLoggingEnabled) {
-        console.log(`${DB_PATH} exists...`);
-      }
+      Log.verbose.info(`${DB_PATH} exists...`);
       return JSON.parse(await readFile(DB_PATH, 'utf-8'));
     } catch {
       // DB doesn't exist, so write the file first.
-      if (verboseLoggingEnabled) {
-        console.log('Creating the database...');
-      }
+      Log.verbose.info('Creating the database...');
       if (!existsSync('./localData')) {
         mkdirSync('./localData');
       }
@@ -74,26 +59,22 @@ class Store {
    */
   static async set<T extends keyof StoreDb>(
     key: T,
-    value: StoreDb[T],
-    verboseLoggingEnabled?: boolean
+    value: StoreDb[T]
   ): Promise<void> {
-    await Store.checkDb(verboseLoggingEnabled);
+    await Store.checkDb();
     Store.db[key] = value;
     await Store.writeDb(Store.db);
   }
 
   static async get<T extends keyof StoreDb>(
-    key: T,
-    verboseLoggingEnabled?: boolean
+    key: T
   ): Promise<StoreDb[T] | null> {
-    await Store.checkDb(verboseLoggingEnabled);
+    await Store.checkDb();
     return Store.db[key];
   }
 
-  static async getLastCheckedDate(
-    verboseLoggingEnabled?: boolean
-  ): Promise<Date> {
-    await Store.checkDb(verboseLoggingEnabled);
+  static async getLastCheckedDate(): Promise<Date> {
+    await Store.checkDb();
     if (Store.db.lastUpdateCheckDate) {
       return new Date(Store.db.lastUpdateCheckDate);
     }

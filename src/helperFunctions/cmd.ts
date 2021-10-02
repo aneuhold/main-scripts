@@ -3,7 +3,7 @@ command line / terminal things. */
 
 import { exec as normalExec } from 'child_process';
 import util from 'util';
-import { logError } from './logger';
+import Log from './logger';
 
 /**
  * The promisified version of the {@link normalExec} function.
@@ -31,7 +31,7 @@ export default async function execCmd(
   try {
     const { stdout, stderr } = await exec(cmd);
     if (stderr) {
-      logError(`There was an error executing ${cmd}. Details are printed below:
+      Log.error(`There was an error executing ${cmd}. Details are printed below:
       ${stderr}`);
       return {
         didComplete: false,
@@ -46,7 +46,7 @@ export default async function execCmd(
       output: stdout,
     };
   } catch (err) {
-    logError(`There was an error executing the "exec" function. Details are printed below:
+    Log.error(`There was an error executing the "exec" function. Details are printed below:
     ${err}`);
     return {
       didComplete: true,

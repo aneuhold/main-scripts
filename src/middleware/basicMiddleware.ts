@@ -1,5 +1,5 @@
 import { MiddlewareFunction } from 'yargs';
-import { logInfo } from '../helperFunctions/logger';
+import Log from '../helperFunctions/logger';
 import { updateIfNeeded } from '../helperFunctions/updateIfNeeded';
 
 /**
@@ -8,7 +8,8 @@ import { updateIfNeeded } from '../helperFunctions/updateIfNeeded';
  */
 const checkVerboseLoggingMiddleware: MiddlewareFunction<unknown> = (argv) => {
   if (argv.verbose) {
-    logInfo('Verbose logging enabled...');
+    Log.verboseLoggingEnabled = true;
+    Log.verbose.info('Verbose logging enabled...');
   }
 };
 
@@ -20,7 +21,7 @@ const checkVerboseLoggingMiddleware: MiddlewareFunction<unknown> = (argv) => {
  * @param argv
  */
 const updateIfNeededMiddleware: MiddlewareFunction<unknown> = async (argv) => {
-  await updateIfNeeded(argv._ as string[], !!argv.verbose);
+  await updateIfNeeded(argv._ as string[]);
 };
 
 export { checkVerboseLoggingMiddleware, updateIfNeededMiddleware };
