@@ -12,6 +12,7 @@ install them automatically if needed.
 - `tb help` Will emit all the commands and their options
 - `tb test` Just emits a test echo to see if the package is working.
 - `tb update` Will force update this package.
+- `tb fpull` Will run `git fetch -a` then `git pull` in the current working directory.
 
 ### 🏞 Flow for Writing New Commands
 

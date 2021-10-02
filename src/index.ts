@@ -6,6 +6,7 @@ import {
   updateIfNeededMiddleware,
   checkVerboseLoggingMiddleware,
 } from './middleware/basicMiddleware';
+import fpull from './commands/fpull';
 
 /**
  * Sets up all of the top-level commands and their options. This is the entry
@@ -27,6 +28,14 @@ yargs(hideBin(process.argv))
     console.log('Forcing update...');
     triggerUpdate(argv._ as string[]);
   })
+  .command(
+    'fpull',
+    'Runs git fetch -a and then git pull in the current directory',
+    {},
+    () => {
+      fpull();
+    }
+  )
   .option('verbose', {
     alias: 'v',
     type: 'boolean',
