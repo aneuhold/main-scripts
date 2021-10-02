@@ -7,7 +7,7 @@ import { existsSync, mkdirSync } from 'fs';
 const DB_PATH = `./localData/storeDb.json`;
 
 export type StoreDb = {
-  lastUpdateCheckDate?: Date;
+  lastUpdateCheckDate?: string;
 };
 
 /**
@@ -52,13 +52,18 @@ class Store {
    * @param key the name of the key
    * @param value the value to assign to the key
    */
-  static async set(key: keyof StoreDb, value: any): Promise<void> {
+  static async set<T extends keyof StoreDb>(
+    key: T,
+    value: StoreDb[T]
+  ): Promise<void> {
     await Store.checkDb();
     Store.db[key] = value;
     await Store.writeDb(Store.db);
   }
 
-  static async get(key: keyof StoreDb): Promise<any> {
+  static async get<T extends keyof StoreDb>(
+    key: T
+  ): Promise<StoreDb[T] | null> {
     await Store.checkDb();
     return Store.db[key];
   }

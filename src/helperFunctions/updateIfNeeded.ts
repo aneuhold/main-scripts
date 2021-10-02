@@ -1,12 +1,12 @@
-import { exec } from "child_process";
-import { name as PACKAGE_NAME } from "../../package.json";
-import Store from "../Store";
-import datesAreOnSameDay from "./dateFunctions";
+import { exec } from 'child_process';
+import { name as PACKAGE_NAME } from '../../package.json';
+import Store from '../Store';
+import datesAreOnSameDay from './dateFunctions';
 
 async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
   const lastCheckDate = await Store.getLastCheckedDate();
   if (!lastCheckDate) {
-    await Store.set("lastUpdateCheckDate", new Date());
+    await Store.set('lastUpdateCheckDate', new Date().toString());
     return false;
   }
   if (datesAreOnSameDay(lastCheckDate, new Date())) {
@@ -19,14 +19,14 @@ function convertArgsToString(args: string[]): string {
   // Remove first two because those are not the actual args
   const argsThatMatter = args.splice(0, 2);
   // Join on a space
-  return argsThatMatter.join(" ");
+  return argsThatMatter.join(' ');
 }
 
 /**
  * Triggers an update of this package.
  */
 export async function triggerUpdate(args: string[]): Promise<void> {
-  console.log("Executing forced update...");
+  console.log('Executing forced update...');
   exec(
     `~/startup.sh update mainscripts ${convertArgsToString(args)}`,
     (err, stdout, stderr) => {
@@ -77,10 +77,10 @@ export async function updateIfNeeded(args: string[]): Promise<void> {
     }
     const updateIsNeeded = stdout.length !== 0;
     if (updateIsNeeded) {
-      console.log("🔴 Update is needed. Installing update now...");
+      console.log('🔴 Update is needed. Installing update now...');
       triggerUpdate(args);
     } else {
-      console.log("✅ Package is up to date. Continuing...");
+      console.log('✅ Package is up to date. Continuing...');
     }
     // Silently continues if no update is needed.
   });
