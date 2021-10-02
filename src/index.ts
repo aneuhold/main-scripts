@@ -17,21 +17,16 @@ yargs(hideBin(process.argv))
   .middleware([checkVerboseLoggingMiddleware, updateIfNeededMiddleware], true)
   .command(
     'test',
-    'Echos a test response to make sure the library is working',
-    () => {},
+    'Echos your arguments to make sure the library is working',
+    {},
     (argv) => {
-      console.info(`You entered the following args :${JSON.stringify(argv)}`);
+      console.info(`You entered the following args: ${JSON.stringify(argv._)}`);
     }
   )
-  .command(
-    'update',
-    'Forces an update for this package',
-    () => {},
-    (argv) => {
-      console.log('Forcing update...');
-      triggerUpdate(argv._ as string[]);
-    }
-  )
+  .command('update', 'Forces an update for this package', {}, (argv) => {
+    console.log('Forcing update...');
+    triggerUpdate(argv._ as string[]);
+  })
   .option('verbose', {
     alias: 'v',
     type: 'boolean',
