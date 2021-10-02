@@ -2,13 +2,19 @@
 import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
 import { triggerUpdate } from './helperFunctions/updateIfNeeded';
-import updateIfNeededMiddleware from './middleware/updateIfNeeded';
+import {
+  updateIfNeededMiddleware,
+  checkVerboseLoggingMiddleware,
+} from './middleware/basicMiddleware';
 
 /**
- * Sets up all of the top-level commands and their options
+ * Sets up all of the top-level commands and their options. This is the entry
+ * point for the WHOLE SHE-BANG.
  */
 yargs(hideBin(process.argv))
-  .middleware([updateIfNeededMiddleware], true)
+  // If a promise is returned in the middleware, then it will wait until
+  // that promise resolves to continue.
+  .middleware([checkVerboseLoggingMiddleware, updateIfNeededMiddleware], true)
   .command(
     'test',
     'Echos a test response to make sure the library is working',

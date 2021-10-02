@@ -61,7 +61,7 @@ export async function updateIfNeeded(
     if (updateIsNeeded) {
       logFailure('Update is needed. Installing update now...');
       triggerUpdate(args);
-    } else {
+    } else if (verboseLoggingEnabled) {
       logSuccess(`Package is up to date. Continuing...`);
     }
   }
