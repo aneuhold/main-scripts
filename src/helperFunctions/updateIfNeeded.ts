@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import execCmd from './cmd';
 import { name as PACKAGE_NAME } from '../../package.json';
 import Store from '../Store';
 import datesAreOnSameDay from './dateFunctions';
@@ -27,24 +27,9 @@ function convertArgsToString(args: string[]): string {
  */
 export async function triggerUpdate(args: string[]): Promise<void> {
   console.log('Executing forced update...');
-  exec(
-    `~/startup.sh update mainscripts ${convertArgsToString(args)}`,
-    (err, stdout, stderr) => {
-      if (err) {
-        console.log(
-          `💀 There was an error executing the "exec" function: ${err.message}`
-        );
-        return;
-      }
-      if (stderr) {
-        console.log(
-          `💀 There was an error executing the forced update: ${stderr}`
-        );
-        return;
-      }
-      console.log(stdout);
-    }
-  );
+  await execCmd(`~/startup.sh update mainscripts ${convertArgsToString(args)}`);
+  // Kill this process once the command is executed to update
+  process.exit(0);
 }
 
 /**
@@ -62,26 +47,16 @@ export async function updateIfNeeded(args: string[]): Promise<void> {
   if (await hasAlreadyBeenUpdatedToday()) {
     return;
   }
-  exec(`npm outdated -g ${PACKAGE_NAME}`, (err, stdout, stderr) => {
-    if (err) {
-      console.log(
-        `💀 There was an error executing the "exec" function: ${err.message}`
-      );
-      return;
-    }
-    if (stderr) {
-      console.log(
-        `💀 There was an error checking if the package is outdated: ${stderr}`
-      );
-      return;
-    }
-    const updateIsNeeded = stdout.length !== 0;
+  const { didComplete, output } = await execCmd(
+    `npm outdated -g ${PACKAGE_NAME}`
+  );
+  if (didComplete) {
+    const updateIsNeeded = output.length !== 0;
     if (updateIsNeeded) {
       console.log('🔴 Update is needed. Installing update now...');
       triggerUpdate(args);
     } else {
       console.log('✅ Package is up to date. Continuing...');
     }
-    // Silently continues if no update is needed.
-  });
+  }
 }
