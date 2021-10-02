@@ -5,14 +5,14 @@ import datesAreOnSameDay from './dateFunctions';
 import Log from './logger';
 
 async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
-  const lastCheckDate = await Store.getLastCheckedDate();
+  const lastCheckDate = await Store.get('lastUpdateCheckDate');
   Log.verbose.info(`lastCheckDate is: ${lastCheckDate}`);
   if (!lastCheckDate) {
     Log.verbose.info("Last check date wasn't there yet, adding that now...");
     await Store.set('lastUpdateCheckDate', new Date().toString());
     return false;
   }
-  if (datesAreOnSameDay(lastCheckDate, new Date())) {
+  if (datesAreOnSameDay(new Date(lastCheckDate), new Date())) {
     await Store.set('lastUpdateCheckDate', new Date().toString());
     return true;
   }

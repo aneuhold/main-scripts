@@ -1,11 +1,13 @@
-import { writeFile, readFile, access } from 'fs/promises';
-import { existsSync, mkdirSync } from 'fs';
+import { writeFile, readFile, access, mkdir } from 'fs/promises';
+import path from 'path';
 import Log from './helperFunctions/logger';
+
+const LOCALDATA_PATH = path.join(__dirname, '..', '..', 'localData');
 
 /**
  * The database store path. This is relative to the root of the project
  */
-const DB_PATH = `./localData/storeDb.json`;
+const DB_PATH = path.join(LOCALDATA_PATH, 'storeDb.json');
 
 export type StoreDb = {
   lastUpdateCheckDate?: string;
@@ -22,10 +24,9 @@ class Store {
 
   private static async writeDb(updatedDb: StoreDb) {
     Log.verbose.info('Attempting to write to the store db file...');
-    const result = await writeFile(DB_PATH, JSON.stringify(updatedDb), {
+    await writeFile(DB_PATH, JSON.stringify(updatedDb), {
       flag: 'w+',
     });
-    Log.verbose.info(`Wrote to the db file with result of: ${result}`);
   }
 
   private static async checkDb() {
@@ -43,10 +44,15 @@ class Store {
     } catch {
       // DB doesn't exist, so write the file first.
       Log.verbose.info('Creating the database...');
-      if (!existsSync('./localData')) {
-        mkdirSync('./localData');
+      try {
+        await access(LOCALDATA_PATH);
+        Log.verbose.success(`${LOCALDATA_PATH} exists.`);
+      } catch {
+        Log.verbose.failure(`${LOCALDATA_PATH} doesn't exist. Creating now...`);
+        await mkdir(LOCALDATA_PATH);
       }
       await writeFile(DB_PATH, '{}', { flag: 'w+' });
+      Log.verbose.success(`Created ${DB_PATH}`);
       return {};
     }
   }
@@ -71,14 +77,6 @@ class Store {
   ): Promise<StoreDb[T] | null> {
     await Store.checkDb();
     return Store.db[key];
-  }
-
-  static async getLastCheckedDate(): Promise<Date> {
-    await Store.checkDb();
-    if (Store.db.lastUpdateCheckDate) {
-      return new Date(Store.db.lastUpdateCheckDate);
-    }
-    throw new Error(`Store.db.lastUpdateCheckData did not have a value`);
   }
 }
 
