@@ -1,5 +1,5 @@
-import { writeFile, readFile, access } from "fs/promises";
-import { existsSync, fstat, mkdirSync } from "fs";
+import { writeFile, readFile, access } from 'fs/promises';
+import { existsSync, mkdirSync } from 'fs';
 
 /**
  * The database store path. This is relative to the root of the project
@@ -20,7 +20,7 @@ class Store {
   private static db: StoreDb;
 
   private static async writeDb(updatedDb: StoreDb) {
-    await writeFile(DB_PATH, JSON.stringify(updatedDb), { flag: "w+" });
+    await writeFile(DB_PATH, JSON.stringify(updatedDb), { flag: 'w+' });
   }
 
   private static async checkDb() {
@@ -34,14 +34,14 @@ class Store {
       console.log(`Checking to see if ${DB_PATH} exists`);
       await access(DB_PATH);
       console.log(`${DB_PATH} exists...`);
-      return JSON.parse(await readFile(DB_PATH, "utf-8"));
+      return JSON.parse(await readFile(DB_PATH, 'utf-8'));
     } catch {
       // DB doesn't exist, so write the file first.
-      console.log("Creating the database...");
-      if (!existsSync("./localData")) {
-        mkdirSync("./localData");
+      console.log('Creating the database...');
+      if (!existsSync('./localData')) {
+        mkdirSync('./localData');
       }
-      await writeFile(DB_PATH, "{}", { flag: "w+" });
+      await writeFile(DB_PATH, '{}', { flag: 'w+' });
       return {};
     }
   }
