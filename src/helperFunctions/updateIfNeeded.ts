@@ -2,19 +2,31 @@ import execCmd from './cmd';
 import { name as PACKAGE_NAME } from '../../package.json';
 import Store from '../Store';
 import datesAreOnSameDay from './dateFunctions';
-import { logFailure, logSuccess } from './logger';
+import { logFailure, logInfo, logSuccess } from './logger';
 
 async function hasAlreadyBeenUpdatedToday(
   verboseLoggingEnabled?: boolean
 ): Promise<boolean> {
   const lastCheckDate = await Store.getLastCheckedDate(verboseLoggingEnabled);
+  if (verboseLoggingEnabled) {
+    logInfo(`lastCheckDate is: ${lastCheckDate}`);
+  }
+  logInfo('did this get logged?');
   if (!lastCheckDate) {
+    if (verboseLoggingEnabled) {
+      logInfo("Last check date wasn't there yet, adding that now...");
+    }
     await Store.set('lastUpdateCheckDate', new Date().toString());
     return false;
   }
   if (datesAreOnSameDay(lastCheckDate, new Date())) {
+    await Store.set('lastUpdateCheckDate', new Date().toString());
     return true;
   }
+  if (verboseLoggingEnabled) {
+    logInfo('Last check date was before today...');
+  }
+  await Store.set('lastUpdateCheckDate', new Date().toString());
   return false;
 }
 
@@ -51,6 +63,9 @@ export async function updateIfNeeded(
 ): Promise<void> {
   // Check if the check has already happened today
   if (await hasAlreadyBeenUpdatedToday(verboseLoggingEnabled)) {
+    if (verboseLoggingEnabled) {
+      logInfo('Package update has already been checked today. Continuing...');
+    }
     return;
   }
   const { didComplete, output } = await execCmd(

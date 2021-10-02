@@ -1,5 +1,6 @@
 import { writeFile, readFile, access } from 'fs/promises';
 import { existsSync, mkdirSync } from 'fs';
+import { logInfo } from './helperFunctions/logger';
 
 /**
  * The database store path. This is relative to the root of the project
@@ -19,8 +20,19 @@ class Store {
    */
   private static db: StoreDb;
 
-  private static async writeDb(updatedDb: StoreDb) {
-    await writeFile(DB_PATH, JSON.stringify(updatedDb), { flag: 'w+' });
+  private static async writeDb(
+    updatedDb: StoreDb,
+    verboseLoggingEnabled?: boolean
+  ) {
+    if (verboseLoggingEnabled) {
+      logInfo('Attempting to write to the store db file...');
+    }
+    const result = await writeFile(DB_PATH, JSON.stringify(updatedDb), {
+      flag: 'w+',
+    });
+    if (verboseLoggingEnabled) {
+      logInfo(`Wrote to the db file with result of: ${result}`);
+    }
   }
 
   private static async checkDb(verboseLoggingEnabled?: boolean) {
