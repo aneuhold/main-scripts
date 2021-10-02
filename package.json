@@ -6,7 +6,8 @@
   "scripts": {
     "pushpub": "npm run build && npm version patch && git push && npm publish --access public",
     "refresh": "npm run build && npm uninstall -g @aneuhold/main-scripts && npm i -g",
-    "build": "tsc"
+    "build": "tsc",
+    "reset:global": "npm uninstall -g @aneuhold/main-scripts && npm i -g @aneuhold/main-scripts"
   },
   "type": "commonjs",
   "repository": {

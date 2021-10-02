@@ -13,7 +13,12 @@ install them automatically if needed.
 - `tb test` Just emits a test echo to see if the package is working.
 - `tb update` Will force update this package.
 
-### Testing New Commands
+### 🏞 Flow for Writing New Commands
+
+1. Write the new command in the TypeScript files
+1. Test the command by running `yarn refresh`. Keep running this whenever you want to test the command again.
+1. When ready to deploy an update to the package, use `npm run pushpub`.
+1. When done making changes to the package, use `yarn reset:global` to set the package to the npm registry version instead of having it linked locally.
 
 To test new commands, you can write the command, then use the `npm run refresh` command if you want to try it globally. This will install the commands globally and uninstall any previous version if it was there. After this is done, it will have a link to the directory with this package for running commands. So you need to run `yarn build` for it to update the commands becuase it runs out of the `lib` directory when node gets a hold of it. 
 
@@ -34,16 +39,17 @@ To test new commands, you can write the command, then use the `npm run refresh` 
 
 - `npm run pushpub` will build then do a `git push` then increment the patch number by one then publish the package to npm. It seems that this needs to be done with npm so that it uses the right credentials.
 - `npm run refresh` can be used for testing new commands. It will uninstall any previous global version of this package and then install the local version.
+- `yarn reset:global` will uninstall the global package and reinstall it from the npm registry instead of locally.
 - `yarn add <package-name>` Use yarn to add packages preferably.
 
-## Build Process
+## Build Process Description
 
 This consists of the following steps:
 
 - Delete the `./lib` folder
 - Generate the files with TypeScript into the `./lib` folder, including `package.json` because it uses that in some parts of the code. 
 
-## Publish Process
+## Publish Process Description
 
 - Run the [build process](#build-process)
 - Packs the files only including the the `./lib` folder and the [default things included](https://docs.npmjs.com/cli/v7/using-npm/developers). This does mean that the `package.json` is going to be in the package twice. But that is okay because the `package.json` that is in the `lib` folder will only be used to reference values. It isn't used for commands or locations of any anything. 
