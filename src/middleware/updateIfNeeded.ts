@@ -9,6 +9,9 @@ import { updateIfNeeded } from '../helperFunctions/updateIfNeeded';
  * @param argv
  */
 const updateIfNeededMiddleware: MiddlewareFunction<unknown> = (argv) => {
+  if (argv.verbose) {
+    console.log('ℹ️  Verbose logging enabled...');
+  }
   (async () => {
     await updateIfNeeded(argv._ as string[]);
   })();

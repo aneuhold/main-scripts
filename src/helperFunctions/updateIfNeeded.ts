@@ -2,6 +2,7 @@ import execCmd from './cmd';
 import { name as PACKAGE_NAME } from '../../package.json';
 import Store from '../Store';
 import datesAreOnSameDay from './dateFunctions';
+import { logFailure, logSuccess } from './logger';
 
 async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
   const lastCheckDate = await Store.getLastCheckedDate();
@@ -53,10 +54,10 @@ export async function updateIfNeeded(args: string[]): Promise<void> {
   if (didComplete) {
     const updateIsNeeded = output.length !== 0;
     if (updateIsNeeded) {
-      console.log('🔴 Update is needed. Installing update now...');
+      logFailure('Update is needed. Installing update now...');
       triggerUpdate(args);
     } else {
-      console.log('✅ Package is up to date. Continuing...');
+      logSuccess(`Package is up to date. Continuing...`);
     }
   }
 }
