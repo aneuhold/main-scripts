@@ -7,6 +7,7 @@ import {
   checkVerboseLoggingMiddleware,
 } from './middleware/basicMiddleware';
 import fpull from './commands/fpull';
+import setup from './commands/setup';
 
 /**
  * Sets up all of the top-level commands and their options. This is the entry
@@ -34,6 +35,14 @@ yargs(hideBin(process.argv))
     {},
     () => {
       fpull();
+    }
+  )
+  .command(
+    'setup',
+    'Sets up the dev environemnt based on the name of the current directory',
+    {},
+    () => {
+      setup();
     }
   )
   .option('verbose', {
