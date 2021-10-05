@@ -18,29 +18,30 @@ const exec = util.promisify(normalExec);
  * Errors while executing the command are printed to the console.
  *
  * @param cmd the command to run
- * @param verboseLoggingEnabled if set to true, will log the output from the command.
- * Either way, if there is an error, it will still output the error.
+ * @param logError if set to false, it will not output a log if an error
+ * occurs in `stderr` when executing the function. This can be useful if
+ * a command regularly outputs an error even when it succeeds.
  *
  * @returns an object that holds the output and the true if the command comlpleted
  * successfully or false if it did not
  */
 export default async function execCmd(
   cmd: string,
-  verboseLoggingEnabled?: boolean
+  logError = false
 ): Promise<{ didComplete: boolean; output: string }> {
   try {
     const { stdout, stderr } = await exec(cmd);
     if (stderr) {
-      Log.error(`There was an error executing ${cmd}. Details are printed below:
-      ${stderr}`);
+      if (logError) {
+        Log.error(`There was an error executing ${cmd}. Details are printed below:
+        ${stderr}`);
+      }
       return {
         didComplete: false,
         output: stderr,
       };
     }
-    if (verboseLoggingEnabled) {
-      console.log(stdout);
-    }
+    Log.verbose.info(stdout);
     return {
       didComplete: true,
       output: stdout,
