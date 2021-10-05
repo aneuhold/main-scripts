@@ -33,7 +33,10 @@
     "no-empty-function": "off",
     "@typescript-eslint/no-empty-function": [
       "off"
-    ]
+    ],
+    // Base rule needs to be disabled as it can report incorrect errors
+    "no-shadow": "off",
+    "@typescript-eslint/no-shadow": ["error"]
   },
   "settings": {
     "import/resolver": {
