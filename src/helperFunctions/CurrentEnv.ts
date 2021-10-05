@@ -1,3 +1,4 @@
+import { readdir } from 'fs/promises';
 import path from 'path';
 import execCmd from './cmd';
 import Log from './logger';
@@ -72,6 +73,13 @@ export default class CurrentEnv {
       // Mighbt want to use process.env.SHELL for Linux environments
     }
     return ShellType.Unknown;
+  }
+
+  /**
+   * Gets all file names in the current directory.
+   */
+  public static async fileNamesInDir(): Promise<string[]> {
+    return readdir(path.resolve('.'));
   }
 
   /**

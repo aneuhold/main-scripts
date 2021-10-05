@@ -8,6 +8,7 @@ import {
 } from './middleware/basicMiddleware';
 import fpull from './commands/fpull';
 import setup from './commands/setup';
+import open from './commands/open';
 
 /**
  * Sets up all of the top-level commands and their options. This is the entry
@@ -43,6 +44,14 @@ yargs(hideBin(process.argv))
     {},
     () => {
       setup();
+    }
+  )
+  .command(
+    'open',
+    'Opens up the relevant project in the correct editor according to the current directory',
+    {},
+    () => {
+      open();
     }
   )
   .option('verbose', {

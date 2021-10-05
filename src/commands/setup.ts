@@ -2,13 +2,11 @@ import path from 'path';
 import execCmd from '../helperFunctions/cmd';
 import CurrentEnv, { TerminalType } from '../helperFunctions/CurrentEnv';
 import Log from '../helperFunctions/logger';
-
-export const REPOS = {
-  piSpa: 'pi-spa',
-};
+import projects, { FolderName } from '../projects';
 
 async function setupPiSpa() {
-  Log.info(`Setting up ${REPOS.piSpa}...`);
+  const project = projects['pi-spa'];
+  Log.info(`Setting up ${project.folderName}...`);
   const currentPath = path.resolve('.');
 
   if (CurrentEnv.terminal() !== TerminalType.WindowsTerminal) {
@@ -42,7 +40,7 @@ async function setupPiSpa() {
 export default async function setup(): Promise<void> {
   const currentFolderName = CurrentEnv.folderName();
   switch (currentFolderName) {
-    case REPOS.piSpa:
+    case FolderName.piSpa:
       await setupPiSpa();
       break;
     default:
