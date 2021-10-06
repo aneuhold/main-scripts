@@ -3,6 +3,7 @@ import { name as PACKAGE_NAME } from '../../package.json';
 import Store from '../Store';
 import datesAreOnSameDay from './dateFunctions';
 import Log from './logger';
+import CurrentEnv, { OperatingSystemType } from './CurrentEnv';
 
 async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
   const lastCheckDate = await Store.get('lastUpdateCheckDate');
@@ -32,8 +33,20 @@ function convertArgsToString(args: string[]): string {
  * Triggers an update of this package.
  */
 export async function triggerUpdate(args: string[]): Promise<void> {
-  console.log('Executing forced update...');
-  await execCmd(`~/startup.sh update mainscripts ${convertArgsToString(args)}`);
+  let cmd = '';
+  if (CurrentEnv.os() === OperatingSystemType.Windows) {
+    // & says to powershell that you actually want to run the script in the
+    // quatoes afterwards
+    cmd = `& "$Home\\startup.ps1" update mainscripts ${convertArgsToString(
+      args
+    )}`;
+  } else {
+    cmd = `~/startup.sh update mainscripts ${convertArgsToString(args)}`;
+  }
+  Log.info(`Executing the following command: "${cmd}"`);
+  const { output } = await execCmd(cmd);
+  Log.info(output);
+
   // Kill this process once the command is executed to update
   process.exit(0);
 }
