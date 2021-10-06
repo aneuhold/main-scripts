@@ -26,6 +26,9 @@ async function setupPiSpa() {
   // The order of the commands matters when executing windows terminal.
   // It might be nice to setup a class that does this for you.
 
+  // If the commands are opening in a separte window, that is probably because
+  // the current window is not `0` for some reason. Although it should be.
+
   // Setup second terminal for client
   await execCmd(
     `Start-Process wt -ArgumentList "--window", "0", "split-pane", "--horizontal", "-d", '"${currentPath}"', "pwsh.exe", "-NoExit", "-Command", "& {yarn client}"`
