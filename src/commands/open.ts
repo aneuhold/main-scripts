@@ -27,11 +27,13 @@ export default async function open(): Promise<void> {
   }
   if (filesWithSlnExtension.length > 0) {
     Log.success(`Opening ${filesWithSlnExtension[0]} in Visual Studio...`);
-    await execCmd(`devenv ${filesWithSlnExtension[0]}`);
+    // Not awaiting because it just hangs after opening.
+    execCmd(`devenv ${filesWithSlnExtension[0]}`);
     return;
   }
 
   // All else fails, open VS Code 😁
   Log.success(`Opening current directory in VS Code...`);
-  await execCmd(`code .`);
+  // Not awaiting because it just hangs after opening.
+  execCmd(`code .`);
 }

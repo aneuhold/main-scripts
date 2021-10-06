@@ -3,7 +3,6 @@ command line / terminal things. */
 
 import { exec as normalExec, ExecOptions, spawn } from 'child_process';
 import util from 'util';
-import { checkVerboseLoggingMiddleware } from '../middleware/basicMiddleware';
 import CurrentEnv, { OperatingSystemType } from './CurrentEnv';
 import Log from './logger';
 
