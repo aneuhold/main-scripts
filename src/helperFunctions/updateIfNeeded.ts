@@ -36,10 +36,10 @@ export async function triggerUpdate(args: string[]): Promise<void> {
   let cmd = '';
   if (CurrentEnv.os() === OperatingSystemType.Windows) {
     // & says to powershell that you actually want to run the script in the
-    // quatoes afterwards
-    cmd = `& "$Home\\startup.ps1" update mainscripts ${convertArgsToString(
-      args
-    )}`;
+    // quotes afterwards
+    // Also just running the startup script for now because of some infinite
+    // loop issues with specifying arguments
+    cmd = `& "$Home\\startup.ps1"`;
   } else {
     cmd = `~/startup.sh update mainscripts ${convertArgsToString(args)}`;
   }
