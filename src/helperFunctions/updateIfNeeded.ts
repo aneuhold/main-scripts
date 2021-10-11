@@ -75,9 +75,11 @@ export async function updateIfNeeded(args: string[]): Promise<void> {
   if (didComplete) {
     const updateIsNeeded = output.length !== 0;
     if (updateIsNeeded) {
+      Log.verbose.info(`Output of outdated command is: ${output}`);
       Log.failure('Update is needed. Installing update now...');
       triggerUpdate(args);
+    } else {
+      Log.verbose.success(`Package is up to date. Continuing...`);
     }
-    Log.verbose.success(`Package is up to date. Continuing...`);
   }
 }
