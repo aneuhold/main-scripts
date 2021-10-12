@@ -1,5 +1,6 @@
 import { readdir } from 'fs/promises';
 import path from 'path';
+import projects, { FolderName, Project } from '../projects';
 import execCmd from './cmd';
 import Log from './logger';
 
@@ -30,6 +31,10 @@ export enum TerminalType {
   Unknown,
 }
 
+/**
+ * Provides information relevant to the current environment this script is
+ * running in.
+ */
 export default class CurrentEnv {
   /**
    * Returns the type of terminal the current environment is using.
@@ -93,6 +98,23 @@ export default class CurrentEnv {
       return OperatingSystemType.MacOSX;
     }
     return OperatingSystemType.Unknown;
+  }
+
+  /**
+   * Gets the current project that the environment is in. This is based on the
+   * folder name.
+   *
+   * If undefined is returned, you can get the folder name with {@link folderName}
+   *
+   * @returns the Project if it matches one of the folder names defined
+   * in the projects file or undefined if nothing matches.
+   */
+  public static project(): Project | undefined {
+    const currentFolderName = CurrentEnv.folderName();
+    if (currentFolderName in FolderName) {
+      return projects[currentFolderName as FolderName];
+    }
+    return undefined;
   }
 
   public static folderName(): string {

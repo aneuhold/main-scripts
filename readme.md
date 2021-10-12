@@ -28,6 +28,7 @@ To test new commands, you can write the command, then use the `npm run refresh` 
 
 Add it so that the Azure CLI is installed by default
 
+- `tb refresh` Should refresh everything back to the main branch and run any cleanup as well. This might do different things based on the project, and could have a "yes"/"no" prompt to the list of instructions
 - `tb update allthethings` Updates everything it can find globally, but not locally? Might need a better name.
 - `tb scaffold node` Scaffolds a node project. Ideas on steps are below:
   - Intialize git and ask for a repo link and all that (setup a dedicated step / js file for this because it will be re-used)
