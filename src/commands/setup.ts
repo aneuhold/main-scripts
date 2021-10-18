@@ -3,6 +3,7 @@ import Log from '../helperFunctions/logger';
 
 export default async function setup(): Promise<void> {
   const project = CurrentEnv.project();
+  Log.verbose.info(`Project found for setup was ${project}`);
   if (project?.setup) {
     await project.setup();
   } else {

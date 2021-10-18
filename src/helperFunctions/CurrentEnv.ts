@@ -111,10 +111,7 @@ export default class CurrentEnv {
    */
   public static project(): Project | undefined {
     const currentFolderName = CurrentEnv.folderName();
-    if (currentFolderName in FolderName) {
-      return projects[currentFolderName as FolderName];
-    }
-    return undefined;
+    return projects[currentFolderName as FolderName];
   }
 
   public static folderName(): string {
