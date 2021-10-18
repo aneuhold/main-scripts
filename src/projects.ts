@@ -11,11 +11,13 @@ export type Project = {
   folderName: string;
   solutionFilePath?: string;
   setup?: () => Promise<void>;
+  refresh?: () => Promise<void>;
 };
 
 export enum FolderName {
   piSpa = 'pi-spa',
   piDiagnoseApiService = 'pi-diagnoseapiservice',
+  piCommonApiService = 'pi-commonapiservice',
 }
 
 /**
@@ -66,6 +68,26 @@ const projects: { [folderName in FolderName]: Project } = {
   'pi-diagnoseapiservice': {
     folderName: FolderName.piSpa,
     solutionFilePath: 'PI.DiagnoseApiService.sln',
+    refresh: async () => {
+      // Delete the global nuget package for pi-corelib
+      // Checkout the main branch of DiagnoseApiService
+      //
+      // Run refresh for pi-corelib
+      // -- Pulls in main branch
+      // -- Cleans pi-corelib
+      // -- Builds pi-corelib
+      //
+      // Run a clean in the pi-diagnoseapiservice folder
+      // Build pi-diagnoseapiservice
+      //
+    },
+  },
+  'pi-commonapiservice': {
+    folderName: FolderName.piCommonApiService,
+    solutionFilePath: path.join(
+      'PI.Core.CommonAPIService',
+      'PI.Core.CommonAPIService.sln'
+    ),
   },
 };
 

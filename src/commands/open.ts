@@ -9,7 +9,10 @@ export default async function open(): Promise<void> {
 
   // If there is already a solution file that should be chosen
   if (projects[currentFolderName]?.solutionFilePath) {
-    await execCmd(`devenv "${projects[currentFolderName].solutionFilePath}"`);
+    Log.success(
+      `Opening ${projects[currentFolderName].solutionFilePath} in Visual Studio...`
+    );
+    execCmd(`devenv "${projects[currentFolderName].solutionFilePath}"`);
     return;
   }
 
