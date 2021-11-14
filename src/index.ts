@@ -67,9 +67,29 @@ yargs(hideBin(process.argv))
       startup();
     }
   )
-  .command('scaffold', 'Scaffolds a project', {}, (argv) => {
-    scaffold(argv._ as string[]);
-  })
+  .command(
+    'scaffold [projectType] [projectName]',
+    'Scaffolds a project',
+    (yargsInstance) => {
+      return yargsInstance
+        .positional('projectType', {
+          describe:
+            'The type of project to scaffold. To see options, run this' +
+            ' command without arguments.',
+        })
+        .positional('projectName', {
+          describe:
+            'The name of the project to start. This will be the root' +
+            ' folder name.',
+        });
+    },
+    (argv) => {
+      scaffold(
+        argv.projectType as undefined | string,
+        argv.projectName as undefined | string
+      );
+    }
+  )
   .option('verbose', {
     alias: 'v',
     type: 'boolean',
