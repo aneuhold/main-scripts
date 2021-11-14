@@ -6,7 +6,7 @@
   "scripts": {
     "pushpub": "npm run build && npm version patch && git push && npm publish --access public",
     "refresh": "npm run build && npm uninstall -g @aneuhold/main-scripts && npm i -g",
-    "build": "tsc",
+    "build": "tsc && shx cp -r src/templates/template-folders lib/src/templates",
     "reset:global": "npm uninstall -g @aneuhold/main-scripts && npm i -g @aneuhold/main-scripts"
   },
   "type": "commonjs",
@@ -45,6 +45,7 @@
     "eslint-plugin-prettier": "^4.0.0",
     "prettier": "^2.4.1",
     "rimraf": "^3.0.2",
+    "shx": "^0.3.3",
     "ts-node": "^10.2.1",
     "typescript": "^4.4.3"
   }

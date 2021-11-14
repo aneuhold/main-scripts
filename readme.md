@@ -53,6 +53,7 @@ This consists of the following steps:
 
 - Delete the `./lib` folder
 - Generate the files with TypeScript into the `./lib` folder, including `package.json` because it uses that in some parts of the code. 
+- Copy over the templates from the templates folder and overwrite because TypeScript does not copy over anything that isn't `.ts`.
 
 ## Publish Process Description
 
