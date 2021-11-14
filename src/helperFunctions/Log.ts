@@ -24,9 +24,14 @@ class Log {
   /**
    * Logs info to the console. Prepends `ℹ️` to each message.
    */
-  info(msg: string): void {
+  info(msg: string, skipNewline?: boolean): void {
     if (this.shouldLog()) {
-      console.log(`ℹ️  ${msg}`);
+      const printMessage = `ℹ️  ${msg}`;
+      if (skipNewline) {
+        process.stdout.write(printMessage);
+      } else {
+        console.log(printMessage);
+      }
     }
   }
 
@@ -35,8 +40,8 @@ class Log {
    *
    * @see Log.prototype.info
    */
-  static info(msg: string): void {
-    new Log().info(msg);
+  static info(msg: string, skipNewline?: boolean): void {
+    new Log().info(msg, skipNewline);
   }
 
   /**

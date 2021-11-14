@@ -4,7 +4,7 @@ command line / terminal things. */
 import { exec as normalExec, ExecOptions, spawn } from 'child_process';
 import util from 'util';
 import CurrentEnv, { OperatingSystemType } from './CurrentEnv';
-import Log from './logger';
+import Log from './Log';
 
 /**
  * The promisified version of the {@link normalExec} function.
@@ -17,6 +17,9 @@ export const variousCommands = {
 };
 
 type ExecCmdReturnType = { didComplete: boolean; output: string };
+export type ExecCmdCommandArgument =
+  | string
+  | { command: string; args?: string[] };
 
 async function helperExec(
   cmd: string,
@@ -60,8 +63,8 @@ async function helperExec(
  */
 async function helperSpawn(
   cmd: string,
-  args: string[],
-  execOptions: ExecOptions
+  args?: string[],
+  execOptions?: ExecOptions
 ): Promise<ExecCmdReturnType> {
   return new Promise((resolve) => {
     let output = '';
@@ -77,13 +80,11 @@ async function helperSpawn(
     });
     spawnedCmd.stdout.on('data', (data) => {
       output += data;
-      // Trim so that the new lines don't go through
-      Log.info(data.trim());
+      Log.info(data, true);
     });
     spawnedCmd.stderr.on('data', (data) => {
       output += data;
-      // Trim so that the new lines don't go through
-      Log.info(data.trim());
+      Log.info(data, true);
     });
     spawnedCmd.on('close', (exitCode) => {
       Log.info(`Command "${cmd}" exited with code ${exitCode}`);
@@ -124,10 +125,13 @@ async function helperSpawn(
  * successfully or false if it did not
  */
 export default async function execCmd(
-  cmd: string | { command: string; args: string[] },
-  logError = false
+  cmd: ExecCmdCommandArgument,
+  logError = false,
+  cwd?: string
 ): Promise<ExecCmdReturnType> {
-  const execOptions: ExecOptions = {};
+  const execOptions: ExecOptions = {
+    cwd,
+  };
 
   // Use powershell core if it is windows
   if (CurrentEnv.os() === OperatingSystemType.Windows) {

@@ -9,6 +9,8 @@ import {
 import fpull from './commands/fpull';
 import setup from './commands/setup';
 import open from './commands/open';
+import startup from './commands/startup';
+import execCmd from './helperFunctions/cmd';
 
 /**
  * Sets up all of the top-level commands and their options. This is the entry
@@ -24,6 +26,8 @@ yargs(hideBin(process.argv))
     {},
     (argv) => {
       console.info(`You entered the following args: ${JSON.stringify(argv._)}`);
+      console.log(process.env);
+      execCmd({ command: 'ls' });
     }
   )
   .command('update', 'Forces an update for this package', {}, () => {
@@ -52,6 +56,14 @@ yargs(hideBin(process.argv))
     {},
     () => {
       open();
+    }
+  )
+  .command(
+    'startup',
+    'Runs the startup script for the current system with no arguments',
+    {},
+    () => {
+      startup();
     }
   )
   .option('verbose', {

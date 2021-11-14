@@ -1,5 +1,5 @@
 import execCmd from '../helperFunctions/cmd';
-import Log from '../helperFunctions/logger';
+import Log from '../helperFunctions/Log';
 
 export default async function fpull(): Promise<void> {
   const { output: output1 } = await execCmd(`git fetch -a`, false);

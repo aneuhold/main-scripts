@@ -1,6 +1,6 @@
 import execCmd from '../helperFunctions/cmd';
 import CurrentEnv from '../helperFunctions/CurrentEnv';
-import Log from '../helperFunctions/logger';
+import Log from '../helperFunctions/Log';
 import getFileNameExtension from '../helperFunctions/stringFunctions';
 import projects, { FolderName } from '../projects';
 

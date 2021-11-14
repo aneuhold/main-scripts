@@ -2,8 +2,8 @@ import execCmd from './cmd';
 import { name as PACKAGE_NAME } from '../../package.json';
 import Store from '../Store';
 import datesAreOnSameDay from './dateFunctions';
-import Log from './logger';
-import CurrentEnv, { OperatingSystemType } from './CurrentEnv';
+import Log from './Log';
+import CurrentEnv from './CurrentEnv';
 
 /**
  * Checks if this package has already been updated today and stores the last
@@ -35,22 +35,7 @@ async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
  * Triggers an update of this package.
  */
 export async function triggerUpdate(): Promise<void> {
-  let cmd = '';
-  if (CurrentEnv.os() === OperatingSystemType.Windows) {
-    // & says to powershell that you actually want to run the script in the
-    // quotes afterwards
-    // Also just running the startup script for now because of some infinite
-    // loop issues with specifying arguments
-    cmd = `& "$Home\\startup.ps1"`;
-  } else {
-    cmd = `~/startup.sh update mainscripts`;
-  }
-  Log.info(`Executing the following command: "${cmd}"`);
-  const { output } = await execCmd(cmd);
-  Log.info(output);
-
-  // Kill this process once the command is executed to update
-  process.exit(0);
+  CurrentEnv.runStartupScript(['update', 'mainscripts']);
 }
 
 /**

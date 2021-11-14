@@ -1,5 +1,5 @@
 import CurrentEnv from '../helperFunctions/CurrentEnv';
-import Log from '../helperFunctions/logger';
+import Log from '../helperFunctions/Log';
 
 export default async function setup(): Promise<void> {
   const project = CurrentEnv.project();

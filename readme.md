@@ -14,6 +14,7 @@ install them automatically if needed.
 - `tb update` Will force update this package.
 - `tb fpull` Will run `git fetch -a` then `git pull` in the current working directory.
 - `tb setup` Will setup the development environment according to the current working directory name. If settings have not been determined yet for the directory name, shell, or terminal, then it will inform you and won't do anything else. 
+- `tb startup` Will run the startup script for the current system with no arguments
 
 ### 🏞 Flow for Writing New Commands
 

@@ -1,7 +1,7 @@
 import path from 'path';
 import execCmd from './helperFunctions/cmd';
 import CurrentEnv, { TerminalType } from './helperFunctions/CurrentEnv';
-import Log from './helperFunctions/logger';
+import Log from './helperFunctions/Log';
 
 /**
  * Represents a project, which is typically a repo but is defined primarily

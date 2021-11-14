@@ -1,8 +1,8 @@
 import { readdir } from 'fs/promises';
 import path from 'path';
 import projects, { FolderName, Project } from '../projects';
-import execCmd from './cmd';
-import Log from './logger';
+import execCmd, { ExecCmdCommandArgument } from './cmd';
+import Log from './Log';
 
 /**
  * The type of shell that the current environment is running.
@@ -85,6 +85,47 @@ export default class CurrentEnv {
    */
   public static async fileNamesInDir(): Promise<string[]> {
     return readdir(path.resolve('.'));
+  }
+
+  /**
+   * Runs the startup script for the current system. This command exits the
+   * package.
+   *
+   * The startup scripts are defined in the
+   * [dotfiles repo](https://github.com/aneuhold/dotfiles).
+   *
+   * @param args are the arguements that should be provided to the startup
+   * script as a string[]. This can be empty.
+   */
+  public static async runStartupScript(args?: string[]): Promise<void> {
+    let cmd: ExecCmdCommandArgument = '';
+    if (CurrentEnv.os() === OperatingSystemType.Windows) {
+      // & says to powershell that you actually want to run the script in the
+      // quotes afterwards
+      // Also just running the startup script for now because of some infinite
+      // loop issues with specifying arguments
+      cmd = `& "$Home\\startup.ps1"`;
+    } else {
+      cmd = { command: 'zsh' };
+      const tmpArgs: string[] = ['startup.sh'];
+
+      // Add additional arguments
+      if (args) {
+        args.forEach((arg) => {
+          tmpArgs.push(arg);
+        });
+      }
+      cmd.args = tmpArgs;
+      await execCmd(cmd, true, process.env.HOME);
+      return;
+    }
+
+    Log.info(`Executing the following command: "${cmd}"`);
+    const { output } = await execCmd(cmd);
+    Log.info(output);
+
+    // Kill this process once the command is executed
+    process.exit(0);
   }
 
   /**
