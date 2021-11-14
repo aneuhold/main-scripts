@@ -11,6 +11,7 @@ import setup from './commands/setup';
 import open from './commands/open';
 import startup from './commands/startup';
 import execCmd from './helperFunctions/cmd';
+import scaffold from './commands/scaffold';
 
 /**
  * Sets up all of the top-level commands and their options. This is the entry
@@ -66,6 +67,9 @@ yargs(hideBin(process.argv))
       startup();
     }
   )
+  .command('scaffold', 'Scaffolds a project', {}, (argv) => {
+    scaffold(argv._ as string[]);
+  })
   .option('verbose', {
     alias: 'v',
     type: 'boolean',

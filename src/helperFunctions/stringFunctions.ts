@@ -10,17 +10,3 @@ export default function getFileNameExtension(
 ): string | undefined {
   return fileName.split('.').pop();
 }
-
-/**
- * Converts the given arguments to a string array with only the arguments
- * passed to this package.
- *
- * @param args
- * @returns
- */
-export function convertArgsToStringArr(args: string[]): string {
-  // Remove first two because those are not the actual args
-  const argsThatMatter = args.splice(0, 2);
-  // Join on a space
-  return argsThatMatter.join(' ');
-}
