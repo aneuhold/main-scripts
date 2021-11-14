@@ -31,13 +31,9 @@
     "lib/**/*"
   ],
   "dependencies": {
-    "leveldown": "^6.1.0",
-    "levelup": "^5.0.1",
     "yargs": "^17.2.1"
   },
   "devDependencies": {
-    "@types/leveldown": "^4.0.3",
-    "@types/levelup": "^4.3.3",
     "@types/node": "^16.10.2",
     "@types/yargs": "^17.0.3",
     "@typescript-eslint/eslint-plugin": "^4.32.0",

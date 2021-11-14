@@ -1,6 +1,12 @@
+import path from 'path';
 import Log from '../helperFunctions/Log';
 import getUserInput from '../helperFunctions/input';
 import templates, { ProjectType } from '../templates/Templates';
+
+/**
+ * The path to the templates folder relative to this file.
+ */
+const pathToTemplates = path.join(__dirname, '..', 'templates');
 
 /**
  * Scaffolds out a project given the project type and project name as a sub
@@ -15,7 +21,7 @@ export default async function scaffold(
 ): Promise<void> {
   if (!projectType) {
     Log.error('No project type was given. See below for possible options:');
-    console.table(templates);
+    console.table(templates, ['name', 'description']);
     process.exit();
   }
   if (!templates[projectType as ProjectType]) {
@@ -23,7 +29,7 @@ export default async function scaffold(
       `No project type found with name: ${projectType}. Please ` +
         `either add one to the "templates" folder or use one of the ones below:`
     );
-    console.table(templates);
+    console.table(templates, ['name', 'description']);
     process.exit();
   }
   Log.info(`The desired project type is: ${projectType}`);
@@ -38,5 +44,12 @@ export default async function scaffold(
     chosenProjectName = projectName;
   }
   Log.info(`The desired project name is: ${chosenProjectName}`);
+
+  const template = templates[projectType as ProjectType];
+  // Get the path to the template folder
+
+  const pathToTemplate = path.join(pathToTemplates, template.folderName);
+
+  Log.verbose.info(`The path to the template is ${pathToTemplate}`);
   process.exit();
 }

@@ -12,6 +12,7 @@ export type ProjectType = keyof typeof projectTypes;
 export type TemplateInfo = {
   name: string;
   description: string;
+  folderName: string;
 };
 
 export type Templates = {
@@ -25,6 +26,7 @@ const templates: Templates = {
   node: {
     name: 'node',
     description: 'Can be used to build a node-library or command line app.',
+    folderName: 'node-project',
   },
 };
 
