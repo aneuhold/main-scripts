@@ -20,8 +20,8 @@ const checkVerboseLoggingMiddleware: MiddlewareFunction<unknown> = (argv) => {
  *
  * @param argv
  */
-const updateIfNeededMiddleware: MiddlewareFunction<unknown> = async (argv) => {
-  await updateIfNeeded(argv._ as string[]);
+const updateIfNeededMiddleware: MiddlewareFunction<unknown> = async () => {
+  await updateIfNeeded();
 };
 
 export { checkVerboseLoggingMiddleware, updateIfNeededMiddleware };

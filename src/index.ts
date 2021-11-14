@@ -26,9 +26,9 @@ yargs(hideBin(process.argv))
       console.info(`You entered the following args: ${JSON.stringify(argv._)}`);
     }
   )
-  .command('update', 'Forces an update for this package', {}, (argv) => {
+  .command('update', 'Forces an update for this package', {}, () => {
     console.log('Forcing update...');
-    triggerUpdate(argv._ as string[]);
+    triggerUpdate();
   })
   .command(
     'fpull',
