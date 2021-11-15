@@ -9,4 +9,5 @@ export default async function fpull(): Promise<void> {
   Log.info(output1);
   const { output: output2 } = await execCmd(`git pull`);
   Log.info(output2);
+  process.exit();
 }
