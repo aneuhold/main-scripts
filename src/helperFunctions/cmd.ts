@@ -5,6 +5,7 @@ import { exec as normalExec, ExecOptions, spawn } from 'child_process';
 import util from 'util';
 import CurrentEnv, { OperatingSystemType } from './CurrentEnv';
 import Log from './Log';
+import sleep from './sleep';
 
 /**
  * The promisified version of the {@link normalExec} function.
@@ -148,4 +149,25 @@ export default async function execCmd(
     'Command type provided to "execCmd" was an object, so executing "spawn" promise...'
   );
   return helperSpawn(cmd.command, cmd.args, execOptions);
+}
+
+/**
+ * Executes the given command but fulfills the
+ * promise when either the command completes, or the given number of ms have
+ * passed. Whichever comes first.
+ *
+ * @param command the command to execute
+ * @param ms the number of milliseconds to wait. This is 5 seconds by default.
+ */
+export async function execCmdWithTimeout(
+  command: string,
+  ms = 5000
+): Promise<ExecCmdReturnType> {
+  const sleepPromise: Promise<ExecCmdReturnType> = sleep(ms).then(() => {
+    return {
+      didComplete: false,
+      output: `Command ended after ${ms} ms.`,
+    };
+  });
+  return Promise.any([sleepPromise, execCmd(command)]);
 }

@@ -1,4 +1,4 @@
-import execCmd from '../helperFunctions/cmd';
+import execCmd, { execCmdWithTimeout } from '../helperFunctions/cmd';
 import CurrentEnv from '../helperFunctions/CurrentEnv';
 import Log from '../helperFunctions/Log';
 import getFileNameExtension from '../helperFunctions/stringFunctions';
@@ -12,7 +12,10 @@ export default async function open(): Promise<void> {
     Log.success(
       `Opening ${projects[currentFolderName].solutionFilePath} in Visual Studio...`
     );
-    await execCmd(`devenv "${projects[currentFolderName].solutionFilePath}"`);
+    await execCmdWithTimeout(
+      `devenv "${projects[currentFolderName].solutionFilePath}"`,
+      4000
+    );
     return;
   }
 
@@ -30,7 +33,7 @@ export default async function open(): Promise<void> {
   }
   if (filesWithSlnExtension.length > 0) {
     Log.success(`Opening ${filesWithSlnExtension[0]} in Visual Studio...`);
-    await execCmd(`devenv ${filesWithSlnExtension[0]}`);
+    await execCmdWithTimeout(`devenv ${filesWithSlnExtension[0]}`, 4000);
     return;
   }
 
