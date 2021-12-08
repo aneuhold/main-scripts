@@ -55,8 +55,9 @@ yargs(hideBin(process.argv))
     'open',
     'Opens up the relevant project in the correct editor according to the current directory',
     {},
-    () => {
-      open();
+    async () => {
+      await open();
+      process.exit();
     }
   )
   .command(
