@@ -28,18 +28,22 @@ To test new commands, you can write the command, then use the `npm run refresh` 
 
 ### 🚧 Commands to be Built
 
-Add it so that the Azure CLI is installed by default
-
 - `tb refresh` Should refresh everything back to the main branch and run any cleanup as well. This might do different things based on the project, and could have a "yes"/"no" prompt to the list of instructions
 - `tb scaffold node` Scaffolds a node project. Ideas on steps are below:
   - Intialize git and ask for a repo link and all that (setup a dedicated step / js file for this because it will be re-used)
   - Initialize npm (package.json)
+    - Add the name from the name given
+    - Add the scripts with the name given
+    - 
   - Create README.md
   - Setup ESLINT with JSON config then update the config with specific values if needed
   - Add Typescript and the tsconfig.json file
   - Add prettier and the .prettierrc.json file
   - Update the tsconfig.json to match what is in this project at the moment probably.
   - Setup the build command in the package.json
+  - Ideas on implementation
+    - There needs to be a way to create the package.json, perhaps it needs to be built in memory first then written? Not sure. Maybe use npm init first and then grab that file? Looks like npm init might not work because it is interactive.
+
 
 ## `package.json` Commands
 

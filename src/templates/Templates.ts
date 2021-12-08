@@ -4,7 +4,7 @@
  * This is the single source of truth for the project types.
  */
 const projectTypes = {
-  node: 'node',
+  'node-cli': 'node-cli',
 };
 
 export type ProjectType = keyof typeof projectTypes;
@@ -23,10 +23,10 @@ export type Templates = {
  * Information on the different templates that are available.
  */
 const templates: Templates = {
-  node: {
-    name: 'node',
-    description: 'Can be used to build a node-library or command line app.',
-    folderName: 'node-project',
+  'node-cli': {
+    name: 'node-cli',
+    description: 'Can be used to build a node CLI.',
+    folderName: 'node-cli-project',
   },
 };
 
