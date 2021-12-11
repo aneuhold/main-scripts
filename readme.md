@@ -29,6 +29,7 @@ To test new commands, you can write the command, then use the `npm run refresh` 
 ### 🚧 Commands to be Built
 
 - `tb refresh` Should refresh everything back to the main branch and run any cleanup as well. This might do different things based on the project, and could have a "yes"/"no" prompt to the list of instructions
+- `tb build` to possibly build the project in the current folder depending on the things that are present there. 
 - `tb scaffold node` Scaffolds a node project. Ideas on steps are below:
   - Intialize git and ask for a repo link and all that (setup a dedicated step / js file for this because it will be re-used)
   - Initialize npm (package.json)

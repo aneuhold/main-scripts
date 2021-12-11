@@ -124,8 +124,7 @@ export default class CurrentEnv {
     const { output } = await execCmd(cmd);
     Log.info(output);
 
-    // Kill this process once the command is executed
-    process.exit(0);
+    process.exit();
   }
 
   /**

@@ -14,6 +14,18 @@ import execCmd from './helperFunctions/cmd';
 import scaffold from './commands/scaffold';
 
 /**
+ * Wraps a command (ones that are called from yargs) with some default
+ * functionality. This should be used to call every command that is provided
+ * by the CLI.
+ *
+ * @param commandFunction the command function to call
+ */
+async function commandWrapper(commandFunction: () => Promise<void>) {
+  await commandFunction();
+  process.exit();
+}
+
+/**
  * Sets up all of the top-level commands and their options. This is the entry
  * point for the WHOLE SHE-BANG.
  */
@@ -26,9 +38,13 @@ yargs(hideBin(process.argv))
     'Echos your arguments to make sure the library is working',
     {},
     (argv) => {
-      console.info(`You entered the following args: ${JSON.stringify(argv._)}`);
-      console.log(process.env);
-      execCmd({ command: 'ls' });
+      commandWrapper(async () => {
+        console.info(
+          `You entered the following args: ${JSON.stringify(argv._)}`
+        );
+        console.log(process.env);
+        await execCmd({ command: 'ls' });
+      });
     }
   )
   .command('update', 'Forces an update for this package', {}, () => {
@@ -40,7 +56,7 @@ yargs(hideBin(process.argv))
     'Runs git fetch -a and then git pull in the current directory',
     {},
     () => {
-      fpull();
+      commandWrapper(fpull);
     }
   )
   .command(
@@ -48,16 +64,15 @@ yargs(hideBin(process.argv))
     'Sets up the dev environemnt based on the name of the current directory',
     {},
     () => {
-      setup();
+      commandWrapper(setup);
     }
   )
   .command(
     'open',
     'Opens up the relevant project in the correct editor according to the current directory',
     {},
-    async () => {
-      await open();
-      process.exit();
+    () => {
+      commandWrapper(open);
     }
   )
   .command(
@@ -65,7 +80,7 @@ yargs(hideBin(process.argv))
     'Runs the startup script for the current system with no arguments',
     {},
     () => {
-      startup();
+      commandWrapper(startup);
     }
   )
   .command(
@@ -85,9 +100,11 @@ yargs(hideBin(process.argv))
         });
     },
     (argv) => {
-      scaffold(
-        argv.projectType as undefined | string,
-        argv.projectName as undefined | string
+      commandWrapper(() =>
+        scaffold(
+          argv.projectType as undefined | string,
+          argv.projectName as undefined | string
+        )
       );
     }
   )
