@@ -39,5 +39,5 @@ export default async function open(): Promise<void> {
 
   // All else fails, open VS Code 😁
   Log.success(`Opening current directory in VS Code...`);
-  await execCmd(`code .`);
+  await execCmdWithTimeout(`code .`, 4000);
 }
