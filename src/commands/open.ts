@@ -1,4 +1,4 @@
-import execCmd, { execCmdWithTimeout } from '../helperFunctions/cmd';
+import { execCmdWithTimeout } from '../helperFunctions/cmd';
 import CurrentEnv from '../helperFunctions/CurrentEnv';
 import Log from '../helperFunctions/Log';
 import getFileNameExtension from '../helperFunctions/stringFunctions';
