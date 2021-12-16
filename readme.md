@@ -30,6 +30,9 @@ To test new commands, you can write the command, then use the `npm run refresh` 
 
 - `tb refresh` Should refresh everything back to the main branch and run any cleanup as well. This might do different things based on the project, and could have a "yes"/"no" prompt to the list of instructions
 - `tb build` to possibly build the project in the current folder depending on the things that are present there.
+- `tb startup`
+  - Make it so that running startup on Windows will add some extra things
+    - Check that VS 2022 is installed and the environment vairiables are set for the path perhaps?
 - `tb open nuget` to open nuget packages on the local system so that they can be deleted and things
 - `tb scaffold node` Scaffolds a node project. Ideas on steps are below:
   - Intialize git and ask for a repo link and all that (setup a dedicated step / js file for this because it will be re-used)
