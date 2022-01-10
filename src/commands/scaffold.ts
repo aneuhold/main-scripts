@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import Log from '../helperFunctions/Log';
+import Log from '../utils/Log';
 import getUserInput from '../helperFunctions/input';
 import templates, { ProjectType } from '../templates/Templates';
 

@@ -1,5 +1,5 @@
 import { MiddlewareFunction } from 'yargs';
-import Log from '../helperFunctions/Log';
+import Log from '../utils/Log';
 import { updateIfNeeded } from '../helperFunctions/updateIfNeeded';
 
 /**

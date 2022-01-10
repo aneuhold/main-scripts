@@ -1,0 +1,1 @@
+The `utils` folder is meant for classes that act as utilities to the various commands.

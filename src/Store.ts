@@ -1,6 +1,6 @@
 import { writeFile, readFile, access, mkdir } from 'fs/promises';
 import path from 'path';
-import Log from './helperFunctions/Log';
+import Log from './utils/Log';
 
 const LOCALDATA_PATH = path.join(__dirname, '..', '..', 'localData');
 

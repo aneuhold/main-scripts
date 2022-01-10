@@ -1,6 +1,6 @@
 import { execCmdWithTimeout } from '../helperFunctions/cmd';
-import CurrentEnv from '../helperFunctions/CurrentEnv';
-import Log from '../helperFunctions/Log';
+import CurrentEnv from '../utils/CurrentEnv';
+import Log from '../utils/Log';
 import getFileNameExtension from '../helperFunctions/stringFunctions';
 import projects, { FolderName } from '../projects';
 

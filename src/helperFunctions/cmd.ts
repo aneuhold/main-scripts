@@ -3,8 +3,8 @@ command line / terminal things. */
 
 import { exec as normalExec, ExecOptions, spawn } from 'child_process';
 import util from 'util';
-import CurrentEnv, { OperatingSystemType } from './CurrentEnv';
-import Log from './Log';
+import CurrentEnv, { OperatingSystemType } from '../utils/CurrentEnv';
+import Log from '../utils/Log';
 import sleep from './sleep';
 
 /**

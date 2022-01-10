@@ -2,8 +2,8 @@ import execCmd from './cmd';
 import { name as PACKAGE_NAME } from '../../package.json';
 import Store from '../Store';
 import datesAreOnSameDay from './dateFunctions';
-import Log from './Log';
-import CurrentEnv from './CurrentEnv';
+import Log from '../utils/Log';
+import CurrentEnv from '../utils/CurrentEnv';
 
 /**
  * Checks if this package has already been updated today and stores the last

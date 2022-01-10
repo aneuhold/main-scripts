@@ -1,7 +1,7 @@
 import { readdir } from 'fs/promises';
 import path from 'path';
 import projects, { FolderName, Project } from '../projects';
-import execCmd, { ExecCmdCommandArgument } from './cmd';
+import execCmd, { ExecCmdCommandArgument } from '../helperFunctions/cmd';
 import Log from './Log';
 
 /**
