@@ -2,7 +2,12 @@ import { writeFile, readFile, access, mkdir } from 'fs/promises';
 import path from 'path';
 import Log from './Log';
 
-const LOCALDATA_PATH = path.join(__dirname, '..', '..', 'localData');
+/**
+ * The path to the localData folder. This should be targeted to one level out
+ * of the root directory that way it isn't stored in the `lib` folder when
+ * compiled.
+ */
+const LOCALDATA_PATH = path.join(__dirname, '..', '..', '..', 'localData');
 
 /**
  * The database store path. This is relative to the root of the project
