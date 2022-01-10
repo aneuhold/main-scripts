@@ -1,6 +1,6 @@
 import execCmd from './cmd';
 import { name as PACKAGE_NAME } from '../../package.json';
-import Store from '../Store';
+import Store from '../utils/Store';
 import datesAreOnSameDay from './dateFunctions';
 import Log from '../utils/Log';
 import CurrentEnv from '../utils/CurrentEnv';
