@@ -3,15 +3,23 @@ import CurrentEnv from '../utils/CurrentEnv';
 import Log from '../utils/Log';
 import getFileNameExtension from '../helperFunctions/stringFunctions';
 import projects, { FolderName } from '../projects';
-import applications from '../helperFunctions/applications/applications';
+import applications, {
+  AppName,
+} from '../helperFunctions/applications/applications';
 
+/**
+ * Starts the process of opening a specific application.
+ *
+ * @param appName the name of the app to open. This doesn't have to be
+ * a valid one. This function will check.
+ */
 function openApplication(appName: string) {
   const appIsSetup = Object.prototype.hasOwnProperty.call(
     applications,
     appName
   );
   if (appIsSetup) {
-    Log.info(`The requested application name is ${appName}`);
+    applications[appName as AppName].defaultCall();
   } else {
     Log.error(
       `The app with the name "${appName}" is not one of the programmed ` +
@@ -23,6 +31,12 @@ function openApplication(appName: string) {
   }
 }
 
+/**
+ * The main entry-point for the `open` command.
+ *
+ * @param appName
+ * @returns
+ */
 export default async function open(appName?: string): Promise<void> {
   if (appName) {
     openApplication(appName);

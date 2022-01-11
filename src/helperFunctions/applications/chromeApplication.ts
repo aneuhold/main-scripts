@@ -1,8 +1,11 @@
 import CurrentEnv, { OperatingSystemType } from '../../utils/CurrentEnv';
+import { Application } from './applications';
 
 /**
  * Gets the path to the chrome application for the current system given the
  * operating system type.
+ *
+ * This does not include the quotes.
  */
 function getChromePath(os: OperatingSystemType): string | null {
   switch (os) {
@@ -17,7 +20,10 @@ function getChromePath(os: OperatingSystemType): string | null {
  * Holds the logic pertaining to interacting with the Chrome application,
  * regardless of which platform it is on.
  */
-const chromeApplication = {
+const chromeApplication: Application = {
+  defaultCall() {
+    console.log('Do something');
+  },
   /**
    * Opens the provided list of URLs, optionally setting them to be pinned
    * tabs or not.
