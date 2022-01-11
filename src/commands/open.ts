@@ -3,8 +3,32 @@ import CurrentEnv from '../utils/CurrentEnv';
 import Log from '../utils/Log';
 import getFileNameExtension from '../helperFunctions/stringFunctions';
 import projects, { FolderName } from '../projects';
+import applications from '../helperFunctions/applications/applications';
 
-export default async function open(): Promise<void> {
+function openApplication(appName: string) {
+  const appIsSetup = Object.prototype.hasOwnProperty.call(
+    applications,
+    appName
+  );
+  if (appIsSetup) {
+    Log.info(`The requested application name is ${appName}`);
+  } else {
+    Log.error(
+      `The app with the name "${appName}" is not one of the programmed ` +
+        `apps. See below for a list of programmed apps:`
+    );
+    Object.keys(applications).forEach((name) => {
+      console.log(`- ${name}\n`);
+    });
+  }
+}
+
+export default async function open(appName?: string): Promise<void> {
+  if (appName) {
+    openApplication(appName);
+    return;
+  }
+
   const currentFolderName = CurrentEnv.folderName() as FolderName;
 
   // If there is already a solution file that should be chosen

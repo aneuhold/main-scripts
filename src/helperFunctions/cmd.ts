@@ -102,7 +102,7 @@ async function helperSpawn(
  * process to execute the command and returns a promise once it is completely
  * finished.
  *
- * The shell environment chosen is determiend by the `CurrentEnv` class.
+ * The shell environment chosen is determined by the `CurrentEnv` class.
  *
  * @param cmd the command to run as either one large string or an object.
  *
@@ -135,7 +135,7 @@ export default async function execCmd(
   };
 
   // Use powershell core if it is windows
-  if (CurrentEnv.os() === OperatingSystemType.Windows) {
+  if (CurrentEnv.os === OperatingSystemType.Windows) {
     execOptions.shell = 'pwsh';
   }
 

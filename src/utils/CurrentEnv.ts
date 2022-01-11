@@ -56,7 +56,7 @@ export default class CurrentEnv {
    * option.
    */
   public static async shell(): Promise<ShellType> {
-    const currentOs = CurrentEnv.os();
+    const currentOs = CurrentEnv.os;
     if (currentOs === OperatingSystemType.Windows) {
       // Command comes from: https://stackoverflow.com/questions/34471956/how-to-determine-if-im-in-powershell-or-cmd
       const { output } = await execCmd(
@@ -99,7 +99,7 @@ export default class CurrentEnv {
    */
   public static async runStartupScript(args?: string[]): Promise<void> {
     let cmd: ExecCmdCommandArgument = '';
-    if (CurrentEnv.os() === OperatingSystemType.Windows) {
+    if (CurrentEnv.os === OperatingSystemType.Windows) {
       // & says to powershell that you actually want to run the script in the
       // quotes afterwards
       // Also just running the startup script for now because of some infinite
@@ -129,8 +129,10 @@ export default class CurrentEnv {
 
   /**
    * Determines the type of operating system in the current environment.
+   *
+   * This looks to be O(1) complexity.
    */
-  public static os(): OperatingSystemType {
+  public static get os(): OperatingSystemType {
     if (process.platform === 'win32') {
       return OperatingSystemType.Windows;
     }
