@@ -1,12 +1,14 @@
 import chromeApplication from './chromeApplication';
+import fileSystemApplication from './fileSystemApplication';
 
 export type Application = {
-  defaultCall: () => void;
+  defaultCall: () => Promise<void>;
   [functionName: string]: unknown;
 };
 
 export enum AppName {
   chrome = 'chrome',
+  nugetCache = 'nugetCache',
 }
 
 /**
@@ -15,6 +17,7 @@ export enum AppName {
  */
 const applications: { [appName in AppName]: Application } = {
   chrome: chromeApplication,
+  nugetCache: fileSystemApplication,
 };
 
 export default applications;

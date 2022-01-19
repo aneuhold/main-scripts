@@ -13,13 +13,13 @@ import applications, {
  * @param appName the name of the app to open. This doesn't have to be
  * a valid one. This function will check.
  */
-function openApplication(appName: string) {
+async function openApplication(appName: string) {
   const appIsSetup = Object.prototype.hasOwnProperty.call(
     applications,
     appName
   );
   if (appIsSetup) {
-    applications[appName as AppName].defaultCall();
+    await applications[appName as AppName].defaultCall();
   } else {
     Log.error(
       `The app with the name "${appName}" is not one of the programmed ` +
@@ -39,7 +39,7 @@ function openApplication(appName: string) {
  */
 export default async function open(appName?: string): Promise<void> {
   if (appName) {
-    openApplication(appName);
+    await openApplication(appName);
     return;
   }
 

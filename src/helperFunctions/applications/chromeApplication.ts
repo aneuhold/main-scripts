@@ -21,7 +21,7 @@ function getChromePath(os: OperatingSystemType): string | null {
  * regardless of which platform it is on.
  */
 const chromeApplication: Application = {
-  defaultCall() {
+  async defaultCall() {
     console.log('Do something');
   },
   /**
