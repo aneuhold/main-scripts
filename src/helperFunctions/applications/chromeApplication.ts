@@ -1,19 +1,34 @@
 import CurrentEnv, { OperatingSystemType } from '../../utils/CurrentEnv';
+import execCmd from '../cmd';
 import { Application } from './applications';
 
 /**
  * Gets the path to the chrome application for the current system given the
  * operating system type.
  *
- * This does not include the quotes.
+ * This does include the quotes
  */
 function getChromePath(os: OperatingSystemType): string | null {
   switch (os) {
     case OperatingSystemType.MacOSX:
-      return `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`;
+      return `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`;
+    case OperatingSystemType.Windows:
+      return `& "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"`;
     default:
       return null;
   }
+}
+
+/**
+ * Opens and sets pinned tabs in chrome. Still trying to figure out
+ * how to get this to work.
+ */
+async function openAndSetPinnedTabs() {
+  await execCmd(
+    `${getChromePath(
+      CurrentEnv.os
+    )} --pinned-tab-count=2 https://google.com https://tonyneuhold.com`
+  );
 }
 
 /**
@@ -22,25 +37,7 @@ function getChromePath(os: OperatingSystemType): string | null {
  */
 const chromeApplication: Application = {
   async defaultCall() {
-    console.log('Do something');
-  },
-  /**
-   * Opens the provided list of URLs, optionally setting them to be pinned
-   * tabs or not.
-   */
-  openAndSetPinnedTabs(
-    tabs: [
-      {
-        url: string;
-        isPinned?: boolean;
-      }
-    ]
-  ): void {
-    // Sort the tabs so the pinned ones go first, this is required by the
-    // chrome things.
-    if (CurrentEnv.os === OperatingSystemType.MacOSX) {
-      console.log(tabs);
-    }
+    openAndSetPinnedTabs();
   },
 };
 

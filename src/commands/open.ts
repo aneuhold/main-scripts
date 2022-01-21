@@ -12,13 +12,18 @@ import applications, {
  *
  * @param appName the name of the app to open. This doesn't have to be
  * a valid one. This function will check.
+ * @param methodName the name of the method to run with that app if it exists
  */
-async function openApplication(appName: string) {
+async function openApplication(appName: string, methodName?: string) {
   const appIsSetup = Object.prototype.hasOwnProperty.call(
     applications,
     appName
   );
   if (appIsSetup) {
+    // Look for a second level operation if one is specified
+    if (methodName) {
+      console.log('Extra methods arent setup yet');
+    }
     await applications[appName as AppName].defaultCall();
   } else {
     Log.error(
@@ -33,13 +38,13 @@ async function openApplication(appName: string) {
 
 /**
  * The main entry-point for the `open` command.
- *
- * @param appName
- * @returns
  */
-export default async function open(appName?: string): Promise<void> {
+export default async function open(
+  appName?: string,
+  methodName?: string
+): Promise<void> {
   if (appName) {
-    await openApplication(appName);
+    await openApplication(appName, methodName);
     return;
   }
 

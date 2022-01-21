@@ -68,17 +68,27 @@ yargs(hideBin(process.argv))
     }
   )
   .command(
-    'open [appName]',
+    'open [appName] [methodName]',
     'Opens up the relevant project in the correct editor according to the current directory,' +
       ' or the provided app with presets.',
     (yargsInstance) => {
-      return yargsInstance.positional('appName', {
-        describe: 'The name of the app to open if wanted',
-        type: 'string',
-      });
+      return yargsInstance
+        .positional('appName', {
+          describe: 'The name of the app to open if wanted',
+          type: 'string',
+        })
+        .positional('methodName', {
+          describe: 'The method to call of the specified application',
+          type: 'string',
+        });
     },
     (argv) => {
-      commandWrapper(() => open(argv.appName as undefined | string));
+      commandWrapper(() =>
+        open(
+          argv.appName as undefined | string,
+          argv.methodName as undefined | string
+        )
+      );
     }
   )
   .command(
