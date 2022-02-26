@@ -113,13 +113,19 @@ yargs(hideBin(process.argv))
           describe:
             'The name of the project to start. This will be the root' +
             ' folder name.',
+        })
+        .option('list', {
+          alias: 'l',
+          type: 'boolean',
+          description: 'List all available project types',
         });
     },
     (argv) => {
       commandWrapper(() =>
         scaffold(
           argv.projectType as undefined | string,
-          argv.projectName as undefined | string
+          argv.projectName as undefined | string,
+          argv.list as undefined | boolean
         )
       );
     }

@@ -63,8 +63,14 @@ function copyTemplateToSubDir(pathToTemplate: string, projectName: string) {
  */
 export default async function scaffold(
   projectType?: string,
-  projectName?: string
+  projectName?: string,
+  shouldListProjectTypes?: boolean
 ): Promise<void> {
+  if (shouldListProjectTypes) {
+    Log.info('The possible project types are: ');
+    console.table(templates, ['name', 'description']);
+    process.exit();
+  }
   if (!projectType) {
     Log.error('No project type was given. See below for possible options:');
     console.table(templates, ['name', 'description']);
