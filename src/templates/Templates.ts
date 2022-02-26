@@ -5,10 +5,17 @@
  */
 const projectTypes = {
   'node-cli': 'node-cli',
+  node: 'node',
 };
 
+/**
+ * A string representing a type of project that can be built from a template.
+ */
 export type ProjectType = keyof typeof projectTypes;
 
+/**
+ * Info on a particular template project.
+ */
 export type TemplateInfo = {
   name: string;
   description: string;
@@ -27,6 +34,11 @@ const templates: Templates = {
     name: 'node-cli',
     description: 'Can be used to build a node CLI.',
     folderName: 'node-cli-project',
+  },
+  node: {
+    name: 'node',
+    description: 'Can be used to start a new simple node project',
+    folderName: 'node-project',
   },
 };
 
