@@ -9,3 +9,7 @@
 - [ ] Update files
   - [ ] Bugs URL in `package.json`
   - [ ] Homepage URL in `package.json`
+
+## Side-note
+
+Nice boilerplate comes from [this repo](https://github.com/jsynowiec/node-typescript-boilerplate).
