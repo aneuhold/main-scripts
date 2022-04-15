@@ -18,6 +18,7 @@ export enum FolderName {
   piSpa = 'pi-spa',
   piDiagnoseApiService = 'pi-diagnoseapiservice',
   piCommonApiService = 'pi-commonapiservice',
+  piDiagnoseSurveyInsights = 'pi-diagnosesurveyinsights',
 }
 
 /**
@@ -87,6 +88,13 @@ const projects: { [folderName in FolderName]: Project } = {
     solutionFilePath: path.join(
       'PI.Core.CommonAPIService',
       'PI.Core.CommonAPIService.sln'
+    ),
+  },
+  'pi-diagnosesurveyinsights': {
+    folderName: FolderName.piDiagnoseSurveyInsights,
+    solutionFilePath: path.join(
+      'PI.DiagnoseSurveyInsights',
+      'PI.DiagnoseSurveyInsights.sln'
     ),
   },
 };
