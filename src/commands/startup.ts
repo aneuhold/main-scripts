@@ -9,13 +9,13 @@ import Log from '../utils/Log';
  * Sets up the Aliases of standard commands that every operating system
  * should have.
  */
-async function setupAliases(): Promise<void> {
+export async function setupAliases(): Promise<void> {
+  const aliasCode = aliases.ctb[CurrentEnv.os];
   if (CurrentEnv.os === OperatingSystemType.Windows) {
     // Write to the windows profile, or find out if it exists.
     const profileDirectory = path.join(os.homedir(), 'Documents', 'PowerShell');
     const fileName = 'Microsoft.PowerShell_profile.ps1';
     const filePath = path.join(profileDirectory, fileName);
-    const aliasCode = aliases.ctb.powershell;
 
     try {
       await access(profileDirectory);
