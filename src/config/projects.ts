@@ -1,7 +1,7 @@
 import path from 'path';
-import execCmd from './helperFunctions/cmd';
-import CurrentEnv, { TerminalType } from './utils/CurrentEnv';
-import Log from './utils/Log';
+import execCmd from '../helperFunctions/cmd';
+import CurrentEnv, { TerminalType } from '../utils/CurrentEnv';
+import Log from '../utils/Log';
 
 /**
  * Represents a project, which is typically a repo but is defined primarily
@@ -19,7 +19,7 @@ export enum FolderName {
   piDiagnoseApiService = 'pi-diagnoseapiservice',
   piCommonApiService = 'pi-commonapiservice',
   piDiagnoseSurveyInsights = 'pi-diagnosesurveyinsights',
-  piBehavioralAssessmentApiService = 'pi-behavioralassessmentapiservice',
+  piBehavioralAssessmentApiService = 'pi-behavioralassessmentapiservice'
 }
 
 /**
@@ -65,7 +65,7 @@ const projects: { [folderName in FolderName]: Project } = {
       await execCmd(
         `Start-Process wt -ArgumentList "--window", "0", "split-pane", "--horizontal", "-d", '"${currentPath}"', "pwsh.exe", "-NoExit", "-Command", "& {yarn server}"`
       );
-    },
+    }
   },
   'pi-diagnoseapiservice': {
     folderName: FolderName.piSpa,
@@ -82,26 +82,26 @@ const projects: { [folderName in FolderName]: Project } = {
       // Run a clean in the pi-diagnoseapiservice folder
       // Build pi-diagnoseapiservice
       //
-    },
+    }
   },
   'pi-commonapiservice': {
     folderName: FolderName.piCommonApiService,
     solutionFilePath: path.join(
       'PI.Core.CommonAPIService',
       'PI.Core.CommonAPIService.sln'
-    ),
+    )
   },
   'pi-diagnosesurveyinsights': {
     folderName: FolderName.piDiagnoseSurveyInsights,
     solutionFilePath: path.join(
       'PI.DiagnoseSurveyInsights',
       'PI.DiagnoseSurveyInsights.sln'
-    ),
+    )
   },
   'pi-behavioralassessmentapiservice': {
     folderName: FolderName.piDiagnoseSurveyInsights,
-    solutionFilePath: 'PI.BehavioralAssessmentAPIService.sln',
-  },
+    solutionFilePath: 'PI.BehavioralAssessmentAPIService.sln'
+  }
 };
 
 export default projects;

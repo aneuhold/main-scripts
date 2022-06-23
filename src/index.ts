@@ -6,7 +6,6 @@ import open from './commands/open';
 import scaffold from './commands/scaffold';
 import setup from './commands/setup';
 import startup from './commands/startup';
-import execCmd from './helperFunctions/cmd';
 import { triggerUpdate } from './helperFunctions/updateIfNeeded';
 import {
   checkVerboseLoggingMiddleware,
@@ -33,20 +32,30 @@ yargs(hideBin(process.argv))
   // If a promise is returned in the middleware, then it will wait until
   // that promise resolves to continue.
   .middleware([checkVerboseLoggingMiddleware, updateIfNeededMiddleware], true)
-  .command('test', 'Echos your arguments to make sure the library is working', {}, (argv) => {
-    commandWrapper(async () => {
-      console.info(`You entered the following args: ${JSON.stringify(argv._)}`);
-      console.log(process.env);
-      await execCmd({ command: 'ls' });
-    });
-  })
+  .command(
+    'test',
+    'Echos your arguments to make sure the library is working',
+    {},
+    (argv) => {
+      commandWrapper(async () => {
+        console.info(
+          `You entered the following args: ${JSON.stringify(argv._)}`
+        );
+      });
+    }
+  )
   .command('update', 'Forces an update for this package', {}, () => {
     console.log('Forcing update...');
     triggerUpdate();
   })
-  .command('fpull', 'Runs git fetch -a and then git pull in the current directory', {}, () => {
-    commandWrapper(fpull);
-  })
+  .command(
+    'fpull',
+    'Runs git fetch -a and then git pull in the current directory',
+    {},
+    () => {
+      commandWrapper(fpull);
+    }
+  )
   .command(
     'setup',
     'Sets up the dev environemnt based on the name of the current directory',
@@ -72,7 +81,10 @@ yargs(hideBin(process.argv))
     },
     (argv) => {
       commandWrapper(() =>
-        open(argv.appName as undefined | string, argv.methodName as undefined | string)
+        open(
+          argv.appName as undefined | string,
+          argv.methodName as undefined | string
+        )
       );
     }
   )
@@ -95,7 +107,8 @@ yargs(hideBin(process.argv))
             ' command without arguments.'
         })
         .positional('projectName', {
-          describe: 'The name of the project to start. This will be the root folder name.'
+          describe:
+            'The name of the project to start. This will be the root folder name.'
         })
         .option('list', {
           alias: 'l',

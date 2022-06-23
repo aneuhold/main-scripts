@@ -1,11 +1,11 @@
+import projects, { FolderName } from '../config/projects';
+import applications, {
+    AppName
+} from '../helperFunctions/applications/applications';
 import { execCmdWithTimeout } from '../helperFunctions/cmd';
+import getFileNameExtension from '../helperFunctions/stringFunctions';
 import CurrentEnv from '../utils/CurrentEnv';
 import Log from '../utils/Log';
-import getFileNameExtension from '../helperFunctions/stringFunctions';
-import projects, { FolderName } from '../projects';
-import applications, {
-  AppName,
-} from '../helperFunctions/applications/applications';
 
 /**
  * Starts the process of opening a specific application.

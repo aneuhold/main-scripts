@@ -1,6 +1,6 @@
 import { readdir } from 'fs/promises';
 import path from 'path';
-import projects, { FolderName, Project } from '../projects';
+import projects, { FolderName, Project } from '../config/projects';
 import execCmd, { ExecCmdCommandArgument } from '../helperFunctions/cmd';
 import Log from './Log';
 
@@ -13,14 +13,14 @@ export enum ShellType {
   Bash,
   Zsh,
   CommandPrompt,
-  Unknown,
+  Unknown
 }
 
 export enum OperatingSystemType {
   Windows,
   MacOSX,
   Linux,
-  Unknown,
+  Unknown
 }
 
 /**
@@ -28,7 +28,7 @@ export enum OperatingSystemType {
  */
 export enum TerminalType {
   WindowsTerminal,
-  Unknown,
+  Unknown
 }
 
 /**

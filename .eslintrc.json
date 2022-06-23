@@ -18,7 +18,8 @@
     "prettier/prettier": [
       "error",
       {
-        "trailingComma": "none"
+        "trailingComma": "none",
+        "endOfLine": "auto"
       }
     ],
     "no-console": "off",
