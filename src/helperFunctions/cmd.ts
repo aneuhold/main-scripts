@@ -14,7 +14,7 @@ const exec = util.promisify(normalExec);
 
 export const variousCommands = {
   pwshExectuablePath:
-    'Get-Command pwsh | Select-Object -ExpandProperty Definition',
+    'Get-Command pwsh | Select-Object -ExpandProperty Definition'
 };
 
 type ExecCmdReturnType = { didComplete: boolean; output: string };
@@ -36,20 +36,20 @@ async function helperExec(
       }
       return {
         didComplete: false,
-        output: stderr,
+        output: stderr
       };
     }
     Log.verbose.info(stdout);
     return {
       didComplete: true,
-      output: stdout,
+      output: stdout
     };
   } catch (err) {
     Log.error(`There was an error executing the "exec" function. Details are printed below:
     ${err}`);
     return {
       didComplete: false,
-      output: err as string,
+      output: err as string
     };
   }
 }
@@ -76,7 +76,7 @@ async function helperSpawn(
       ${err}`);
       resolve({
         didComplete: false,
-        output: err.toString(),
+        output: err.toString()
       });
     });
     spawnedCmd.stdout.on('data', (data) => {
@@ -91,7 +91,7 @@ async function helperSpawn(
       Log.info(`Command "${cmd}" exited with code ${exitCode}`);
       resolve({
         didComplete: true,
-        output,
+        output
       });
     });
   });
@@ -131,7 +131,7 @@ export default async function execCmd(
   cwd?: string
 ): Promise<ExecCmdReturnType> {
   const execOptions: ExecOptions = {
-    cwd,
+    cwd
   };
 
   // Use powershell core if it is windows
@@ -166,7 +166,7 @@ export async function execCmdWithTimeout(
   const sleepPromise: Promise<ExecCmdReturnType> = sleep(ms).then(() => {
     return {
       didComplete: false,
-      output: `Command ended after ${ms} ms.`,
+      output: `Command ended after ${ms} ms.`
     };
   });
   return Promise.any([sleepPromise, execCmd(command)]);

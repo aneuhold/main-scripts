@@ -5,7 +5,7 @@
  */
 const projectTypes = {
   'node-cli': 'node-cli',
-  node: 'node',
+  node: 'node'
 };
 
 /**
@@ -33,13 +33,13 @@ const templates: Templates = {
   'node-cli': {
     name: 'node-cli',
     description: 'Can be used to build a node CLI.',
-    folderName: 'node-cli-project',
+    folderName: 'node-cli-project'
   },
   node: {
     name: 'node',
     description: 'Can be used to start a new simple node project',
-    folderName: 'node-project',
-  },
+    folderName: 'node-project'
+  }
 };
 
 export default templates;

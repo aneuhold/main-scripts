@@ -38,7 +38,7 @@ async function openAndSetPinnedTabs() {
 const chromeApplication: Application = {
   async defaultCall() {
     openAndSetPinnedTabs();
-  },
+  }
 };
 
 export default chromeApplication;

@@ -30,7 +30,7 @@ class Store {
   private static async writeDb(updatedDb: StoreDb) {
     Log.verbose.info('Attempting to write to the store db file...');
     await writeFile(DB_PATH, JSON.stringify(updatedDb), {
-      flag: 'w+',
+      flag: 'w+'
     });
   }
 

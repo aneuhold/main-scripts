@@ -12,8 +12,8 @@ const aliases: { [command: string]: AliasInfo } = {
     [OperatingSystemType.Windows]:
       `Function ctbFunc {ssh aneuhold@137.184.231.32}\n` +
       `Set-Alias -Name ctb -Value ctbFunc`,
-    [OperatingSystemType.MacOSX]: '',
-    [OperatingSystemType.Linux]: '',
+    [OperatingSystemType.MacOSX]: `alias ctb='ssh aneuhold@137.184.231.32'`,
+    [OperatingSystemType.Linux]: `alias ctb='ssh aneuhold@137.184.231.32'`,
     [OperatingSystemType.Unknown]: ''
   }
 };

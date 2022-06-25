@@ -5,12 +5,13 @@ import fpull from './commands/fpull';
 import open from './commands/open';
 import scaffold from './commands/scaffold';
 import setup from './commands/setup';
-import startup from './commands/startup';
+import startup, { setupAliases } from './commands/startup';
 import { triggerUpdate } from './helperFunctions/updateIfNeeded';
 import {
   checkVerboseLoggingMiddleware,
   updateIfNeededMiddleware
 } from './middleware/basicMiddleware';
+import Log from './utils/Log';
 
 /**
  * Wraps a command (ones that are called from yargs) with some default
@@ -38,9 +39,7 @@ yargs(hideBin(process.argv))
     {},
     (argv) => {
       commandWrapper(async () => {
-        console.info(
-          `You entered the following args: ${JSON.stringify(argv._)}`
-        );
+        Log.info(`You entered the following args: ${JSON.stringify(argv._)}`);
       });
     }
   )

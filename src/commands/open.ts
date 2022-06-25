@@ -1,6 +1,6 @@
 import projects, { FolderName } from '../config/projects';
 import applications, {
-    AppName
+  AppName
 } from '../helperFunctions/applications/applications';
 import { execCmdWithTimeout } from '../helperFunctions/cmd';
 import getFileNameExtension from '../helperFunctions/stringFunctions';
