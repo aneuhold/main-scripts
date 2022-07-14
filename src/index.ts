@@ -1,16 +1,5 @@
 #!/usr/bin/env node
-import { hideBin } from 'yargs/helpers';
-import yargs from 'yargs/yargs';
-import fpull from './commands/fpull';
-import open from './commands/open';
-import scaffold from './commands/scaffold';
-import setup from './commands/setup';
-import startup, { setupAliases } from './commands/startup';
-import { triggerUpdate } from './helperFunctions/updateIfNeeded';
-import {
-  checkVerboseLoggingMiddleware,
-  updateIfNeededMiddleware
-} from './middleware/basicMiddleware';
+import { program } from 'commander';
 import Log from './utils/Log';
 
 /**
@@ -25,11 +14,35 @@ async function commandWrapper(commandFunction: () => Promise<void>) {
   process.exit();
 }
 
+program.name('tb');
+
+program
+  .option('-v, --verbose', 'run with verbose logging')
+  .hook('preAction', (thisCommand) => {
+    if (thisCommand.opts().verbose) {
+      Log.verboseLoggingEnabled = true;
+      Log.verbose.info('Verbose logging enabled...');
+    }
+  });
+
+program
+  .command('test')
+  .argument('[args...]')
+  .action(async (args) => {
+    Log.info(`You entered the following args: ${JSON.stringify(args)}`);
+  });
+
+// Run the thang
+(async () => {
+  await program.parseAsync();
+})();
+
+/* 
 /**
  * Sets up all of the top-level commands and their options. This is the entry
  * point for the WHOLE SHE-BANG.
  */
-yargs(hideBin(process.argv))
+/* yargs(hideBin(process.argv))
   // If a promise is returned in the middleware, then it will wait until
   // that promise resolves to continue.
   .middleware([checkVerboseLoggingMiddleware, updateIfNeededMiddleware], true)
@@ -133,3 +146,4 @@ yargs(hideBin(process.argv))
   .help()
   .scriptName('tb')
   .parse();
+ */
