@@ -53,6 +53,7 @@ program
     (argv) => {
       commandWrapper(async () => {
         Log.info(`You entered the following args: ${JSON.stringify(argv._)}`);
+        calculateProbabilities();
       });
     }
   )
