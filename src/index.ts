@@ -9,17 +9,6 @@ import calculateProbabilities from './helperFunctions/calculator';
 import { triggerUpdate } from './helperFunctions/updateIfNeeded';
 import Log from './utils/Log';
 
-/**
- * Wraps a command with an exit statement. This will await the command
- * then close out of the process afterwards.
- *
- * @param commandFunction the command function to call
- */
-async function commandWrapper(commandFunction: () => Promise<void>) {
-  await commandFunction();
-  process.exit();
-}
-
 program.name('tb');
 
 program
@@ -72,9 +61,7 @@ program
   .argument('[appName]', 'The name of the app to open if wanted')
   .argument('[methodName]', 'The method to call of the specified application')
   .action(async (appName, methodName) => {
-    commandWrapper(async () => {
-      await open(appName, methodName);
-    });
+    await open(appName, methodName);
   });
 
 program
@@ -106,4 +93,5 @@ program
 // Run the thang
 (async () => {
   await program.parseAsync();
+  process.exit();
 })();
