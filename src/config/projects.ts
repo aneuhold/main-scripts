@@ -19,7 +19,10 @@ export enum FolderName {
   piDiagnoseApiService = 'pi-diagnoseapiservice',
   piCommonApiService = 'pi-commonapiservice',
   piDiagnoseSurveyInsights = 'pi-diagnosesurveyinsights',
-  piBehavioralAssessmentApiService = 'pi-behavioralassessmentapiservice'
+  piBehavioralAssessmentApiService = 'pi-behavioralassessmentapiservice',
+  piDiagnosePulseReportsFunction = 'pi-diagnose-pulsereportsfunction',
+  piClientHire = 'pi-client-hire',
+  piClientDesign = 'pi-client-design'
 }
 
 /**
@@ -31,58 +34,11 @@ export enum FolderName {
 const projects: { [folderName in FolderName]: Project } = {
   'pi-spa': {
     folderName: FolderName.piSpa,
-    setup: async () => {
-      const project = projects['pi-spa'];
-      Log.info(`Setting up ${project.folderName}...`);
-      const currentPath = path.resolve('.');
-
-      if (CurrentEnv.terminal() !== TerminalType.WindowsTerminal) {
-        Log.failure(
-          `Setup for pi-spa not established for anything but Windows Terminal`
-        );
-        return;
-      }
-
-      // Install pacakges
-      Log.info('Installing yarn packages...');
-      const { output: yarnInstallOutput } = await execCmd('yarn yarn:all');
-      console.log(yarnInstallOutput);
-
-      // See this post for info on how to order these commands:
-      // https://superuser.com/questions/1564090/how-to-pass-commands-into-the-shell-opened-in-new-windows-terminal
-      // The order of the commands matters when executing windows terminal.
-      // It might be nice to setup a class that does this for you.
-
-      // If the commands are opening in a separte window, that is probably because
-      // the current window is not `0` for some reason. Although it should be.
-
-      // Setup second terminal for client
-      await execCmd(
-        `Start-Process wt -ArgumentList "--window", "0", "split-pane", "--horizontal", "-d", '"${currentPath}"', "pwsh.exe", "-NoExit", "-Command", "& {yarn client}"`
-      );
-
-      // Setup third terminal for server
-      await execCmd(
-        `Start-Process wt -ArgumentList "--window", "0", "split-pane", "--horizontal", "-d", '"${currentPath}"', "pwsh.exe", "-NoExit", "-Command", "& {yarn server}"`
-      );
-    }
+    setup: setupPiSubTerminalsFunc(FolderName.piSpa)
   },
   'pi-diagnoseapiservice': {
     folderName: FolderName.piSpa,
-    solutionFilePath: 'PI.DiagnoseApiService.sln',
-    refresh: async () => {
-      // Delete the global nuget package for pi-corelib
-      // Checkout the main branch of DiagnoseApiService
-      //
-      // Run refresh for pi-corelib
-      // -- Pulls in main branch
-      // -- Cleans pi-corelib
-      // -- Builds pi-corelib
-      //
-      // Run a clean in the pi-diagnoseapiservice folder
-      // Build pi-diagnoseapiservice
-      //
-    }
+    solutionFilePath: 'PI.DiagnoseApiService.sln'
   },
   'pi-commonapiservice': {
     folderName: FolderName.piCommonApiService,
@@ -101,7 +57,69 @@ const projects: { [folderName in FolderName]: Project } = {
   'pi-behavioralassessmentapiservice': {
     folderName: FolderName.piDiagnoseSurveyInsights,
     solutionFilePath: 'PI.BehavioralAssessmentAPIService.sln'
+  },
+  'pi-diagnose-pulsereportsfunction': {
+    folderName: FolderName.piDiagnosePulseReportsFunction,
+    solutionFilePath: path.join(
+      'PI.Diagnose.PulseReportsFunction',
+      'PI.Diagnose.PulseReportsFunction.sln'
+    )
+  },
+  'pi-client-hire': {
+    folderName: FolderName.piClientHire,
+    setup: setupPiSubTerminalsFunc(FolderName.piClientHire, 'hire')
+  },
+  'pi-client-design': {
+    folderName: FolderName.piClientDesign,
+    setup: setupPiSubTerminalsFunc(FolderName.piClientDesign, 'design')
   }
 };
+
+/**
+ * Sets up a standardized set of terminals for PI related apps.
+ *
+ * @param folderName the name of the folder this starts in
+ * @param subPath the sub-path of the main folder that the commands should
+ * be ran in
+ */
+function setupPiSubTerminalsFunc(folderName: FolderName, subPath = '') {
+  return async () => {
+    const project = projects[folderName];
+    Log.info(`Setting up ${project.folderName}...`);
+    const currentPath = path.resolve('.', subPath);
+
+    if (CurrentEnv.terminal() !== TerminalType.WindowsTerminal) {
+      Log.failure(
+        `Setup for ${folderName} not established for anything but Windows Terminal`
+      );
+      return;
+    }
+
+    // Install pacakges
+    Log.info('Installing yarn packages...');
+    const { output: yarnInstallOutput } = await execCmd(
+      `cd ${subPath} && yarn yarn:all`
+    );
+    console.log(yarnInstallOutput);
+
+    // See this post for info on how to order these commands:
+    // https://superuser.com/questions/1564090/how-to-pass-commands-into-the-shell-opened-in-new-windows-terminal
+    // The order of the commands matters when executing windows terminal.
+    // It might be nice to setup a class that does this for you.
+
+    // If the commands are opening in a separte window, that is probably because
+    // the current window is not `0` for some reason. Although it should be.
+
+    // Setup second terminal for client
+    await execCmd(
+      `Start-Process wt -ArgumentList "--window", "0", "split-pane", "--horizontal", "-d", '"${currentPath}"', "pwsh.exe", "-NoExit", "-Command", "& {yarn client}"`
+    );
+
+    // Setup third terminal for server
+    await execCmd(
+      `Start-Process wt -ArgumentList "--window", "0", "split-pane", "--horizontal", "-d", '"${currentPath}"', "pwsh.exe", "-NoExit", "-Command", "& {yarn server}"`
+    );
+  };
+}
 
 export default projects;
