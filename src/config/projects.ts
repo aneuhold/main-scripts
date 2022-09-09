@@ -22,7 +22,8 @@ export enum FolderName {
   piBehavioralAssessmentApiService = 'pi-behavioralassessmentapiservice',
   piDiagnosePulseReportsFunction = 'pi-diagnose-pulsereportsfunction',
   piClientHire = 'pi-client-hire',
-  piClientDesign = 'pi-client-design'
+  piClientDesign = 'pi-client-design',
+  piPermissionsLib = 'pi-permissions-lib'
 }
 
 /**
@@ -72,6 +73,10 @@ const projects: { [folderName in FolderName]: Project } = {
   'pi-client-design': {
     folderName: FolderName.piClientDesign,
     setup: setupPiSubTerminalsFunc(FolderName.piClientDesign, 'design')
+  },
+  'pi-permissions-lib': {
+    folderName: FolderName.piPermissionsLib,
+    solutionFilePath: 'PI.PermissionsLib.sln'
   }
 };
 

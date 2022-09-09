@@ -72,3 +72,7 @@ This consists of the following steps:
 ### Windows Permissions Error with NPM
 
 Sometimes it seems that permissions get messed up. The only solution seems to go to the Program Files for `nodejs` and change the permissions for that folder to allow all local users to have full control. Otherwise installing anything with nodejs doesn't seem to work anymore.
+
+### Error About Promises.Any when Running Commands
+
+Node likely needs to be updated. Anything 14.x and earlier doesn't support ES2016 syntax pretty sure.
