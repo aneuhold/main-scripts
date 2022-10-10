@@ -102,9 +102,7 @@ function setupPiSubTerminalsFunc(folderName: FolderName, subPath = '') {
 
     // Install pacakges
     Log.info('Installing yarn packages...');
-    const { output: yarnInstallOutput } = await execCmd(
-      `cd ${subPath} && yarn yarn:all`
-    );
+    const { output: yarnInstallOutput } = await execCmd(`yarn yarn:all`);
     console.log(yarnInstallOutput);
 
     // See this post for info on how to order these commands:
