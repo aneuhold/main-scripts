@@ -23,7 +23,8 @@ export enum FolderName {
   piDiagnosePulseReportsFunction = 'pi-diagnose-pulsereportsfunction',
   piClientHire = 'pi-client-hire',
   piClientDesign = 'pi-client-design',
-  piPermissionsLib = 'pi-permissions-lib'
+  piPermissionsLib = 'pi-permissions-lib',
+  piClientDiagnose = 'pi-client-diagnose'
 }
 
 /**
@@ -35,7 +36,10 @@ export enum FolderName {
 const projects: { [folderName in FolderName]: Project } = {
   'pi-spa': {
     folderName: FolderName.piSpa,
-    setup: setupPiSubTerminalsFunc(FolderName.piSpa)
+    setup: setupPiSubTerminalsFunc(FolderName.piSpa, [
+      'yarn client',
+      'yarn server'
+    ])
   },
   'pi-diagnoseapiservice': {
     folderName: FolderName.piSpa,
@@ -68,15 +72,27 @@ const projects: { [folderName in FolderName]: Project } = {
   },
   'pi-client-hire': {
     folderName: FolderName.piClientHire,
-    setup: setupPiSubTerminalsFunc(FolderName.piClientHire, 'hire')
+    setup: setupPiSubTerminalsFunc(
+      FolderName.piClientHire,
+      ['yarn client', 'yarn server'],
+      'hire'
+    )
   },
   'pi-client-design': {
     folderName: FolderName.piClientDesign,
-    setup: setupPiSubTerminalsFunc(FolderName.piClientDesign, 'design')
+    setup: setupPiSubTerminalsFunc(
+      FolderName.piClientDesign,
+      ['yarn client', 'yarn server'],
+      'design'
+    )
   },
   'pi-permissions-lib': {
     folderName: FolderName.piPermissionsLib,
     solutionFilePath: 'PI.PermissionsLib.sln'
+  },
+  'pi-client-diagnose': {
+    folderName: FolderName.piClientDiagnose,
+    setup: setupPiSubTerminalsFunc(FolderName.piClientDiagnose, ['yarn client'])
   }
 };
 
@@ -84,10 +100,16 @@ const projects: { [folderName in FolderName]: Project } = {
  * Sets up a standardized set of terminals for PI related apps.
  *
  * @param folderName the name of the folder this starts in
+ * @param separateTerminalCommands the array of different commands that should be
+ * ran in their own terminal
  * @param subPath the sub-path of the main folder that the commands should
  * be ran in
  */
-function setupPiSubTerminalsFunc(folderName: FolderName, subPath = '') {
+function setupPiSubTerminalsFunc(
+  folderName: FolderName,
+  separateTerminalCommands: string[],
+  subPath = ''
+) {
   return async () => {
     const project = projects[folderName];
     Log.info(`Setting up ${project.folderName}...`);
@@ -113,14 +135,12 @@ function setupPiSubTerminalsFunc(folderName: FolderName, subPath = '') {
     // If the commands are opening in a separte window, that is probably because
     // the current window is not `0` for some reason. Although it should be.
 
-    // Setup second terminal for client
-    await execCmd(
-      `Start-Process wt -ArgumentList "--window", "0", "split-pane", "--horizontal", "-d", '"${currentPath}"', "pwsh.exe", "-NoExit", "-Command", "& {yarn client}"`
-    );
-
-    // Setup third terminal for server
-    await execCmd(
-      `Start-Process wt -ArgumentList "--window", "0", "split-pane", "--horizontal", "-d", '"${currentPath}"', "pwsh.exe", "-NoExit", "-Command", "& {yarn server}"`
+    await Promise.all(
+      separateTerminalCommands.map(async (command) => {
+        return execCmd(
+          `Start-Process wt -ArgumentList "--window", "0", "split-pane", "--horizontal", "-d", '"${currentPath}"', "pwsh.exe", "-NoExit", "-Command", "& {${command}}"`
+        );
+      })
     );
   };
 }
