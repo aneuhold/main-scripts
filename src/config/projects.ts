@@ -92,7 +92,10 @@ const projects: { [folderName in FolderName]: Project } = {
   },
   'pi-client-diagnose': {
     folderName: FolderName.piClientDiagnose,
-    setup: setupPiSubTerminalsFunc(FolderName.piClientDiagnose, ['yarn client'])
+    setup: setupPiSubTerminalsFunc(FolderName.piClientDiagnose, [
+      'yarn client',
+      'yarn server'
+    ])
   }
 };
 
