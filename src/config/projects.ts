@@ -24,7 +24,8 @@ export enum FolderName {
   piClientHire = 'pi-client-hire',
   piClientDesign = 'pi-client-design',
   piPermissionsLib = 'pi-permissions-lib',
-  piClientDiagnose = 'pi-client-diagnose'
+  piClientDiagnose = 'pi-client-diagnose',
+  piPlatform = 'pi-platform'
 }
 
 /**
@@ -93,6 +94,13 @@ const projects: { [folderName in FolderName]: Project } = {
   'pi-client-diagnose': {
     folderName: FolderName.piClientDiagnose,
     setup: setupPiSubTerminalsFunc(FolderName.piClientDiagnose, [
+      'yarn client',
+      'yarn server'
+    ])
+  },
+  'pi-platform': {
+    folderName: FolderName.piPlatform,
+    setup: setupPiSubTerminalsFunc(FolderName.piPlatform, [
       'yarn client',
       'yarn server'
     ])
