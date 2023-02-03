@@ -25,7 +25,8 @@ export enum FolderName {
   piClientDesign = 'pi-client-design',
   piPermissionsLib = 'pi-permissions-lib',
   piClientDiagnose = 'pi-client-diagnose',
-  piPlatform = 'pi-platform'
+  piPlatform = 'pi-platform',
+  clientCore = 'client-core'
 }
 
 /**
@@ -104,6 +105,15 @@ const projects: { [folderName in FolderName]: Project } = {
       'yarn client',
       'yarn server'
     ])
+  },
+  'client-core': {
+    folderName: FolderName.clientCore,
+    setup: setupPiSubTerminalsFunc(
+      FolderName.clientCore,
+      ['yarn watch', 'yarn unlink:local'],
+      '',
+      'yarn'
+    )
   }
 };
 
@@ -119,7 +129,8 @@ const projects: { [folderName in FolderName]: Project } = {
 function setupPiSubTerminalsFunc(
   folderName: FolderName,
   separateTerminalCommands: string[],
-  subPath = ''
+  subPath = '',
+  installCommand = 'yarn yarn:all'
 ) {
   return async () => {
     const project = projects[folderName];
@@ -135,7 +146,7 @@ function setupPiSubTerminalsFunc(
 
     // Install pacakges
     Log.info('Installing yarn packages...');
-    const { output: yarnInstallOutput } = await execCmd(`yarn yarn:all`);
+    const { output: yarnInstallOutput } = await execCmd(installCommand);
     console.log(yarnInstallOutput);
 
     // See this post for info on how to order these commands:
