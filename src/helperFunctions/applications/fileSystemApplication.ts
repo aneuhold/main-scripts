@@ -5,7 +5,7 @@ import { Application } from './applications';
 async function openWindowsNugetCache() {
   await Promise.all([
     execCmd(`ii $HOME/localNuget`),
-    execCmd(`ii $HOME/.nuget/packages`),
+    execCmd(`ii $HOME/.nuget/packages`)
   ]);
 }
 
@@ -22,7 +22,7 @@ async function openNugetCache() {
 const fileSystemApplication: Application = {
   async defaultCall() {
     await openNugetCache();
-  },
+  }
 };
 
 export default fileSystemApplication;

@@ -12,7 +12,7 @@ export type Application = {
  */
 export enum AppName {
   chrome = 'chrome',
-  nugetCache = 'nugetCache',
+  nugetCache = 'nugetCache'
 }
 
 /**
@@ -21,7 +21,7 @@ export enum AppName {
  */
 const applications: { [appName in AppName]: Application } = {
   chrome: chromeApplication,
-  nugetCache: fileSystemApplication,
+  nugetCache: fileSystemApplication
 };
 
 export default applications;

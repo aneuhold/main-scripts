@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { program } from 'commander';
+import clean from './commands/clean';
 import fpull from './commands/fpull';
 import open from './commands/open';
 import scaffold from './commands/scaffold';
@@ -88,6 +89,18 @@ program
   .option('-l, --list', 'List all available project types')
   .action(async (projectType, projectName, options) => {
     await scaffold(projectType, projectName, options.list);
+  });
+
+program
+  .command('clean')
+  .description('Cleans up the provided target, for example branches')
+  .argument(
+    '[target]',
+    'The target to clean up. To see options, run this' +
+      ' command without arguments.'
+  )
+  .action(async (target) => {
+    await clean(target);
   });
 
 // Run the thang
