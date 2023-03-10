@@ -1,6 +1,6 @@
-import { writeFile, readFile, access, mkdir } from 'fs/promises';
+import { Log } from '@aneuhold/core-ts-lib';
+import { access, mkdir, readFile, writeFile } from 'fs/promises';
 import path from 'path';
-import Log from './Log';
 
 /**
  * The path to the localData folder. This should be targeted to one level out

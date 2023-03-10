@@ -34,7 +34,7 @@
     "lib/**/*"
   ],
   "dependencies": {
-    "@aneuhold/core-ts-lib": "^1.0.3",
+    "@aneuhold/core-ts-lib": "*",
     "commander": "^10.0.0"
   },
   "devDependencies": {

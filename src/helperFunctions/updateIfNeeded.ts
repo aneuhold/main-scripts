@@ -47,8 +47,6 @@ export async function triggerUpdate(): Promise<void> {
  *
  * Because the check for an update process is a bit long-winded, it only does
  * this once a day.
- *
- * @param {string[]} args the arguments provided by the user
  */
 export async function updateIfNeeded(): Promise<void> {
   // Check if the check has already happened today

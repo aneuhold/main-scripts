@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@aneuhold/core-ts-lib@^1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@aneuhold/core-ts-lib/-/core-ts-lib-1.0.3.tgz#435830c3d408919a73f1fdecbb2a4b4f14d24844"
-  integrity sha512-iyOEH7citNmQZrF/sQSoXPpYptY4k7ZR8mxRoDM4/VyF1UAwR3YpYEi3AStBkFt/5BOGwtGDErMgH736auPCcQ==
+"@aneuhold/core-ts-lib@*":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@aneuhold/core-ts-lib/-/core-ts-lib-1.0.4.tgz#3b317ff12de3ac77c48e91db7a3315a31ef981cb"
+  integrity sha512-hzZ8ED5OelUZLf3jiQq7d6iKPeO3PTEjUGa2UwXPEq+dI79OoxLGOaeIEDivqvrDOxNiv/XdCaQCFpivbp9wmg==
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
