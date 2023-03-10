@@ -1,6 +1,9 @@
-import execCmd from '../helperFunctions/cmd';
-import CurrentEnv, { OperatingSystemType } from '../utils/CurrentEnv';
-import Log from '../utils/Log';
+import {
+  CurrentEnv,
+  execCmd,
+  Log,
+  OperatingSystemType
+} from '@aneuhold/core-ts-lib';
 
 /**
  * Different things that can be cleaned.

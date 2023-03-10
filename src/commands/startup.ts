@@ -1,8 +1,11 @@
+import {
+  CurrentEnv,
+  findAndInsertText,
+  OperatingSystemType
+} from '@aneuhold/core-ts-lib';
 import os from 'os';
 import path from 'path';
 import aliases from '../config/aliases';
-import findAndInsertText from '../helperFunctions/fileFunctions';
-import CurrentEnv, { OperatingSystemType } from '../utils/CurrentEnv';
 
 /**
  * Sets up the Aliases of standard commands that every operating system

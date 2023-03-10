@@ -1,7 +1,6 @@
-import path from 'path';
+import { getUserInput, Log } from '@aneuhold/core-ts-lib';
 import fs from 'fs';
-import Log from '../utils/Log';
-import getUserInput from '../helperFunctions/input';
+import path from 'path';
 import templates, { ProjectType } from '../templates/Templates';
 
 /**

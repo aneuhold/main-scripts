@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { Log } from '@aneuhold/core-ts-lib';
 import { program } from 'commander';
 import clean from './commands/clean';
 import fpull from './commands/fpull';
@@ -8,7 +9,6 @@ import setup from './commands/setup';
 import startup from './commands/startup';
 import calculateProbabilities from './helperFunctions/calculator';
 import { triggerUpdate } from './helperFunctions/updateIfNeeded';
-import Log from './utils/Log';
 
 program.name('tb');
 

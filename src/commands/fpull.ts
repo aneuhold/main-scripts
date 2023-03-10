@@ -1,5 +1,4 @@
-import execCmd from '../helperFunctions/cmd';
-import Log from '../utils/Log';
+import { execCmd, Log } from '@aneuhold/core-ts-lib';
 
 export default async function fpull(): Promise<void> {
   const { output: output1 } = await execCmd(`git fetch -a`, false);

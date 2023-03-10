@@ -1,7 +1,5 @@
+import { CurrentEnv, execCmd, Log, TerminalType } from '@aneuhold/core-ts-lib';
 import path from 'path';
-import execCmd from '../helperFunctions/cmd';
-import CurrentEnv, { TerminalType } from '../utils/CurrentEnv';
-import Log from '../utils/Log';
 
 /**
  * Represents a project, which is typically a repo but is defined primarily

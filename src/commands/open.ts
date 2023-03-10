@@ -1,11 +1,12 @@
+import {
+  applications,
+  AppName,
+  CurrentEnv,
+  execCmdWithTimeout,
+  getFileNameExtension,
+  Log
+} from '@aneuhold/core-ts-lib';
 import projects, { FolderName } from '../config/projects';
-import applications, {
-  AppName
-} from '../helperFunctions/applications/applications';
-import { execCmdWithTimeout } from '../helperFunctions/cmd';
-import getFileNameExtension from '../helperFunctions/stringFunctions';
-import CurrentEnv from '../utils/CurrentEnv';
-import Log from '../utils/Log';
 
 /**
  * Starts the process of opening a specific application.
