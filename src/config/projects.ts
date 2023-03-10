@@ -1,4 +1,7 @@
-import { CurrentEnv, execCmd, Log, TerminalType } from '@aneuhold/core-ts-lib';
+import {
+    CLIService, CurrentEnv, Logger,
+    TerminalType
+} from '@aneuhold/core-ts-lib';
 import path from 'path';
 
 /**
@@ -132,19 +135,19 @@ function setupPiSubTerminalsFunc(
 ) {
   return async () => {
     const project = projects[folderName];
-    Log.info(`Setting up ${project.folderName}...`);
+    Logger.info(`Setting up ${project.folderName}...`);
     const currentPath = path.resolve('.', subPath);
 
     if (CurrentEnv.terminal() !== TerminalType.WindowsTerminal) {
-      Log.failure(
+      Logger.failure(
         `Setup for ${folderName} not established for anything but Windows Terminal`
       );
       return;
     }
 
     // Install pacakges
-    Log.info('Installing yarn packages...');
-    const { output: yarnInstallOutput } = await execCmd(installCommand);
+    Logger.info('Installing yarn packages...');
+    const { output: yarnInstallOutput } = await CLIService.execCmd(installCommand);
     console.log(yarnInstallOutput);
 
     // See this post for info on how to order these commands:
@@ -157,7 +160,7 @@ function setupPiSubTerminalsFunc(
 
     await Promise.all(
       separateTerminalCommands.map(async (command) => {
-        return execCmd(
+        return CLIService.execCmd(
           `Start-Process wt -ArgumentList "--window", "0", "split-pane", "--horizontal", "-d", '"${currentPath}"', "pwsh.exe", "-NoExit", "-Command", "& {${command}}"`
         );
       })

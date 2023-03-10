@@ -1,8 +1,8 @@
 import {
+  CLIService,
   CurrentEnv,
   datesAreOnSameDay,
-  execCmd,
-  Log
+  Logger
 } from '@aneuhold/core-ts-lib';
 import { name as PACKAGE_NAME } from '../../package.json';
 import Store from '../utils/Store';
@@ -18,9 +18,9 @@ import Store from '../utils/Store';
  */
 async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
   const lastCheckDate = await Store.get('lastUpdateCheckDate');
-  Log.verbose.info(`lastCheckDate is: ${lastCheckDate}`);
+  Logger.verbose.info(`lastCheckDate is: ${lastCheckDate}`);
   if (!lastCheckDate) {
-    Log.verbose.info("Last check date wasn't there yet, adding that now...");
+    Logger.verbose.info("Last check date wasn't there yet, adding that now...");
     await Store.set('lastUpdateCheckDate', new Date().toString());
     return false;
   }
@@ -28,7 +28,7 @@ async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
     await Store.set('lastUpdateCheckDate', new Date().toString());
     return true;
   }
-  Log.verbose.info('Last check date was before today...');
+  Logger.verbose.info('Last check date was before today...');
   await Store.set('lastUpdateCheckDate', new Date().toString());
   return false;
 }
@@ -37,7 +37,7 @@ async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
  * Triggers an update of this package.
  */
 export async function triggerUpdate(): Promise<void> {
-  CurrentEnv.runStartupScript(['update', 'mainscripts']);
+  CurrentEnv.runStartupScript();
 }
 
 /**
@@ -51,22 +51,22 @@ export async function triggerUpdate(): Promise<void> {
 export async function updateIfNeeded(): Promise<void> {
   // Check if the check has already happened today
   if (await hasAlreadyBeenUpdatedToday()) {
-    Log.verbose.info(
+    Logger.verbose.info(
       'Package update has already been checked today. Continuing...'
     );
     return;
   }
-  const { didComplete, output } = await execCmd(
+  const { didComplete, output } = await CLIService.execCmd(
     `npm outdated -g ${PACKAGE_NAME}`
   );
   if (didComplete) {
     const updateIsNeeded = output.length !== 0;
     if (updateIsNeeded) {
-      Log.verbose.info(`Output of outdated command is: ${output}`);
-      Log.failure('Update is needed. Installing update now...');
+      Logger.verbose.info(`Output of outdated command is: ${output}`);
+      Logger.failure('Update is needed. Installing update now...');
       triggerUpdate();
     } else {
-      Log.verbose.success(`Package is up to date. Continuing...`);
+      Logger.verbose.success(`Package is up to date. Continuing...`);
     }
   }
 }

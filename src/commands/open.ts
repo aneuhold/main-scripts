@@ -1,12 +1,21 @@
 import {
-  applications,
-  AppName,
+  ChromeService,
+  CLIService,
   CurrentEnv,
-  execCmdWithTimeout,
+  FileSystemService,
   getFileNameExtension,
-  Log
+  Logger
 } from '@aneuhold/core-ts-lib';
 import projects, { FolderName } from '../config/projects';
+
+/**
+ * The list of app names that are possible. These can be aliases to specific
+ * operations as well. This is the single source of truth.
+ */
+export enum AppName {
+  chrome = 'chrome',
+  nugetCache = 'nugetCache'
+}
 
 /**
  * Starts the process of opening a specific application.
@@ -16,24 +25,34 @@ import projects, { FolderName } from '../config/projects';
  * @param methodName the name of the method to run with that app if it exists
  */
 async function openApplication(appName: string, methodName?: string) {
-  const appIsSetup = Object.prototype.hasOwnProperty.call(
-    applications,
-    appName
-  );
+  const appIsSetup = Object.prototype.hasOwnProperty.call(AppName, appName);
   if (appIsSetup) {
     // Look for a second level operation if one is specified
     if (methodName) {
       console.log('Extra methods arent setup yet');
     }
-    await applications[appName as AppName].defaultCall();
+    await runApplication(appName as AppName);
   } else {
-    Log.error(
+    Logger.error(
       `The app with the name "${appName}" is not one of the programmed ` +
         `apps. See below for a list of programmed apps:`
     );
-    Object.keys(applications).forEach((name) => {
+    Object.keys(AppName).forEach((name) => {
       console.log(`- ${name}\n`);
     });
+  }
+}
+
+async function runApplication(appName: AppName) {
+  switch (appName) {
+    case AppName.chrome:
+      await ChromeService.openAndSetPinnedTabs();
+      break;
+    case AppName.nugetCache:
+      await FileSystemService.openNugetCache();
+      break;
+    default:
+      break;
   }
 }
 
@@ -53,10 +72,10 @@ export default async function open(
 
   // If there is already a solution file that should be chosen
   if (projects[currentFolderName]?.solutionFilePath) {
-    Log.success(
+    Logger.success(
       `Opening ${projects[currentFolderName].solutionFilePath} in Visual Studio...`
     );
-    await execCmdWithTimeout(
+    await CLIService.execCmdWithTimeout(
       `devenv "${projects[currentFolderName].solutionFilePath}"`,
       4000
     );
@@ -69,19 +88,22 @@ export default async function open(
   );
 
   if (filesWithSlnExtension.length > 1) {
-    Log.failure(
+    Logger.failure(
       `There were more than 1 solution files that were found. The solution files that were found were: `
     );
     console.log(filesWithSlnExtension);
     return;
   }
   if (filesWithSlnExtension.length > 0) {
-    Log.success(`Opening ${filesWithSlnExtension[0]} in Visual Studio...`);
-    await execCmdWithTimeout(`devenv ${filesWithSlnExtension[0]}`, 4000);
+    Logger.success(`Opening ${filesWithSlnExtension[0]} in Visual Studio...`);
+    await CLIService.execCmdWithTimeout(
+      `devenv ${filesWithSlnExtension[0]}`,
+      4000
+    );
     return;
   }
 
   // All else fails, open VS Code 😁
-  Log.success(`Opening current directory in VS Code...`);
-  await execCmdWithTimeout(`code .`, 4000);
+  Logger.success(`Opening current directory in VS Code...`);
+  await CLIService.execCmdWithTimeout(`code .`, 4000);
 }

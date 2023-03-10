@@ -1,6 +1,6 @@
 import {
   CurrentEnv,
-  findAndInsertText,
+  FileSystemService,
   OperatingSystemType
 } from '@aneuhold/core-ts-lib';
 import os from 'os';
@@ -18,10 +18,18 @@ export async function setupAliases(): Promise<void> {
     // Write to the windows profile, or find out if it exists.
     const profileDirectory = path.join(os.homedir(), 'Documents', 'PowerShell');
     const fileName = 'Microsoft.PowerShell_profile.ps1';
-    await findAndInsertText(profileDirectory, fileName, aliasCode);
+    await FileSystemService.findAndInsertText(
+      profileDirectory,
+      fileName,
+      aliasCode
+    );
   } else if (CurrentEnv.os === OperatingSystemType.MacOSX) {
     const fileName = '.zshrc';
-    await findAndInsertText(os.homedir(), fileName, aliasCode);
+    await FileSystemService.findAndInsertText(
+      os.homedir(),
+      fileName,
+      aliasCode
+    );
   }
 }
 

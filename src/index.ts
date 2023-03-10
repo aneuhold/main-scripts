@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Log } from '@aneuhold/core-ts-lib';
+import { Logger } from '@aneuhold/core-ts-lib';
 import { program } from 'commander';
 import clean from './commands/clean';
 import fpull from './commands/fpull';
@@ -16,8 +16,8 @@ program
   .option('-v, --verbose', 'run with verbose logging')
   .hook('preAction', (thisCommand) => {
     if (thisCommand.opts().verbose) {
-      Log.verboseLoggingEnabled = true;
-      Log.verbose.info('Verbose logging enabled...');
+      Logger.verboseLoggingEnabled = true;
+      Logger.verbose.info('Verbose logging enabled...');
     }
   });
 
@@ -26,7 +26,7 @@ program
   .argument('[args...]')
   .description('Runs a test command to make sure the package is working')
   .action(async (args) => {
-    Log.info(`You entered the following args: ${JSON.stringify(args)}`);
+    Logger.info(`You entered the following args: ${JSON.stringify(args)}`);
     calculateProbabilities();
   });
 

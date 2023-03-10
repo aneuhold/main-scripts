@@ -1,4 +1,4 @@
-import { getUserInput, Log } from '@aneuhold/core-ts-lib';
+import { CLIService, Logger } from '@aneuhold/core-ts-lib';
 import fs from 'fs';
 import path from 'path';
 import templates, { ProjectType } from '../templates/Templates';
@@ -49,7 +49,7 @@ function createDirectoryContents(templatePath: string, newProjectPath: string) {
 function copyTemplateToSubDir(pathToTemplate: string, projectName: string) {
   const newProjectPath = path.join(process.cwd(), projectName);
   fs.mkdirSync(newProjectPath);
-  Log.info(`Copying template to ${newProjectPath}`);
+  Logger.info(`Copying template to ${newProjectPath}`);
   createDirectoryContents(pathToTemplate, newProjectPath);
 }
 
@@ -66,47 +66,47 @@ export default async function scaffold(
   shouldListProjectTypes?: boolean
 ): Promise<void> {
   if (shouldListProjectTypes) {
-    Log.info('The possible project types are: ');
+    Logger.info('The possible project types are: ');
     console.table(templates, ['name', 'description']);
     process.exit();
   }
   if (!projectType) {
-    Log.error('No project type was given. See below for possible options:');
+    Logger.error('No project type was given. See below for possible options:');
     console.table(templates, ['name', 'description']);
     process.exit();
   }
   if (!templates[projectType as ProjectType]) {
-    Log.error(
+    Logger.error(
       `No project type found with name: ${projectType}. Please ` +
         `either add one to the "templates" folder or use one of the ones below:`
     );
     console.table(templates, ['name', 'description']);
     process.exit();
   }
-  Log.info(`The desired project type is: ${projectType}`);
+  Logger.info(`The desired project type is: ${projectType}`);
 
   let chosenProjectName: string;
   if (!projectName) {
-    chosenProjectName = await getUserInput(
+    chosenProjectName = await CLIService.getUserInput(
       'What is the name of the project? This will be the name' +
         ' of the root directory of the project as well so leave spaces out: '
     );
   } else {
     chosenProjectName = projectName;
   }
-  Log.info(`The desired project name is: ${chosenProjectName}`);
+  Logger.info(`The desired project name is: ${chosenProjectName}`);
 
   const template = templates[projectType as ProjectType];
   // Get the path to the template folder
 
   const pathToTemplate = path.join(pathToTemplates, template.folderName);
 
-  Log.verbose.info(`The path to the template is ${pathToTemplate}`);
+  Logger.verbose.info(`The path to the template is ${pathToTemplate}`);
 
   copyTemplateToSubDir(pathToTemplate, chosenProjectName);
 
-  Log.success(`Successfully created new project ${chosenProjectName}`);
-  Log.info(`Use "cd ${chosenProjectName}" to move into that directory`);
+  Logger.success(`Successfully created new project ${chosenProjectName}`);
+  Logger.info(`Use "cd ${chosenProjectName}" to move into that directory`);
   process.exit();
 }
 

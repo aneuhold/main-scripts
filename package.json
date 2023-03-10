@@ -10,7 +10,7 @@
     "reset:global": "npm uninstall -g @aneuhold/main-scripts && npm i -g @aneuhold/main-scripts",
     "upgrade:all": "yarn upgrade --latest",
     "link:core": "yarn link @aneuhold/core-ts-lib",
-    "unlink:core": "yarn unlink @aneuhold/core-ts-lib && yarn install --force"
+    "unlink:core": "yarn unlink @aneuhold/core-ts-lib && yarn install --force && yarn upgrade"
   },
   "type": "commonjs",
   "repository": {

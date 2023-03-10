@@ -1,13 +1,13 @@
-import { CurrentEnv, Log } from '@aneuhold/core-ts-lib';
+import { CurrentEnv, Logger } from '@aneuhold/core-ts-lib';
 import projects, { FolderName, Project } from '../config/projects';
 
 export default async function setup(): Promise<void> {
   const project = getProject();
-  Log.verbose.info(`Project found for setup was ${project}`);
+  Logger.verbose.info(`Project found for setup was ${project}`);
   if (project?.setup) {
     await project.setup();
   } else {
-    Log.failure(
+    Logger.failure(
       `There are no settings for the folder with name ${CurrentEnv.folderName()}. Please add them to the main-scripts project.`
     );
   }

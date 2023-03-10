@@ -1,4 +1,4 @@
-import { Log } from '@aneuhold/core-ts-lib';
+import { Logger } from '@aneuhold/core-ts-lib';
 import { access, mkdir, readFile, writeFile } from 'fs/promises';
 import path from 'path';
 
@@ -28,7 +28,7 @@ class Store {
   private static db: StoreDb;
 
   private static async writeDb(updatedDb: StoreDb) {
-    Log.verbose.info('Attempting to write to the store db file...');
+    Logger.verbose.info('Attempting to write to the store db file...');
     await writeFile(DB_PATH, JSON.stringify(updatedDb), {
       flag: 'w+'
     });
@@ -42,22 +42,24 @@ class Store {
 
   private static async getDb(): Promise<StoreDb> {
     try {
-      Log.verbose.info(`Checking to see if ${DB_PATH} exists`);
+      Logger.verbose.info(`Checking to see if ${DB_PATH} exists`);
       await access(DB_PATH);
-      Log.verbose.info(`${DB_PATH} exists...`);
+      Logger.verbose.info(`${DB_PATH} exists...`);
       return JSON.parse(await readFile(DB_PATH, 'utf-8'));
     } catch {
       // DB doesn't exist, so write the file first.
-      Log.verbose.info('Creating the database...');
+      Logger.verbose.info('Creating the database...');
       try {
         await access(LOCALDATA_PATH);
-        Log.verbose.success(`${LOCALDATA_PATH} exists.`);
+        Logger.verbose.success(`${LOCALDATA_PATH} exists.`);
       } catch {
-        Log.verbose.failure(`${LOCALDATA_PATH} doesn't exist. Creating now...`);
+        Logger.verbose.failure(
+          `${LOCALDATA_PATH} doesn't exist. Creating now...`
+        );
         await mkdir(LOCALDATA_PATH);
       }
       await writeFile(DB_PATH, '{}', { flag: 'w+' });
-      Log.verbose.success(`Created ${DB_PATH}`);
+      Logger.verbose.success(`Created ${DB_PATH}`);
       return {};
     }
   }

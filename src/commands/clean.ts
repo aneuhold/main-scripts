@@ -1,7 +1,7 @@
 import {
+  CLIService,
   CurrentEnv,
-  execCmd,
-  Log,
+  Logger,
   OperatingSystemType
 } from '@aneuhold/core-ts-lib';
 
@@ -17,7 +17,7 @@ enum CleanTarget {
  */
 export default async function clean(cleanTarget?: string): Promise<void> {
   if (!cleanTarget) {
-    Log.error(
+    Logger.error(
       `No target was specified. See below for a list of valid targets:`
     );
     logValidCleanTargets();
@@ -31,7 +31,7 @@ export default async function clean(cleanTarget?: string): Promise<void> {
       await cleanBranches();
       break;
     default:
-      Log.error(
+      Logger.error(
         `The target "${target}" is not a valid target. See below ` +
           `for a list of valid targets:`
       );
@@ -44,20 +44,22 @@ export default async function clean(cleanTarget?: string): Promise<void> {
  * Removes all git branches besides the main branch locally.
  */
 async function cleanBranches() {
-  Log.success(`Removing all git branches besides the main branch locally...`);
+  Logger.success(
+    `Removing all git branches besides the main branch locally...`
+  );
   if (CurrentEnv.os === OperatingSystemType.Windows) {
     // Execute the powershell version of the command
-    const returnValue = await execCmd(
+    const returnValue = await CLIService.execCmd(
       `git branch -D  @(git branch | select-string -NotMatch "main" | Foreach {$_.Line.Trim()})`
     );
-    Log.info(returnValue.output);
+    Logger.info(returnValue.output);
     return;
   }
   // Execute the bash version of the command
-  const returnValue = await execCmd(
+  const returnValue = await CLIService.execCmd(
     `git branch | grep -v "main" | xargs git branch -D`
   );
-  Log.info(returnValue.output);
+  Logger.info(returnValue.output);
 }
 
 function logValidCleanTargets() {
