@@ -1,6 +1,8 @@
 import {
-    CLIService, CurrentEnv, Logger,
-    TerminalType
+  CLIService,
+  CurrentEnv,
+  Logger,
+  TerminalType
 } from '@aneuhold/core-ts-lib';
 import path from 'path';
 
@@ -147,7 +149,9 @@ function setupPiSubTerminalsFunc(
 
     // Install pacakges
     Logger.info('Installing yarn packages...');
-    const { output: yarnInstallOutput } = await CLIService.execCmd(installCommand);
+    const { output: yarnInstallOutput } = await CLIService.execCmd(
+      installCommand
+    );
     console.log(yarnInstallOutput);
 
     // See this post for info on how to order these commands:
@@ -161,7 +165,10 @@ function setupPiSubTerminalsFunc(
     await Promise.all(
       separateTerminalCommands.map(async (command) => {
         return CLIService.execCmd(
-          `Start-Process wt -ArgumentList "--window", "0", "split-pane", "--horizontal", "-d", '"${currentPath}"', "pwsh.exe", "-NoExit", "-Command", "& {${command}}"`
+          `Start-Process wt.exe -ArgumentList "--window", "0", "split-pane", "--horizontal", "-d", '"${currentPath}"', "pwsh.exe", "-NoExit", "-Command", "& {${command}}"`,
+          false,
+          undefined,
+          true
         );
       })
     );
