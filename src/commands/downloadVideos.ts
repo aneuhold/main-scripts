@@ -11,16 +11,18 @@ const writeFilePromise = promisify(writeFile);
  * Downloads videos from the internet to the provided folder path using the
  * locally setup `videosToDownload.ts` file.
  */
-export default async function downloadVideos(): Promise<void> {
+export default async function downloadVideos(): Promise<string[]> {
   Logger.info('Getting videos to download...');
 
   // Get the current directory and fetch each file url in videosToDownload, which
   // will be downloaded to that directory
   const currentDir = process.cwd();
+  const videoFolderNames: string[] = [];
   await Promise.all(
     videosToDownload.map(async (videoSeries) => {
       // Create a new folder for the videos
       const newFolderName = videoSeries.title;
+      videoFolderNames.push(newFolderName);
       const newFolderPath = path.join(currentDir, newFolderName);
       Logger.info(`Creating folder ${newFolderName} at ${newFolderPath}...`);
       fs.mkdirSync(newFolderPath);
@@ -37,6 +39,7 @@ export default async function downloadVideos(): Promise<void> {
       );
     })
   );
+  return videoFolderNames;
 }
 
 /**
