@@ -2,7 +2,9 @@
 import { Logger } from '@aneuhold/core-ts-lib';
 import { program } from 'commander';
 import clean from './commands/clean';
+import downloadVideos from './commands/downloadVideos';
 import fpull from './commands/fpull';
+import mergeVideos from './commands/mergeVideos';
 import open from './commands/open';
 import scaffold from './commands/scaffold';
 import setup from './commands/setup';
@@ -101,6 +103,28 @@ program
   )
   .action(async (target) => {
     await clean(target);
+  });
+
+program
+  .command('downloadVideos')
+  .description(
+    'Downloads all videos from the videosToDownload.ts file to a folder in the current directory.'
+  )
+  .action(async () => {
+    await downloadVideos();
+  });
+
+program
+  .command('mergeVideos')
+  .description(
+    'Merges all videos in the provided folder into a single video called merged.mp4.'
+  )
+  .argument(
+    '[pathToFolder]',
+    'The path to the folder containing the videos to merge. Defaults to the current directory.'
+  )
+  .action(async (pathToFolder) => {
+    await mergeVideos(pathToFolder);
   });
 
 // Run the thang

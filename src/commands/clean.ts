@@ -42,6 +42,9 @@ export default async function clean(cleanTarget?: string): Promise<void> {
 
 /**
  * Removes all git branches besides the main branch locally.
+ *
+ * This currently throws an error on Windows because of the profile usage,
+ * but it still works. It doesn't work without using the profile for some reason.
  */
 async function cleanBranches() {
   Logger.success(
@@ -50,7 +53,10 @@ async function cleanBranches() {
   if (CurrentEnv.os === OperatingSystemType.Windows) {
     // Execute the powershell version of the command
     const returnValue = await CLIService.execCmd(
-      `git branch -D  @(git branch | select-string -NotMatch "main" | Foreach {$_.Line.Trim()})`
+      `git branch -D  @(git branch | Select-String -NotMatch "main" | Foreach {$_.Line.Trim()})`,
+      false,
+      undefined,
+      true
     );
     Logger.info(returnValue.output);
     return;
