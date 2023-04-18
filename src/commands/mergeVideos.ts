@@ -29,27 +29,50 @@ export default async function mergeVideos(pathToFolder: string) {
   // Create the path to the output file
   const outputFilePath = path.join(pathToVideos, 'merged.mp4');
   const tempFolderPath = path.join(pathToVideos, 'temp');
+
+  // check if the temporary folder exists, if it does, delete it
+  if (fs.existsSync(tempFolderPath)) {
+    fs.rmSync(tempFolderPath, { recursive: true });
+  }
+
+  // Make the temporary folder
   fs.mkdirSync(tempFolderPath);
 
   // Merge the videos together
   await new Promise<void>((resolve, reject) => {
     const ffmpegCommand = ffmpeg();
 
+    ffmpegCommand
+      // videoCodec has to go at the very beginning of the command. Otherwise
+      // it will not work.
+      .videoCodec('h264_nvenc')
+      // FPS output has to go at the beginning as well. This has to be set
+      // to a value otherwise FFMPEG will make the framerate whatever it seems
+      // to feel like 😂. So there is a bunch of fragmentation unless this is
+      // set.
+      .FPSOutput(60);
+
     mp4Videos.forEach((video) => {
-      ffmpegCommand.input(path.join(pathToVideos, video));
+      ffmpegCommand.addInput(path.join(pathToVideos, video));
     });
+
+    // -hwaccel is only an input option. Not an output option. This doesn't
+    // really help much it seems though.
+    // ffmpegCommand.addInputOptions('-hwaccel cuda');
 
     ffmpegCommand
       .on('start', () => Logger.info(`Merging videos...`))
       .on('end', () => {
         Logger.info(`Merged videos`);
         resolve();
-      })
-      .on('error', (err) => {
-        Logger.error(err);
-        reject();
-      })
-      .inputOption(['-hwaccel_device 0', '-hwaccel cuda'])
-      .mergeToFile(outputFilePath, tempFolderPath);
+      });
+    ffmpegCommand.on('error', (err, stdout, stderr) => {
+      // All outputs have to be logged to see detailed error messages
+      Logger.error(err);
+      Logger.error(stdout);
+      Logger.error(stderr);
+      reject();
+    });
+    ffmpegCommand.mergeToFile(outputFilePath, tempFolderPath);
   });
 }

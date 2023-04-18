@@ -29,7 +29,8 @@ export enum FolderName {
   piPermissionsLib = 'pi-permissions-lib',
   piClientDiagnose = 'pi-client-diagnose',
   piPlatform = 'pi-platform',
-  clientCore = 'client-core'
+  clientCore = 'client-core',
+  piClientOrgManagement = 'pi-client-org-management'
 }
 
 /**
@@ -114,6 +115,15 @@ const projects: { [folderName in FolderName]: Project } = {
     setup: setupPiSubTerminalsFunc(
       FolderName.clientCore,
       ['yarn watch', 'yarn unlink:local'],
+      '',
+      'yarn'
+    )
+  },
+  'pi-client-org-management': {
+    folderName: FolderName.piClientOrgManagement,
+    setup: setupPiSubTerminalsFunc(
+      FolderName.piClientOrgManagement,
+      ['yarn start'],
       '',
       'yarn'
     )
