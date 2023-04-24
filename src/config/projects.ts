@@ -26,6 +26,7 @@ export enum FolderName {
   piDiagnosePulseReportsFunction = 'pi-diagnose-pulsereportsfunction',
   piClientHire = 'pi-client-hire',
   piClientDesign = 'pi-client-design',
+  piClientInspire = 'pi-client-inspire',
   piPermissionsLib = 'pi-permissions-lib',
   piClientDiagnose = 'pi-client-diagnose',
   piPlatform = 'pi-platform',
@@ -127,6 +128,14 @@ const projects: { [folderName in FolderName]: Project } = {
       '',
       'yarn'
     )
+  },
+  'pi-client-inspire': {
+    folderName: FolderName.piClientInspire,
+    setup: setupPiSubTerminalsFunc(
+      FolderName.piClientInspire,
+      ['yarn client', 'yarn server'],
+      'inspire'
+    )
   }
 };
 
@@ -160,7 +169,9 @@ function setupPiSubTerminalsFunc(
     // Install pacakges
     Logger.info('Installing yarn packages...');
     const { output: yarnInstallOutput } = await CLIService.execCmd(
-      installCommand
+      installCommand,
+      false,
+      currentPath
     );
     console.log(yarnInstallOutput);
 
