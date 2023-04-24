@@ -2,8 +2,21 @@ import { VideoSeriesInfo } from '../utils/VideoSeriesInfo';
 
 const videosToDownload: VideoSeriesInfo[] = [
   {
-    title: 'SL 1 - Decision Trees',
-    urls: []
+    title: 'Video Series Name',
+    urls: [
+      'insertHere',
+      'insertHere',
+      'insertHere',
+      'insertHere',
+      'insertHere',
+      'insertHere',
+      'insertHere',
+      'insertHere',
+      'insertHere',
+      'insertHere',
+      'insertHere',
+      'insertHere'
+    ]
   }
 ];
 

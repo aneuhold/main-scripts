@@ -11,6 +11,4 @@ export default async function downloadAndMergeVideos() {
     await mergeVideos(videoFolderName);
     Logger.info(`Merged videos in ${videoFolderName} folder`);
   }
-
-  // Filter out the folders that are not video folders
 }

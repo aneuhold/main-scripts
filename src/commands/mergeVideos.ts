@@ -24,7 +24,12 @@ export default async function mergeVideos(pathToFolder: string) {
   const mp4Videos = videos.filter((file) => path.extname(file) === '.mp4');
 
   // Sort the mp4 files to ensure that they are in the correct order
-  mp4Videos.sort();
+  mp4Videos.sort((a, b) => {
+    const aNumber = Number(a.split('.')[0]);
+    const bNumber = Number(b.split('.')[0]);
+
+    return aNumber - bNumber;
+  });
 
   // Create the path to the output file
   const outputFilePath = path.join(pathToVideos, 'merged.mp4');
@@ -37,6 +42,9 @@ export default async function mergeVideos(pathToFolder: string) {
 
   // Make the temporary folder
   fs.mkdirSync(tempFolderPath);
+
+  // Convert all the videos to a consistent size so they can be merged
+  await convertAllVideosToConsistentSize(mp4Videos, pathToVideos);
 
   // Merge the videos together
   await new Promise<void>((resolve, reject) => {
@@ -75,4 +83,51 @@ export default async function mergeVideos(pathToFolder: string) {
     });
     ffmpegCommand.mergeToFile(outputFilePath, tempFolderPath);
   });
+}
+
+async function convertAllVideosToConsistentSize(
+  mp4Videos: string[],
+  pathToVideos: string
+) {
+  // Convert all videos to 1920x1080
+  // eslint-disable-next-line no-restricted-syntax
+  for (const video of mp4Videos) {
+    Logger.info(`Converting ${video} to 1920x1080...`);
+    // eslint-disable-next-line no-await-in-loop
+    await convertVideoToConsistentSize(video, pathToVideos);
+    Logger.info(`Converted ${video} to 1920x1080`);
+  }
+}
+
+async function convertVideoToConsistentSize(
+  videoName: string,
+  pathToVideos: string
+) {
+  // Change the video file name to a temp file name
+  const tempVideoName = `temp-${videoName}`;
+  const tempVideoPath = path.join(pathToVideos, tempVideoName);
+  const videoPath = path.join(pathToVideos, videoName);
+  fs.renameSync(videoPath, tempVideoPath);
+
+  await new Promise<void>((resolve, reject) => {
+    ffmpeg(tempVideoPath)
+      .videoCodec('h264_nvenc')
+      .size('1920x1080')
+      .on('start', () => Logger.info(`Converting video...`))
+      .on('end', () => {
+        Logger.info(`Converted video`);
+        resolve();
+      })
+      .on('error', (err, stdout, stderr) => {
+        // All outputs have to be logged to see detailed error messages
+        Logger.error(err);
+        Logger.error(stdout);
+        Logger.error(stderr);
+        reject();
+      })
+      .save(videoPath);
+  });
+
+  // Delete the temp file
+  fs.rmSync(tempVideoPath);
 }

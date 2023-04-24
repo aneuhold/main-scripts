@@ -5,6 +5,7 @@ import clean from './commands/clean';
 import downloadAndMergeVideos from './commands/downloadAndMergeVideos';
 import downloadVideos from './commands/downloadVideos';
 import fpull from './commands/fpull';
+import mergeAllVideos from './commands/mergeAllVideos';
 import mergeVideos from './commands/mergeVideos';
 import open from './commands/open';
 import scaffold from './commands/scaffold';
@@ -112,7 +113,7 @@ program
     'Downloads all videos from the videosToDownload.ts file to a folder in the current directory.'
   )
   .action(async () => {
-    await downloadVideos();
+    await downloadVideos(false);
   });
 
 program
@@ -136,6 +137,15 @@ program
   )
   .action(async () => {
     await downloadAndMergeVideos();
+  });
+
+program
+  .command('mergeAllVideos')
+  .description(
+    'Merges all videos in folders in the current directory into a merged.mp4 file in each folder.'
+  )
+  .action(async () => {
+    await mergeAllVideos();
   });
 
 // Run the thang
