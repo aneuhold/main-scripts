@@ -4,7 +4,8 @@ import {
   CurrentEnv,
   FileSystemService,
   getFileNameExtension,
-  Logger
+  Logger,
+  OperatingSystemType
 } from '@aneuhold/core-ts-lib';
 import projects, { FolderName } from '../config/projects';
 
@@ -56,6 +57,16 @@ async function runApplication(appName: AppName) {
   }
 }
 
+async function openSolutionFile(solutionFilePath?: string) {
+  if (CurrentEnv.os === OperatingSystemType.MacOSX) {
+    Logger.success(`Opening ${solutionFilePath} in Rider...`);
+    await CLIService.execCmdWithTimeout(`rider "${solutionFilePath}"`, 4000);
+  } else {
+    Logger.success(`Opening ${solutionFilePath} in Visual Studio...`);
+    await CLIService.execCmdWithTimeout(`devenv "${solutionFilePath}"`, 4000);
+  }
+}
+
 /**
  * The main entry-point for the `open` command.
  */
@@ -72,13 +83,7 @@ export default async function open(
 
   // If there is already a solution file that should be chosen
   if (projects[currentFolderName]?.solutionFilePath) {
-    Logger.success(
-      `Opening ${projects[currentFolderName].solutionFilePath} in Visual Studio...`
-    );
-    await CLIService.execCmdWithTimeout(
-      `devenv "${projects[currentFolderName].solutionFilePath}"`,
-      4000
-    );
+    await openSolutionFile(projects[currentFolderName].solutionFilePath);
     return;
   }
 
@@ -95,11 +100,7 @@ export default async function open(
     return;
   }
   if (filesWithSlnExtension.length > 0) {
-    Logger.success(`Opening ${filesWithSlnExtension[0]} in Visual Studio...`);
-    await CLIService.execCmdWithTimeout(
-      `devenv ${filesWithSlnExtension[0]}`,
-      4000
-    );
+    await openSolutionFile(filesWithSlnExtension[0]);
     return;
   }
 
