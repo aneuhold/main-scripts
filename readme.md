@@ -28,10 +28,6 @@ To test new commands, you can write the command, then use the `npm run refresh` 
 
 ### 🚧 Commands to be Built
 
-- Improvements to `tb startup`
-  - Add check for docker command and docker-compose
-- Improvemnts on `tb fpull`
-  - Add an option `-r` for reset which will do a hard reset on the current branch as well, and also make it interactive so it will ask if there was an error
 - `tb scaffold node` Scaffolds a node project. Ideas on steps are below:
   - Intialize git and ask for a repo link and all that (setup a dedicated step / js file for this because it will be re-used)
   - Initialize npm (package.json)
