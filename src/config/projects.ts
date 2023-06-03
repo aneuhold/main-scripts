@@ -1,6 +1,7 @@
 import {
   CLIService,
   CurrentEnv,
+  ITermService,
   Logger,
   TerminalType
 } from '@aneuhold/core-ts-lib';
@@ -159,12 +160,16 @@ function setupPiSubTerminalsFunc(
     Logger.info(`Setting up ${project.folderName}...`);
     const currentPath = path.resolve('.', subPath);
 
-    if (CurrentEnv.terminal() !== TerminalType.WindowsTerminal) {
-      Logger.failure(
-        `Setup for ${folderName} not established for anything but Windows Terminal`
-      );
-      return;
-    }
+    if (CurrentEnv.terminal)
+      if (
+        CurrentEnv.terminal() !== TerminalType.WindowsTerminal &&
+        CurrentEnv.terminal() !== TerminalType.ITerm2
+      ) {
+        Logger.failure(
+          `Setup for ${folderName} not established for anything but Windows Terminal and iTerm2.`
+        );
+        return;
+      }
 
     // Install pacakges
     Logger.info('Installing yarn packages...');
@@ -175,25 +180,44 @@ function setupPiSubTerminalsFunc(
     );
     console.log(yarnInstallOutput);
 
-    // See this post for info on how to order these commands:
-    // https://superuser.com/questions/1564090/how-to-pass-commands-into-the-shell-opened-in-new-windows-terminal
-    // The order of the commands matters when executing windows terminal.
-    // It might be nice to setup a class that does this for you.
-
-    // If the commands are opening in a separte window, that is probably because
-    // the current window is not `0` for some reason. Although it should be.
-
-    await Promise.all(
-      separateTerminalCommands.map(async (command) => {
-        return CLIService.execCmd(
-          `Start-Process wt.exe -ArgumentList "--window", "0", "split-pane", "--horizontal", "-d", '"${currentPath}"', "pwsh.exe", "-NoExit", "-Command", "& {${command}}"`,
-          false,
-          undefined,
-          true
-        );
-      })
-    );
+    if (CurrentEnv.terminal() === TerminalType.WindowsTerminal) {
+      // If the commands are opening in a separte window, that is probably because
+      // the current window is not `0` for some reason. Although it should be.
+      await runWindowsTerminalCommands(separateTerminalCommands, currentPath);
+    } else if (CurrentEnv.terminal() === TerminalType.ITerm2) {
+      await runITerm2Commands(separateTerminalCommands, currentPath);
+    }
   };
+}
+
+// See this post for info on how to order these commands:
+// https://superuser.com/questions/1564090/how-to-pass-commands-into-the-shell-opened-in-new-windows-terminal
+// The order of the commands matters when executing windows terminal.
+// It might be nice to setup a class that does this for you.
+async function runWindowsTerminalCommands(
+  separateTerminalCommands: string[],
+  currentPath: string
+) {
+  await Promise.all(
+    separateTerminalCommands.map(async (command) => {
+      return CLIService.execCmd(
+        `Start-Process wt.exe -ArgumentList "--window", "0", "split-pane", "--horizontal", "-d", '"${currentPath}"', "pwsh.exe", "-NoExit", "-Command", "& {${command}}"`,
+        false,
+        undefined,
+        true
+      );
+    })
+  );
+}
+
+async function runITerm2Commands(
+  separateTerminalCommands: string[],
+  currentPath: string
+) {
+  await ITermService.splitHorizontallyAndRunCommands(
+    separateTerminalCommands,
+    currentPath
+  );
 }
 
 export default projects;
