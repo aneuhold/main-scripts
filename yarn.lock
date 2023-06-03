@@ -3,9 +3,9 @@
 
 
 "@aneuhold/core-ts-lib@*":
-  version "1.0.9"
-  resolved "https://registry.yarnpkg.com/@aneuhold/core-ts-lib/-/core-ts-lib-1.0.9.tgz#f2dd0f957aa34bfefe7f6399a4269919eaf7348e"
-  integrity sha512-vXVGmzWZR2a5+LPnhIk+Ie0p2z8GCAoqTh0Y2Kt4GgwTZln1btpTUEkAUTimcAZVwLTD/6/tAT8VT9r45dgkcw==
+  version "1.0.10"
+  resolved "https://registry.yarnpkg.com/@aneuhold/core-ts-lib/-/core-ts-lib-1.0.10.tgz#a1499b8a94691cfbb43499ff2bed3e091faeffee"
+  integrity sha512-d0LFG/dMeU2p3xRHS3n1d3/ttKWc8RTRUJ9xH6hmGOhbikZ6CWcI32ZN2sDV1eHAfWNPD3JuqCgikMhF91kLMw==
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
