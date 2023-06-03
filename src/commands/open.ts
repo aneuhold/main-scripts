@@ -4,8 +4,7 @@ import {
   CurrentEnv,
   FileSystemService,
   getFileNameExtension,
-  Logger,
-  OperatingSystemType
+  Logger
 } from '@aneuhold/core-ts-lib';
 import projects, { FolderName } from '../config/projects';
 
@@ -58,13 +57,8 @@ async function runApplication(appName: AppName) {
 }
 
 async function openSolutionFile(solutionFilePath?: string) {
-  if (CurrentEnv.os === OperatingSystemType.MacOSX) {
-    Logger.success(`Opening ${solutionFilePath} in Rider...`);
-    await CLIService.execCmdWithTimeout(`rider "${solutionFilePath}"`, 4000);
-  } else {
-    Logger.success(`Opening ${solutionFilePath} in Visual Studio...`);
-    await CLIService.execCmdWithTimeout(`devenv "${solutionFilePath}"`, 4000);
-  }
+  Logger.success(`Opening ${solutionFilePath} in Rider...`);
+  await CLIService.execCmdWithTimeout(`rider "${solutionFilePath}"`, 4000);
 }
 
 /**
