@@ -25,6 +25,7 @@ export enum FolderName {
   piDiagnoseSurveyInsights = 'pi-diagnosesurveyinsights',
   piBehavioralAssessmentApiService = 'pi-behavioralassessmentapiservice',
   piDiagnosePulseReportsFunction = 'pi-diagnose-pulsereportsfunction',
+  piDesignApiService = 'pi-designapiservice',
   piClientHire = 'pi-client-hire',
   piClientDesign = 'pi-client-design',
   piClientInspire = 'pi-client-inspire',
@@ -70,6 +71,10 @@ const projects: { [folderName in FolderName]: Project } = {
   'pi-behavioralassessmentapiservice': {
     folderName: FolderName.piDiagnoseSurveyInsights,
     solutionFilePath: 'PI.BehavioralAssessmentAPIService.sln'
+  },
+  'pi-designapiservice': {
+    folderName: FolderName.piDesignApiService,
+    solutionFilePath: 'PI.DesignAPIService.sln'
   },
   'pi-diagnose-pulsereportsfunction': {
     folderName: FolderName.piDiagnosePulseReportsFunction,
