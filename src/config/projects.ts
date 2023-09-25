@@ -33,7 +33,8 @@ export enum FolderName {
   piClientDiagnose = 'pi-client-diagnose',
   piPlatform = 'pi-platform',
   clientCore = 'client-core',
-  piClientOrgManagement = 'pi-client-org-management'
+  piClientOrgManagement = 'pi-client-org-management',
+  piClientSurveyTaker = 'pi-client-surveytaker'
 }
 
 /**
@@ -141,6 +142,15 @@ const projects: { [folderName in FolderName]: Project } = {
       FolderName.piClientInspire,
       ['yarn client', 'yarn server'],
       'inspire'
+    )
+  },
+  'pi-client-surveytaker': {
+    folderName: FolderName.piClientSurveyTaker,
+    setup: setupPiSubTerminalsFunc(
+      FolderName.piClientSurveyTaker,
+      ['yarn watch:client', 'yarn server'],
+      '',
+      'yarn i'
     )
   }
 };
