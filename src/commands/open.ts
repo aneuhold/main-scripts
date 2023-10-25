@@ -9,12 +9,18 @@ import {
 import projects, { FolderName } from '../config/projects';
 
 /**
+ * This should probably be updated for correct pathing and different OSes
+ */
+const PATH_TO_RUBY_GEMS = `$HOME/.asdf/installs/ruby`;
+
+/**
  * The list of app names that are possible. These can be aliases to specific
  * operations as well. This is the single source of truth.
  */
 export enum AppName {
   chrome = 'chrome',
-  nugetCache = 'nugetCache'
+  nugetCache = 'nugetCache',
+  rubyGems = 'rubyGems'
 }
 
 /**
@@ -50,6 +56,9 @@ async function runApplication(appName: AppName) {
       break;
     case AppName.nugetCache:
       await FileSystemService.openNugetCache();
+      break;
+    case AppName.rubyGems:
+      await CLIService.execCmdWithTimeout(`code ${PATH_TO_RUBY_GEMS}`, 4000);
       break;
     default:
       break;
