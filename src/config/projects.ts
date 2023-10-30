@@ -35,7 +35,8 @@ export enum FolderName {
   piPlatform = 'pi-platform',
   clientCore = 'client-core',
   piClientOrgManagement = 'pi-client-org-management',
-  piClientSurveyTaker = 'pi-client-surveytaker'
+  piClientSurveyTaker = 'pi-client-surveytaker',
+  workpatterns = 'workpatterns'
 }
 
 /**
@@ -156,6 +157,21 @@ const projects: { [folderName in FolderName]: Project } = {
       ['yarn watch:client', 'yarn server'],
       '',
       'yarn i'
+    )
+  },
+  workpatterns: {
+    folderName: FolderName.workpatterns,
+    setup: setupPiSubTerminalsFunc(
+      FolderName.workpatterns,
+      [
+        'bundle exec puma -C config/puma.rb',
+        'bin/webpack-dev-server',
+        'bundle exec sidekiq -C config/sidekiq.yml',
+        'bundle exec sidekiq -C config/sidekiq_critical_slow.yml',
+        'bundle exec clockwork config/clockwork.rb'
+      ],
+      '',
+      'yarn && bundle'
     )
   }
 };
