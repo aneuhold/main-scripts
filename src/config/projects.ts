@@ -36,7 +36,7 @@ export enum FolderName {
   clientCore = 'client-core',
   piClientOrgManagement = 'pi-client-org-management',
   piClientSurveyTaker = 'pi-client-surveytaker',
-  workpatterns = 'workpatterns'
+  piPerform = 'pi-perform'
 }
 
 /**
@@ -159,10 +159,10 @@ const projects: { [folderName in FolderName]: Project } = {
       'yarn i'
     )
   },
-  workpatterns: {
-    folderName: FolderName.workpatterns,
+  'pi-perform': {
+    folderName: FolderName.piPerform,
     setup: setupPiSubTerminalsFunc(
-      FolderName.workpatterns,
+      FolderName.piPerform,
       [
         'bundle exec puma -C config/puma.rb',
         'bin/webpack-dev-server',
