@@ -163,13 +163,7 @@ const projects: { [folderName in FolderName]: Project } = {
     folderName: FolderName.piPerform,
     setup: setupPiSubTerminalsFunc(
       FolderName.piPerform,
-      [
-        'bundle exec puma -C config/puma.rb',
-        'bin/webpack-dev-server',
-        'bundle exec sidekiq -C config/sidekiq.yml',
-        'bundle exec sidekiq -C config/sidekiq_critical_slow.yml',
-        'bundle exec clockwork config/clockwork.rb'
-      ],
+      ['yarn dev-start'],
       '',
       'yarn && bundle'
     )
