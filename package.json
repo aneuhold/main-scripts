@@ -1,6 +1,6 @@
 {
   "name": "@aneuhold/main-scripts",
-  "version": "1.0.68",
+  "version": "1.0.69",
   "description": "Main scripts for use personally on any platform",
   "main": "index.js",
   "scripts": {
