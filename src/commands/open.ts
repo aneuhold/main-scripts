@@ -1,11 +1,10 @@
+import { Logger, StringService } from '@aneuhold/core-ts-lib';
 import {
-  ChromeService,
   CLIService,
+  ChromeService,
   CurrentEnv,
-  FileSystemService,
-  getFileNameExtension,
-  Logger
-} from '@aneuhold/core-ts-lib';
+  OSFileSystemService
+} from '@aneuhold/be-ts-lib';
 import projects, { FolderName } from '../config/projects';
 
 /**
@@ -55,7 +54,7 @@ async function runApplication(appName: AppName) {
       await ChromeService.openAndSetPinnedTabs();
       break;
     case AppName.nugetCache:
-      await FileSystemService.openNugetCache();
+      await OSFileSystemService.openNugetCache();
       break;
     case AppName.rubyGems:
       await CLIService.execCmdWithTimeout(`code ${PATH_TO_RUBY_GEMS}`, 4000);
@@ -92,7 +91,7 @@ export default async function open(
 
   const fileNamesInDir = await CurrentEnv.fileNamesInDir();
   const filesWithSlnExtension = fileNamesInDir.filter(
-    (fileName) => getFileNameExtension(fileName) === 'sln'
+    (fileName) => StringService.getFileNameExtension(fileName) === 'sln'
   );
 
   if (filesWithSlnExtension.length > 1) {

@@ -2,9 +2,9 @@ import {
   CLIService,
   CurrentEnv,
   ITermService,
-  Logger,
   TerminalType
-} from '@aneuhold/core-ts-lib';
+} from '@aneuhold/be-ts-lib';
+import { Logger } from '@aneuhold/core-ts-lib';
 import path from 'path';
 
 /**

@@ -1,10 +1,7 @@
-import {
-  CurrentEnv,
-  FileSystemService,
-  OperatingSystemType
-} from '@aneuhold/core-ts-lib';
+import { FileSystemService } from '@aneuhold/core-ts-lib';
 import os from 'os';
 import path from 'path';
+import { CurrentEnv, OperatingSystemType } from '@aneuhold/be-ts-lib';
 import aliases from '../config/aliases';
 
 /**

@@ -1,4 +1,4 @@
-import { OperatingSystemType } from '@aneuhold/core-ts-lib';
+import { OperatingSystemType } from '@aneuhold/be-ts-lib';
 
 export type AliasInfo = {
   [osType in OperatingSystemType]: string;

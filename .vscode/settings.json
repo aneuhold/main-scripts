@@ -8,10 +8,7 @@
     "editor.formatOnSave": false
   },
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true,
-    "source.organizeImports": false
-  },
-  "[svelte]": {
-    "editor.defaultFormatter": "svelte.svelte-vscode"
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "never"
   }
 }

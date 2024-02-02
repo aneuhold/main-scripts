@@ -1,9 +1,9 @@
 import {
   CLIService,
   CurrentEnv,
-  Logger,
   OperatingSystemType
-} from '@aneuhold/core-ts-lib';
+} from '@aneuhold/be-ts-lib';
+import { Logger } from '@aneuhold/core-ts-lib';
 
 /**
  * Different things that can be cleaned.

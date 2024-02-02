@@ -1,9 +1,5 @@
-import {
-  CLIService,
-  CurrentEnv,
-  datesAreOnSameDay,
-  Logger
-} from '@aneuhold/core-ts-lib';
+import { datesAreOnSameDay, Logger } from '@aneuhold/core-ts-lib';
+import { CLIService, CurrentEnv } from '@aneuhold/be-ts-lib';
 import { name as PACKAGE_NAME } from '../../package.json';
 import Store from '../utils/Store';
 

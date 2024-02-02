@@ -34,26 +34,27 @@
     "lib/**/*"
   ],
   "dependencies": {
-    "@aneuhold/core-ts-lib": "*",
-    "commander": "^10.0.0",
+    "@aneuhold/be-ts-lib": "^1.0.6",
+    "@aneuhold/core-ts-lib": "1.1.11",
+    "commander": "^11.1.0",
     "fluent-ffmpeg": "^2.1.2",
-    "node-fetch": "2"
+    "node-fetch": "^2"
   },
   "devDependencies": {
-    "@types/fluent-ffmpeg": "^2.1.21",
-    "@types/node": "^18.15.0",
-    "@types/node-fetch": "^2.6.3",
-    "@typescript-eslint/eslint-plugin": "^5.54.1",
-    "@typescript-eslint/parser": "^5.54.1",
-    "eslint": "^8.35.0",
+    "@types/fluent-ffmpeg": "^2.1.24",
+    "@types/node": "^20.11.16",
+    "@types/node-fetch": "^2.6.11",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "eslint": "^8.56.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-prettier": "^4.0.0",
-    "prettier": "^2.4.1",
-    "rimraf": "^4.4.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-prettier": "^5.1.3",
+    "prettier": "^3.2.4",
+    "rimraf": "^5.0.5",
     "shx": "^0.3.3",
-    "ts-node": "^10.2.1",
-    "typescript": "^4.4.3"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   }
 }

@@ -33,7 +33,6 @@ To test new commands, you can write the command, then use the `npm run refresh` 
   - Initialize npm (package.json)
     - Add the name from the name given
     - Add the scripts with the name given
-    -
   - Create README.md
   - Setup ESLINT with JSON config then update the config with specific values if needed
   - Add Typescript and the tsconfig.json file

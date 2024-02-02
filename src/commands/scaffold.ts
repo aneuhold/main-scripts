@@ -1,6 +1,7 @@
-import { CLIService, Logger } from '@aneuhold/core-ts-lib';
+import { Logger } from '@aneuhold/core-ts-lib';
 import fs from 'fs';
 import path from 'path';
+import { CLIService } from '@aneuhold/be-ts-lib';
 import templates, { ProjectType } from '../templates/Templates';
 
 /**
