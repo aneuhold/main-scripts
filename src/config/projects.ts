@@ -66,10 +66,7 @@ const projects: { [folderName in FolderName]: Project } = {
   },
   'pi-diagnosesurveyinsights': {
     folderName: FolderName.piDiagnoseSurveyInsights,
-    solutionFilePath: path.join(
-      'PI.DiagnoseSurveyInsights',
-      'PI.DiagnoseSurveyInsights.sln'
-    )
+    solutionFilePath: 'PI.DiagnoseSurveyInsights.sln'
   },
   'pi-behavioralassessmentapiservice': {
     folderName: FolderName.piDiagnoseSurveyInsights,
