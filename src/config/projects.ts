@@ -36,7 +36,8 @@ export enum FolderName {
   clientCore = 'client-core',
   piClientOrgManagement = 'pi-client-org-management',
   piClientSurveyTaker = 'pi-client-surveytaker',
-  piPerform = 'pi-perform'
+  piPerform = 'pi-perform',
+  piPermissionsMigrations = 'pi-permissions-migrations'
 }
 
 /**
@@ -164,6 +165,10 @@ const projects: { [folderName in FolderName]: Project } = {
       '',
       'yarn && bundle'
     )
+  },
+  'pi-permissions-migrations': {
+    folderName: FolderName.piPermissionsMigrations,
+    solutionFilePath: 'PIPermissionsMigration.sln'
   }
 };
 
