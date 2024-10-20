@@ -1,37 +1,39 @@
 {
   "name": "@aneuhold/main-scripts",
-  "version": "1.0.71",
-  "description": "Main scripts for use personally on any platform",
-  "main": "index.js",
-  "scripts": {
-    "pushpub": "npm run build && npm version patch && git push && npm publish --access public",
-    "refresh": "npm run build && npm uninstall -g @aneuhold/main-scripts && npm i -g",
-    "build": "tsc && shx cp -r src/templates/template-folders lib/src/templates",
-    "reset:global": "npm uninstall -g @aneuhold/main-scripts && npm i -g @aneuhold/main-scripts",
-    "upgrade:all": "yarn upgrade --latest",
-    "link:core": "yarn link @aneuhold/core-ts-lib",
-    "unlink:core": "yarn unlink @aneuhold/core-ts-lib && yarn install --force && yarn upgrade"
-  },
-  "type": "commonjs",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/aneuhold/main-scripts.git"
-  },
-  "keywords": [
-    "Scripting",
-    "Node.js"
-  ],
   "author": "Anton G. Neuhold Jr.",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/aneuhold/main-scripts/issues"
+  "version": "1.0.71",
+  "description": "Main scripts for use personally on any platform",
+  "packageManager": "yarn@4.5.1",
+  "type": "module",
+  "scripts": {
+    "pushpub": "npm run build && npm version patch && git push && npm publish --access public",
+    "refresh": "yarn build && npm uninstall -g @aneuhold/main-scripts && npm i -g",
+    "build": "rimraf lib && tsc --project tsconfig.build.json && shx cp -r src/templates/template-folders lib/src/templates",
+    "lint": "eslint",
+    "upgrade:all": "yarn upgrade --latest",
+    "link:core": "yarn link @aneuhold/core-ts-lib",
+    "unlink:core": "yarn unlink @aneuhold/core-ts-lib && yarn install --force && yarn upgrade",
+    "reset:global": "npm uninstall -g @aneuhold/main-scripts && npm i -g @aneuhold/main-scripts"
   },
-  "homepage": "https://github.com/aneuhold/main-scripts#readme",
+  "main": "src/index.js",
   "bin": {
     "tb": "./lib/src/index.js"
   },
   "files": [
     "lib/**/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aneuhold/main-scripts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/aneuhold/main-scripts/issues"
+  },
+  "homepage": "https://github.com/aneuhold/main-scripts#readme",
+  "keywords": [
+    "Scripting",
+    "Node.js"
   ],
   "dependencies": {
     "@aneuhold/be-ts-lib": "^1.0.6",
@@ -41,20 +43,15 @@
     "node-fetch": "^2"
   },
   "devDependencies": {
+    "@aneuhold/eslint-config": "^1.0.36",
     "@types/fluent-ffmpeg": "^2.1.24",
     "@types/node": "^20.11.16",
     "@types/node-fetch": "^2.6.11",
-    "@typescript-eslint/eslint-plugin": "^6.20.0",
-    "@typescript-eslint/parser": "^6.20.0",
-    "eslint": "^8.56.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-prettier": "^5.1.3",
-    "prettier": "^3.2.4",
+    "eslint": "^9.13.0",
+    "prettier": "^3.3.3",
     "rimraf": "^5.0.5",
     "shx": "^0.3.3",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
   }
 }
