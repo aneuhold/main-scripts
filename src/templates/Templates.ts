@@ -3,15 +3,15 @@
  *
  * This is the single source of truth for the project types.
  */
-const projectTypes = {
-  'node-cli': 'node-cli',
-  node: 'node'
+type ProjectTypes = {
+  'node-cli': 'node-cli';
+  node: 'node';
 };
 
 /**
  * A string representing a type of project that can be built from a template.
  */
-export type ProjectType = keyof typeof projectTypes;
+export type ProjectType = keyof ProjectTypes;
 
 /**
  * Info on a particular template project.
