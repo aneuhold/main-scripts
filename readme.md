@@ -1,8 +1,8 @@
 # Main Scripts
 
-This repo contains the main scripts I use on any OS (besides mobile... for now?). This should be installed and initally invoked by the startup script in the [dotfiles repo](https://github.com/aneuhold/dotfiles).
+[![NPM Version](https://img.shields.io/npm/v/%40aneuhold%2Fmain-scripts)](https://www.npmjs.com/package/@aneuhold/main-scripts)
 
-This is also deployed to [NPM here](https://www.npmjs.com/package/@aneuhold/main-scripts).
+This repo contains the main scripts I use on any OS (besides mobile... for now?). This should be installed and initially invoked by the startup script in the [dotfiles repo](https://github.com/aneuhold/dotfiles).
 
 ## ✅ Commands
 
@@ -44,8 +44,7 @@ To test new commands, you can write the command, then use the `npm run refresh` 
 
 ## `package.json` Commands
 
-- `npm run pushpub` will build then do a `git push` then increment the patch number by one then publish the package to npm. It seems that this needs to be done with npm so that it uses the right credentials.
-- `npm run refresh` can be used for testing new commands. It will uninstall any previous global version of this package and then install the local version.
+- `yarn refresh` can be used for testing new commands. It will uninstall any previous global version of this package and then install the local version.
 - `yarn reset:global` will uninstall the global package and reinstall it from the npm registry instead of locally.
 - `yarn add <package-name>` Use yarn to add packages preferably.
 
@@ -59,7 +58,7 @@ This consists of the following steps:
 
 ## Publish Process Description
 
-- Run the [build process](#build-process)
+- Run `yarn build`
 - Packs the files only including the the `./lib` folder and the [default things included](https://docs.npmjs.com/cli/v7/using-npm/developers). This does mean that the `package.json` is going to be in the package twice. But that is okay because the `package.json` that is in the `lib` folder will only be used to reference values. It isn't used for commands or locations of any anything.
 
 ## Potential Issues

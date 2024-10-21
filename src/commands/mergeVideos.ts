@@ -1,4 +1,4 @@
-import { Logger } from '@aneuhold/core-ts-lib';
+import { Logger } from '@jsr/aneuhold__core-ts-lib';
 import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 import path from 'path';
@@ -69,17 +69,19 @@ export default async function mergeVideos(pathToFolder: string) {
     // ffmpegCommand.addInputOptions('-hwaccel cuda');
 
     ffmpegCommand
-      .on('start', () => Logger.info(`Merging videos...`))
+      .on('start', () => {
+        Logger.info(`Merging videos...`);
+      })
       .on('end', () => {
         Logger.info(`Merged videos`);
         resolve();
       });
     ffmpegCommand.on('error', (err, stdout, stderr) => {
       // All outputs have to be logged to see detailed error messages
-      Logger.error(err);
-      Logger.error(stdout);
-      Logger.error(stderr);
-      reject();
+      Logger.error(JSON.stringify(err));
+      Logger.error(stdout as string);
+      Logger.error(stderr as string);
+      reject(new Error('Error merging videos'));
     });
     ffmpegCommand.mergeToFile(outputFilePath, tempFolderPath);
   });
@@ -90,10 +92,10 @@ async function convertAllVideosToConsistentSize(
   pathToVideos: string
 ) {
   // Convert all videos to 1920x1080
-  // eslint-disable-next-line no-restricted-syntax
+
   for (const video of mp4Videos) {
     Logger.info(`Converting ${video} to 1920x1080...`);
-    // eslint-disable-next-line no-await-in-loop
+
     await convertVideoToConsistentSize(video, pathToVideos);
     Logger.info(`Converted ${video} to 1920x1080`);
   }
@@ -113,17 +115,19 @@ async function convertVideoToConsistentSize(
     ffmpeg(tempVideoPath)
       .videoCodec('h264_nvenc')
       .size('1920x1080')
-      .on('start', () => Logger.info(`Converting video...`))
+      .on('start', () => {
+        Logger.info(`Converting video...`);
+      })
       .on('end', () => {
         Logger.info(`Converted video`);
         resolve();
       })
       .on('error', (err, stdout, stderr) => {
         // All outputs have to be logged to see detailed error messages
-        Logger.error(err);
-        Logger.error(stdout);
-        Logger.error(stderr);
-        reject();
+        Logger.error(JSON.stringify(err));
+        Logger.error(stdout as string);
+        Logger.error(stderr as string);
+        reject(new Error('Error converting videos'));
       })
       .save(videoPath);
   });

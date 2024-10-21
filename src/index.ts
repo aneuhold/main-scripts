@@ -1,18 +1,19 @@
-#!/usr/bin/env node
-import { Logger } from '@aneuhold/core-ts-lib';
+#!/usr/bin/env node --no-warnings
+
+import { Logger } from '@jsr/aneuhold__core-ts-lib';
 import { program } from 'commander';
-import clean from './commands/clean';
-import downloadAndMergeVideos from './commands/downloadAndMergeVideos';
-import downloadVideos from './commands/downloadVideos';
-import fpull from './commands/fpull';
-import mergeAllVideos from './commands/mergeAllVideos';
-import mergeVideos from './commands/mergeVideos';
-import open from './commands/open';
-import scaffold from './commands/scaffold';
-import setup from './commands/setup';
-import startup from './commands/startup';
-import calculateProbabilities from './helperFunctions/calculator';
-import { triggerUpdate } from './helperFunctions/updateIfNeeded';
+import clean from './commands/clean.js';
+import downloadAndMergeVideos from './commands/downloadAndMergeVideos.js';
+import downloadVideos from './commands/downloadVideos.js';
+import fpull from './commands/fpull.js';
+import mergeAllVideos from './commands/mergeAllVideos.js';
+import mergeVideos from './commands/mergeVideos.js';
+import open from './commands/open.js';
+import scaffold from './commands/scaffold.js';
+import setup from './commands/setup.js';
+import startup from './commands/startup.js';
+import calculateProbabilities from './helperFunctions/calculator.js';
+import { triggerUpdate } from './helperFunctions/updateIfNeeded.js';
 
 program.name('tb');
 
@@ -29,7 +30,7 @@ program
   .command('test')
   .argument('[args...]')
   .description('Runs a test command to make sure the package is working')
-  .action(async (args) => {
+  .action((args) => {
     Logger.info(`You entered the following args: ${JSON.stringify(args)}`);
     calculateProbabilities();
   });
@@ -51,7 +52,7 @@ program
 program
   .command('setup')
   .description(
-    'Sets up the dev environemnt based on the name of the current directory'
+    'Sets up the dev environment based on the name of the current directory'
   )
   .action(async () => {
     await setup();
@@ -65,7 +66,7 @@ program
   )
   .argument('[appName]', 'The name of the app to open if wanted')
   .argument('[methodName]', 'The method to call of the specified application')
-  .action(async (appName, methodName) => {
+  .action(async (appName: string, methodName: string) => {
     await open(appName, methodName);
   });
 
@@ -91,9 +92,15 @@ program
     'The name of the project to start. This will be the root folder name.'
   )
   .option('-l, --list', 'List all available project types')
-  .action(async (projectType, projectName, options) => {
-    await scaffold(projectType, projectName, options.list);
-  });
+  .action(
+    async (
+      projectType: string,
+      projectName: string,
+      options: { list: boolean }
+    ) => {
+      await scaffold(projectType, projectName, options.list);
+    }
+  );
 
 program
   .command('clean')
@@ -103,7 +110,7 @@ program
     'The target to clean up. To see options, run this' +
       ' command without arguments.'
   )
-  .action(async (target) => {
+  .action(async (target: string) => {
     await clean(target);
   });
 
@@ -125,7 +132,7 @@ program
     '[pathToFolder]',
     'The path to the folder containing the videos to merge. Defaults to the current directory.'
   )
-  .action(async (pathToFolder) => {
+  .action(async (pathToFolder: string) => {
     await mergeVideos(pathToFolder);
   });
 
@@ -149,7 +156,7 @@ program
   });
 
 // Run the thang
-(async () => {
+void (async () => {
   await program.parseAsync();
   process.exit();
 })();

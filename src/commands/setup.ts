@@ -1,10 +1,10 @@
-import { Logger } from '@aneuhold/core-ts-lib';
 import { CurrentEnv } from '@aneuhold/be-ts-lib';
-import projects, { FolderName, Project } from '../config/projects';
+import { Logger } from '@jsr/aneuhold__core-ts-lib';
+import projects, { FolderName, Project } from '../config/projects.js';
 
 export default async function setup(): Promise<void> {
   const project = getProject();
-  Logger.verbose.info(`Project found for setup was ${project}`);
+  Logger.verbose.info(`Project found for setup was ${JSON.stringify(project)}`);
   if (project?.setup) {
     await project.setup();
   } else {

@@ -1,11 +1,11 @@
-import { Logger, StringService } from '@aneuhold/core-ts-lib';
 import {
   CLIService,
   ChromeService,
   CurrentEnv,
   OSFileSystemService
 } from '@aneuhold/be-ts-lib';
-import projects, { FolderName } from '../config/projects';
+import { Logger, StringService } from '@jsr/aneuhold__core-ts-lib';
+import projects, { FolderName, Project } from '../config/projects.js';
 
 /**
  * This should probably be updated for correct pathing and different OSes
@@ -81,11 +81,16 @@ export default async function open(
     return;
   }
 
-  const currentFolderName = CurrentEnv.folderName() as FolderName;
+  const currentFolderName = CurrentEnv.folderName();
+
+  let project: Project | undefined;
+  if (currentFolderName in projects) {
+    project = projects[currentFolderName as FolderName];
+  }
 
   // If there is already a solution file that should be chosen
-  if (projects[currentFolderName]?.solutionFilePath) {
-    await openSolutionFile(projects[currentFolderName].solutionFilePath);
+  if (project?.solutionFilePath) {
+    await openSolutionFile(project.solutionFilePath);
     return;
   }
 

@@ -1,4 +1,3 @@
-/* eslint-disable no-loop-func */
 type ResearchTower = {
   damageUpgrade: number;
   shieldUpgrade: number;

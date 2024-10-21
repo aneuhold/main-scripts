@@ -1,7 +1,7 @@
-import { datesAreOnSameDay, Logger } from '@aneuhold/core-ts-lib';
 import { CLIService, CurrentEnv } from '@aneuhold/be-ts-lib';
-import { name as PACKAGE_NAME } from '../../package.json';
-import Store from '../utils/Store';
+import { DateService, Logger } from '@jsr/aneuhold__core-ts-lib';
+import packageJson from '../../package.json' assert { type: 'json' };
+import Store from '../utils/Store.js';
 
 /**
  * Checks if this package has already been updated today and stores the last
@@ -20,7 +20,7 @@ async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
     await Store.set('lastUpdateCheckDate', new Date().toString());
     return false;
   }
-  if (datesAreOnSameDay(new Date(lastCheckDate), new Date())) {
+  if (DateService.datesAreOnSameDay(new Date(lastCheckDate), new Date())) {
     await Store.set('lastUpdateCheckDate', new Date().toString());
     return true;
   }
@@ -33,7 +33,7 @@ async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
  * Triggers an update of this package.
  */
 export async function triggerUpdate(): Promise<void> {
-  CurrentEnv.runStartupScript();
+  await CurrentEnv.runStartupScript();
 }
 
 /**
@@ -53,14 +53,14 @@ export async function updateIfNeeded(): Promise<void> {
     return;
   }
   const { didComplete, output } = await CLIService.execCmd(
-    `npm outdated -g ${PACKAGE_NAME}`
+    `npm outdated -g ${packageJson.name}`
   );
   if (didComplete) {
     const updateIsNeeded = output.length !== 0;
     if (updateIsNeeded) {
       Logger.verbose.info(`Output of outdated command is: ${output}`);
       Logger.failure('Update is needed. Installing update now...');
-      triggerUpdate();
+      await triggerUpdate();
     } else {
       Logger.verbose.success(`Package is up to date. Continuing...`);
     }

@@ -1,13 +1,16 @@
-import { Logger } from '@aneuhold/core-ts-lib';
+import { Logger } from '@jsr/aneuhold__core-ts-lib';
 import { access, mkdir, readFile, writeFile } from 'fs/promises';
-import path from 'path';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * The path to the localData folder. This should be targeted to one level out
  * of the root directory that way it isn't stored in the `lib` folder when
  * compiled.
  */
-const LOCALDATA_PATH = path.join(__dirname, '..', '..', '..', 'localData');
+const fileName = fileURLToPath(import.meta.url);
+const directoryName = dirname(fileName);
+const LOCALDATA_PATH = path.join(directoryName, '..', '..', '..', 'localData');
 
 /**
  * The database store path. This is relative to the root of the project
@@ -25,7 +28,7 @@ class Store {
   /**
    * Holds the database in-memory for use.
    */
-  private static db: StoreDb;
+  private static db: StoreDb | undefined;
 
   private static async writeDb(updatedDb: StoreDb) {
     Logger.verbose.info('Attempting to write to the store db file...');
@@ -45,7 +48,7 @@ class Store {
       Logger.verbose.info(`Checking to see if ${DB_PATH} exists`);
       await access(DB_PATH);
       Logger.verbose.info(`${DB_PATH} exists...`);
-      return JSON.parse(await readFile(DB_PATH, 'utf-8'));
+      return JSON.parse(await readFile(DB_PATH, 'utf-8')) as StoreDb;
     } catch {
       // DB doesn't exist, so write the file first.
       Logger.verbose.info('Creating the database...');
@@ -75,6 +78,9 @@ class Store {
     value: StoreDb[T]
   ): Promise<void> {
     await Store.checkDb();
+    if (!Store.db) {
+      return;
+    }
     Store.db[key] = value;
     await Store.writeDb(Store.db);
   }
@@ -83,6 +89,9 @@ class Store {
     key: T
   ): Promise<StoreDb[T] | null> {
     await Store.checkDb();
+    if (!Store.db) {
+      return null;
+    }
     return Store.db[key];
   }
 }

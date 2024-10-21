@@ -3,7 +3,7 @@ import {
   CurrentEnv,
   OperatingSystemType
 } from '@aneuhold/be-ts-lib';
-import { Logger } from '@aneuhold/core-ts-lib';
+import { Logger } from '@jsr/aneuhold__core-ts-lib';
 
 /**
  * Different things that can be cleaned.
@@ -23,21 +23,22 @@ export default async function clean(cleanTarget?: string): Promise<void> {
     logValidCleanTargets();
     return;
   }
-  // Check if the target is one of the valid CleanTarget values
-  const target = cleanTarget.toLowerCase() as CleanTarget;
 
-  switch (target) {
-    case CleanTarget.branches:
-      await cleanBranches();
-      break;
-    default:
-      Logger.error(
-        `The target "${target}" is not a valid target. See below ` +
-          `for a list of valid targets:`
-      );
-      logValidCleanTargets();
-      break;
+  cleanTarget = cleanTarget.toLowerCase();
+
+  // Check if the target is one of the valid CleanTarget values
+  if (!(cleanTarget in CleanTarget)) {
+    Logger.error(
+      `The target "${cleanTarget}" is not a valid target. See below ` +
+        `for a list of valid targets:`
+    );
+    logValidCleanTargets();
+    return;
   }
+
+  // At the moment, there's only one target, so we can just call the function
+  // directly. If there are more targets, then a switch block can be added.
+  await cleanBranches();
 }
 
 /**

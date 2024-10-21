@@ -1,8 +1,13 @@
-import { Logger } from '@aneuhold/core-ts-lib';
+import { CLIService } from '@aneuhold/be-ts-lib';
+import { Logger } from '@jsr/aneuhold__core-ts-lib';
 import fs from 'fs';
 import path from 'path';
-import { CLIService } from '@aneuhold/be-ts-lib';
-import templates, { ProjectType } from '../templates/Templates';
+import { fileURLToPath } from 'url';
+import templates, { ProjectType } from '../templates/Templates.js';
+
+// Convert import.meta.url to a file path
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * The path to the templates folder relative to this file.
@@ -76,7 +81,7 @@ export default async function scaffold(
     console.table(templates, ['name', 'description']);
     process.exit();
   }
-  if (!templates[projectType as ProjectType]) {
+  if (!(projectType in templates)) {
     Logger.error(
       `No project type found with name: ${projectType}. Please ` +
         `either add one to the "templates" folder or use one of the ones below:`
@@ -110,7 +115,3 @@ export default async function scaffold(
   Logger.info(`Use "cd ${chosenProjectName}" to move into that directory`);
   process.exit();
 }
-
-/*
-
-*/

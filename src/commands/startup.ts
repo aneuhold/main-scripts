@@ -1,8 +1,8 @@
-import { FileSystemService } from '@aneuhold/core-ts-lib';
+import { CurrentEnv, OperatingSystemType } from '@aneuhold/be-ts-lib';
+import { FileSystemService } from '@jsr/aneuhold__core-ts-lib';
 import os from 'os';
 import path from 'path';
-import { CurrentEnv, OperatingSystemType } from '@aneuhold/be-ts-lib';
-import aliases from '../config/aliases';
+import aliases from '../config/aliases.js';
 
 /**
  * Sets up the Aliases of standard commands that every operating system
