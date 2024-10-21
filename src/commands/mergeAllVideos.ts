@@ -1,4 +1,4 @@
-import { Logger } from '@aneuhold/core-ts-lib';
+import { Logger } from '@jsr/aneuhold__core-ts-lib';
 import fs from 'fs';
 import mergeVideos from './mergeVideos.js';
 
@@ -11,7 +11,7 @@ export default async function mergeAllVideos() {
     try {
       await mergeVideos(videoFolderName);
       Logger.info(`Merged videos in ${videoFolderName} folder`);
-    } catch (e) {
+    } catch {
       Logger.error(`Error merging videos in ${videoFolderName} folder`);
       Logger.info('Trying next folder...');
     }

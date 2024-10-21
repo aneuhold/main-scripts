@@ -5,5 +5,6 @@ export default [
   ...tsLibConfig,
   {
     // other override settings. e.g. for `files: ['**/*.test.*']`
+    ignores: ['*/**/template-folders']
   }
 ];

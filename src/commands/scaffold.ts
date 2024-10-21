@@ -1,5 +1,5 @@
 import { CLIService } from '@aneuhold/be-ts-lib';
-import { Logger } from '@aneuhold/core-ts-lib';
+import { Logger } from '@jsr/aneuhold__core-ts-lib';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

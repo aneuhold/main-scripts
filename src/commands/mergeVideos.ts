@@ -1,4 +1,4 @@
-import { Logger } from '@aneuhold/core-ts-lib';
+import { Logger } from '@jsr/aneuhold__core-ts-lib';
 import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 import path from 'path';
@@ -78,10 +78,10 @@ export default async function mergeVideos(pathToFolder: string) {
       });
     ffmpegCommand.on('error', (err, stdout, stderr) => {
       // All outputs have to be logged to see detailed error messages
-      Logger.error(err);
-      Logger.error(stdout);
-      Logger.error(stderr);
-      reject();
+      Logger.error(JSON.stringify(err));
+      Logger.error(stdout as string);
+      Logger.error(stderr as string);
+      reject(new Error('Error merging videos'));
     });
     ffmpegCommand.mergeToFile(outputFilePath, tempFolderPath);
   });
@@ -124,10 +124,10 @@ async function convertVideoToConsistentSize(
       })
       .on('error', (err, stdout, stderr) => {
         // All outputs have to be logged to see detailed error messages
-        Logger.error(err);
-        Logger.error(stdout);
-        Logger.error(stderr);
-        reject();
+        Logger.error(JSON.stringify(err));
+        Logger.error(stdout as string);
+        Logger.error(stderr as string);
+        reject(new Error('Error converting videos'));
       })
       .save(videoPath);
   });

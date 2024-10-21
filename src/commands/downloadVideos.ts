@@ -1,4 +1,4 @@
-import { Logger } from '@aneuhold/core-ts-lib';
+import { Logger } from '@jsr/aneuhold__core-ts-lib';
 import fs, { writeFile } from 'fs';
 import fetch from 'node-fetch';
 import path from 'path';
@@ -33,7 +33,7 @@ export default async function downloadVideos(
     if (downloadInParallel) {
       await Promise.all(
         videoSeries.urls.map(async (url, index) => {
-          downloadVideoAndLogInfo(url, index, newFolderPath);
+          await downloadVideoAndLogInfo(url, index, newFolderPath);
         })
       );
     } else {

@@ -1,5 +1,6 @@
 #!/usr/bin/env node --no-warnings
-import { Logger } from '@aneuhold/core-ts-lib';
+
+import { Logger } from '@jsr/aneuhold__core-ts-lib';
 import { program } from 'commander';
 import clean from './commands/clean.js';
 import downloadAndMergeVideos from './commands/downloadAndMergeVideos.js';
@@ -65,7 +66,7 @@ program
   )
   .argument('[appName]', 'The name of the app to open if wanted')
   .argument('[methodName]', 'The method to call of the specified application')
-  .action(async (appName, methodName) => {
+  .action(async (appName: string, methodName: string) => {
     await open(appName, methodName);
   });
 
@@ -91,9 +92,15 @@ program
     'The name of the project to start. This will be the root folder name.'
   )
   .option('-l, --list', 'List all available project types')
-  .action(async (projectType, projectName, options) => {
-    await scaffold(projectType, projectName, options.list);
-  });
+  .action(
+    async (
+      projectType: string,
+      projectName: string,
+      options: { list: boolean }
+    ) => {
+      await scaffold(projectType, projectName, options.list);
+    }
+  );
 
 program
   .command('clean')
@@ -103,7 +110,7 @@ program
     'The target to clean up. To see options, run this' +
       ' command without arguments.'
   )
-  .action(async (target) => {
+  .action(async (target: string) => {
     await clean(target);
   });
 
@@ -125,7 +132,7 @@ program
     '[pathToFolder]',
     'The path to the folder containing the videos to merge. Defaults to the current directory.'
   )
-  .action(async (pathToFolder) => {
+  .action(async (pathToFolder: string) => {
     await mergeVideos(pathToFolder);
   });
 
