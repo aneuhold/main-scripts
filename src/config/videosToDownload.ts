@@ -1,4 +1,4 @@
-import { VideoSeriesInfo } from '../utils/VideoSeriesInfo';
+import { VideoSeriesInfo } from '../utils/VideoSeriesInfo.js';
 
 const videosToDownload: VideoSeriesInfo[] = [
   {

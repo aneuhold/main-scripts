@@ -4,7 +4,7 @@ import {
   ITermService,
   TerminalType
 } from '@aneuhold/be-ts-lib';
-import { Logger } from '@aneuhold/core-ts-lib';
+import { Logger } from '@jsr/aneuhold__core-ts-lib';
 import path from 'path';
 
 /**
@@ -192,7 +192,7 @@ function setupPiSubTerminalsFunc(
     Logger.info(`Setting up ${project.folderName}...`);
     const currentPath = path.resolve('.', subPath);
 
-    if (CurrentEnv.terminal)
+    if (CurrentEnv.terminal())
       if (
         CurrentEnv.terminal() !== TerminalType.WindowsTerminal &&
         CurrentEnv.terminal() !== TerminalType.ITerm2

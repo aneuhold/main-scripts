@@ -1,13 +1,16 @@
 import { Logger } from '@aneuhold/core-ts-lib';
 import { access, mkdir, readFile, writeFile } from 'fs/promises';
-import path from 'path';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * The path to the localData folder. This should be targeted to one level out
  * of the root directory that way it isn't stored in the `lib` folder when
  * compiled.
  */
-const LOCALDATA_PATH = path.join(__dirname, '..', '..', '..', 'localData');
+const fileName = fileURLToPath(import.meta.url);
+const directoryName = dirname(fileName);
+const LOCALDATA_PATH = path.join(directoryName, '..', '..', '..', 'localData');
 
 /**
  * The database store path. This is relative to the root of the project

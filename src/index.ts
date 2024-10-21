@@ -1,18 +1,18 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --no-warnings
 import { Logger } from '@aneuhold/core-ts-lib';
 import { program } from 'commander';
-import clean from './commands/clean';
-import downloadAndMergeVideos from './commands/downloadAndMergeVideos';
-import downloadVideos from './commands/downloadVideos';
-import fpull from './commands/fpull';
-import mergeAllVideos from './commands/mergeAllVideos';
-import mergeVideos from './commands/mergeVideos';
-import open from './commands/open';
-import scaffold from './commands/scaffold';
-import setup from './commands/setup';
-import startup from './commands/startup';
-import calculateProbabilities from './helperFunctions/calculator';
-import { triggerUpdate } from './helperFunctions/updateIfNeeded';
+import clean from './commands/clean.js';
+import downloadAndMergeVideos from './commands/downloadAndMergeVideos.js';
+import downloadVideos from './commands/downloadVideos.js';
+import fpull from './commands/fpull.js';
+import mergeAllVideos from './commands/mergeAllVideos.js';
+import mergeVideos from './commands/mergeVideos.js';
+import open from './commands/open.js';
+import scaffold from './commands/scaffold.js';
+import setup from './commands/setup.js';
+import startup from './commands/startup.js';
+import calculateProbabilities from './helperFunctions/calculator.js';
+import { triggerUpdate } from './helperFunctions/updateIfNeeded.js';
 
 program.name('tb');
 
@@ -29,7 +29,7 @@ program
   .command('test')
   .argument('[args...]')
   .description('Runs a test command to make sure the package is working')
-  .action(async (args) => {
+  .action((args) => {
     Logger.info(`You entered the following args: ${JSON.stringify(args)}`);
     calculateProbabilities();
   });
@@ -51,7 +51,7 @@ program
 program
   .command('setup')
   .description(
-    'Sets up the dev environemnt based on the name of the current directory'
+    'Sets up the dev environment based on the name of the current directory'
   )
   .action(async () => {
     await setup();
@@ -149,7 +149,7 @@ program
   });
 
 // Run the thang
-(async () => {
+void (async () => {
   await program.parseAsync();
   process.exit();
 })();

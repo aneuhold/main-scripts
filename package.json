@@ -7,13 +7,11 @@
   "packageManager": "yarn@4.5.1",
   "type": "module",
   "scripts": {
-    "pushpub": "npm run build && npm version patch && git push && npm publish --access public",
     "refresh": "yarn build && npm uninstall -g @aneuhold/main-scripts && npm i -g",
     "build": "rimraf lib && tsc --project tsconfig.build.json && shx cp -r src/templates/template-folders lib/src/templates",
     "lint": "eslint",
-    "upgrade:all": "yarn upgrade --latest",
-    "link:core": "yarn link @aneuhold/core-ts-lib",
-    "unlink:core": "yarn unlink @aneuhold/core-ts-lib && yarn install --force && yarn upgrade",
+    "upgrade:core": "yarn up '@jsr/aneuhold*' '@aneuhold/*'",
+    "upgrade:all": "yarn up",
     "reset:global": "npm uninstall -g @aneuhold/main-scripts && npm i -g @aneuhold/main-scripts"
   },
   "main": "src/index.js",
@@ -36,8 +34,8 @@
     "Node.js"
   ],
   "dependencies": {
-    "@aneuhold/be-ts-lib": "^1.0.6",
-    "@aneuhold/core-ts-lib": "1.1.11",
+    "@aneuhold/be-ts-lib": "^1.0.77",
+    "@jsr/aneuhold__core-ts-lib": "^2.0.4",
     "commander": "^11.1.0",
     "fluent-ffmpeg": "^2.1.2",
     "node-fetch": "^2"

@@ -3,7 +3,7 @@ import fs, { writeFile } from 'fs';
 import fetch from 'node-fetch';
 import path from 'path';
 import { promisify } from 'util';
-import videosToDownload from '../config/videosToDownload';
+import videosToDownload from '../config/videosToDownload.js';
 
 const writeFilePromise = promisify(writeFile);
 
@@ -20,7 +20,7 @@ export default async function downloadVideos(
   // will be downloaded to that directory
   const currentDir = process.cwd();
   const videoFolderNames: string[] = [];
-  // eslint-disable-next-line no-restricted-syntax
+
   for (const videoSeries of videosToDownload) {
     // Create a new folder for the videos
     const newFolderName = videoSeries.title;
@@ -31,16 +31,13 @@ export default async function downloadVideos(
 
     // Download each video
     if (downloadInParallel) {
-      // eslint-disable-next-line no-await-in-loop
       await Promise.all(
         videoSeries.urls.map(async (url, index) => {
           downloadVideoAndLogInfo(url, index, newFolderPath);
         })
       );
     } else {
-      // eslint-disable-next-line no-restricted-syntax
       for (const [index, url] of videoSeries.urls.entries()) {
-        // eslint-disable-next-line no-await-in-loop
         await downloadVideoAndLogInfo(url, index, newFolderPath);
       }
     }
@@ -66,5 +63,5 @@ async function downloadVideoAndLogInfo(
 async function download(url: string, dest: string) {
   await fetch(url)
     .then((x) => x.arrayBuffer())
-    .then((x) => writeFilePromise(dest, Buffer.from(x)));
+    .then((x) => writeFilePromise(dest, new Uint8Array(x)));
 }
