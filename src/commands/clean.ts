@@ -3,7 +3,7 @@ import {
   CurrentEnv,
   OperatingSystemType
 } from '@aneuhold/be-ts-lib';
-import { Logger } from '@jsr/aneuhold__core-ts-lib';
+import { Logger } from '@aneuhold/core-ts-lib';
 
 /**
  * Different things that can be cleaned.

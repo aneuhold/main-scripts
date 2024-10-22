@@ -1,5 +1,5 @@
 import { CLIService } from '@aneuhold/be-ts-lib';
-import { Logger } from '@jsr/aneuhold__core-ts-lib';
+import { Logger } from '@aneuhold/core-ts-lib';
 
 export default async function fpull(): Promise<void> {
   const { output: output1 } = await CLIService.execCmd(`git fetch -a`, false);

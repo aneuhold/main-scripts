@@ -1,4 +1,4 @@
-import { Logger } from '@jsr/aneuhold__core-ts-lib';
+import { Logger } from '@aneuhold/core-ts-lib';
 import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 import path from 'path';
