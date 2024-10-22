@@ -1,4 +1,4 @@
-import { Logger } from '@jsr/aneuhold__core-ts-lib';
+import { Logger } from '@aneuhold/core-ts-lib';
 import { access, mkdir, readFile, writeFile } from 'fs/promises';
 import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';

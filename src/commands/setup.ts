@@ -1,5 +1,5 @@
 import { CurrentEnv } from '@aneuhold/be-ts-lib';
-import { Logger } from '@jsr/aneuhold__core-ts-lib';
+import { Logger } from '@aneuhold/core-ts-lib';
 import projects, { FolderName, Project } from '../config/projects.js';
 
 export default async function setup(): Promise<void> {

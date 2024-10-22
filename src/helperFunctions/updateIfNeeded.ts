@@ -1,5 +1,5 @@
 import { CLIService, CurrentEnv } from '@aneuhold/be-ts-lib';
-import { DateService, Logger } from '@jsr/aneuhold__core-ts-lib';
+import { DateService, Logger } from '@aneuhold/core-ts-lib';
 import packageJson from '../../package.json' assert { type: 'json' };
 import Store from '../utils/Store.js';
 

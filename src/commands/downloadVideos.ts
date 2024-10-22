@@ -1,4 +1,4 @@
-import { Logger } from '@jsr/aneuhold__core-ts-lib';
+import { Logger } from '@aneuhold/core-ts-lib';
 import fs, { writeFile } from 'fs';
 import fetch from 'node-fetch';
 import path from 'path';

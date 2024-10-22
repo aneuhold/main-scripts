@@ -1,6 +1,6 @@
 #!/usr/bin/env node --no-warnings
 
-import { Logger } from '@jsr/aneuhold__core-ts-lib';
+import { Logger } from '@aneuhold/core-ts-lib';
 import { program } from 'commander';
 import clean from './commands/clean.js';
 import downloadAndMergeVideos from './commands/downloadAndMergeVideos.js';

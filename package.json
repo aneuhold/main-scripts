@@ -14,9 +14,10 @@
     "upgrade:all": "yarn up",
     "reset:global": "npm uninstall -g @aneuhold/main-scripts && npm i -g @aneuhold/main-scripts"
   },
-  "main": "src/index.js",
+  "main": "lib/src/index.js",
+  "module": "lib/src/index.js",
   "bin": {
-    "tb": "./lib/src/index.js"
+    "tb": "lib/src/index.js"
   },
   "files": [
     "lib/**/*"
@@ -35,7 +36,7 @@
   ],
   "dependencies": {
     "@aneuhold/be-ts-lib": "^1.0.77",
-    "@jsr/aneuhold__core-ts-lib": "^2.0.4",
+    "@aneuhold/core-ts-lib": "^2.0.5",
     "commander": "^12.1.0",
     "fluent-ffmpeg": "^2.1.2",
     "node-fetch": "^2"

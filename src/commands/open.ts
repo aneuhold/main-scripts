@@ -4,7 +4,7 @@ import {
   CurrentEnv,
   OSFileSystemService
 } from '@aneuhold/be-ts-lib';
-import { Logger, StringService } from '@jsr/aneuhold__core-ts-lib';
+import { Logger, StringService } from '@aneuhold/core-ts-lib';
 import projects, { FolderName, Project } from '../config/projects.js';
 
 /**

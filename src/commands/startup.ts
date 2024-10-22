@@ -1,5 +1,5 @@
 import { CurrentEnv, OperatingSystemType } from '@aneuhold/be-ts-lib';
-import { FileSystemService } from '@jsr/aneuhold__core-ts-lib';
+import { FileSystemService } from '@aneuhold/core-ts-lib';
 import os from 'os';
 import path from 'path';
 import aliases from '../config/aliases.js';

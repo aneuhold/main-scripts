@@ -54,6 +54,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@aneuhold/core-ts-lib@npm:^2.0.5":
+  version: 2.0.5
+  resolution: "@aneuhold/core-ts-lib@npm:2.0.5"
+  checksum: 10c0/e2205718e18dc708d694026742978ba5f46661fa181bf1d953058e9a4a5c3cc3df09da86f5ff89d60b1e0db874b92e5dca4ca0fbf1b6e14f14693d6bf5ca3ac2
+  languageName: node
+  linkType: hard
+
 "@aneuhold/eslint-config@npm:^1.0.36":
   version: 1.0.36
   resolution: "@aneuhold/eslint-config@npm:1.0.36"
@@ -78,8 +85,8 @@ __metadata:
   resolution: "@aneuhold/main-scripts@workspace:."
   dependencies:
     "@aneuhold/be-ts-lib": "npm:^1.0.77"
+    "@aneuhold/core-ts-lib": "npm:^2.0.5"
     "@aneuhold/eslint-config": "npm:^1.0.36"
-    "@jsr/aneuhold__core-ts-lib": "npm:^2.0.4"
     "@types/fluent-ffmpeg": "npm:^2.1.24"
     "@types/node": "npm:^20.11.16"
     "@types/node-fetch": "npm:^2.6.11"
@@ -93,7 +100,7 @@ __metadata:
     tsx: "npm:^4.19.1"
     typescript: "npm:^5.6.3"
   bin:
-    tb: ./lib/src/index.js
+    tb: lib/src/index.js
   languageName: unknown
   linkType: soft
 
@@ -390,13 +397,6 @@ __metadata:
   version: 1.5.0
   resolution: "@jridgewell/sourcemap-codec@npm:1.5.0"
   checksum: 10c0/2eb864f276eb1096c3c11da3e9bb518f6d9fc0023c78344cdc037abadc725172c70314bdb360f2d4b7bffec7f5d657ce006816bc5d4ecb35e61b66132db00c18
-  languageName: node
-  linkType: hard
-
-"@jsr/aneuhold__core-ts-lib@npm:^2.0.4":
-  version: 2.0.4
-  resolution: "@jsr/aneuhold__core-ts-lib@npm:2.0.4::__archiveUrl=https%3A%2F%2Fnpm.jsr.io%2F~%2F11%2F%40jsr%2Faneuhold__core-ts-lib%2F2.0.4.tgz"
-  checksum: 10c0/fb5fc6df2799d98c403e4356c6fdca05394c9c0ffee9c7c8e140a5fe6d0385c6078bca442d75d6d9420a819ab58520f6f16c3f686159644d1c0f434c6eba523b
   languageName: node
   linkType: hard
 
