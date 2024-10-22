@@ -10,7 +10,7 @@
     "refresh": "yarn build && npm uninstall -g @aneuhold/main-scripts && npm i -g",
     "build": "rimraf lib && tsc --project tsconfig.build.json && shx cp -r src/templates/template-folders lib/src/templates",
     "lint": "eslint",
-    "upgrade:core": "yarn up '@jsr/aneuhold*' '@aneuhold/*'",
+    "upgrade:core": "yarn up '@aneuhold/*'",
     "upgrade:all": "yarn up",
     "reset:global": "npm uninstall -g @aneuhold/main-scripts && npm i -g @aneuhold/main-scripts"
   },
@@ -35,14 +35,14 @@
     "Node.js"
   ],
   "dependencies": {
-    "@aneuhold/be-ts-lib": "^1.0.77",
-    "@aneuhold/core-ts-lib": "^2.0.5",
+    "@aneuhold/be-ts-lib": "^1.0.79",
+    "@aneuhold/core-ts-lib": "^2.0.6",
     "commander": "^12.1.0",
     "fluent-ffmpeg": "^2.1.2",
     "node-fetch": "^2"
   },
   "devDependencies": {
-    "@aneuhold/eslint-config": "^1.0.36",
+    "@aneuhold/eslint-config": "^1.0.37",
     "@types/fluent-ffmpeg": "^2.1.24",
     "@types/node": "^20.11.16",
     "@types/node-fetch": "^2.6.11",
