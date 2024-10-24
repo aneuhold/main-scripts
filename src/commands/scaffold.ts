@@ -1,8 +1,8 @@
-import { CLIService } from '@aneuhold/be-ts-lib';
 import { Logger } from '@aneuhold/core-ts-lib';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import CLIService from '../services/CLIService.js';
 import templates, { ProjectType } from '../templates/Templates.js';
 
 // Convert import.meta.url to a file path

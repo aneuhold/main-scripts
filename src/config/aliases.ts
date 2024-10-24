@@ -1,4 +1,4 @@
-import { OperatingSystemType } from '@aneuhold/be-ts-lib';
+import { OperatingSystemType } from '../utils/CurrentEnv.js';
 
 export type AliasInfo = {
   [osType in OperatingSystemType]: string;

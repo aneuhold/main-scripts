@@ -1,11 +1,9 @@
-import {
-  CLIService,
-  ChromeService,
-  CurrentEnv,
-  OSFileSystemService
-} from '@aneuhold/be-ts-lib';
 import { Logger, StringService } from '@aneuhold/core-ts-lib';
 import projects, { FolderName, Project } from '../config/projects.js';
+import ChromeService from '../services/applications/ChromeService.js';
+import OSFileSystemService from '../services/applications/OSFileSystemService.js';
+import CLIService from '../services/CLIService.js';
+import CurrentEnv from '../utils/CurrentEnv.js';
 
 /**
  * This should probably be updated for correct pathing and different OSes

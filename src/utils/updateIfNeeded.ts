@@ -1,7 +1,8 @@
-import { CLIService, CurrentEnv } from '@aneuhold/be-ts-lib';
 import { DateService, Logger } from '@aneuhold/core-ts-lib';
 import packageJson from '../../package.json' assert { type: 'json' };
+import CLIService from '../services/CLIService.js';
 import Store from '../utils/Store.js';
+import CurrentEnv from './CurrentEnv.js';
 
 /**
  * Checks if this package has already been updated today and stores the last

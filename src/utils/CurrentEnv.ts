@@ -1,7 +1,7 @@
+import { Logger } from '@aneuhold/core-ts-lib';
 import { readdir } from 'fs/promises';
 import path from 'path';
 import CLIService from '../services/CLIService.js';
-import { Logger } from '@jsr/aneuhold__core-ts-lib';
 
 /**
  * The type of shell that the current environment is running.

@@ -1,11 +1,8 @@
-import {
-  CLIService,
-  CurrentEnv,
-  ITermService,
-  TerminalType
-} from '@aneuhold/be-ts-lib';
 import { Logger } from '@aneuhold/core-ts-lib';
 import path from 'path';
+import ITermService from '../services/applications/ITermService.js';
+import CLIService from '../services/CLIService.js';
+import CurrentEnv, { TerminalType } from '../utils/CurrentEnv.js';
 
 /**
  * Represents a project, which is typically a repo but is defined primarily
