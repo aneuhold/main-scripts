@@ -9,16 +9,17 @@ If you would like to start a project with this as a basis, feel free to fork / c
 
 ## 📦 Installation
 
-This is meant to be installed globally, and not brought in to another project. So for compatibility reasons, the best way to use this is to run:
+This is typically meant to be installed globally. So for compatibility reasons, the best way to use this is to run:
 
 ```
 npm install -g @aneuhold/main-scripts
 ```
 
+This can also be used as a dev dependency
+
 ## ✅ Commands
 
-Each command starts with `tb`. That stands for Tiny Box but that isn't really important 😛. Whenever running a command it will check for updates to this package once a day, and
-install them automatically if needed.
+Each command starts with `tb`. That stands for Tiny Box but that isn't really important 😛.
 
 - `tb help` Will emit all the commands and their options
 - `tb open` Will open the current directory in either VS Code, or Rider depending on the project as it is configured in [`projects.ts`](src/config/projects.ts).
@@ -28,6 +29,17 @@ install them automatically if needed.
 - `tb setup` Will setup the development environment according to the current working directory name. If settings have not been determined yet for the directory name, shell, or terminal, then it will inform you and won't do anything else.
 - `tb startup` Will run the startup script for the current system with no arguments
 - `tb scaffold [projectType] [projectName]` Will build the given project type with the given project name as a new folder in the current working directory named with the given `projectName`.
+
+### Commands specifically for package.json scripts
+
+- `tb pkg validateJsr` Will run a few steps, where if one fails, the next do not proceed:
+  1.  Check if there are any pending changes that haven't been committed
+  1.  Update the current working directory's `jsr.json` `version` field to match the `version` field in the `package.json` in the same directory
+  1.  Run `jsr publish --allow-dirty --dry-run` to ensure it passes the checks of JSR
+  1.  Revert the change to the local `jsr.json` file
+- `tb pkg publishJsr` Will do the same steps as above, but the `jsr` command will be `jsr publish --allow-dirty`. If running locally, this will prompt you to login with your local browser to JSR and permit the publish. In CI, it should handle this without any intervention if the JSR GitHub action is used.
+
+> Both of the above commands require a dev dependency on `jsr`.
 
 ## ⚠️ Potential Issues
 
