@@ -1,9 +1,6 @@
-import {
-  CLIService,
-  CurrentEnv,
-  OperatingSystemType
-} from '@aneuhold/be-ts-lib';
 import { Logger } from '@aneuhold/core-ts-lib';
+import CLIService from '../services/CLIService.js';
+import CurrentEnv, { OperatingSystemType } from '../utils/CurrentEnv.js';
 
 /**
  * Different things that can be cleaned.

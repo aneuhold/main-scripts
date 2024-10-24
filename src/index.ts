@@ -13,8 +13,8 @@ import pkg from './commands/pkg.js';
 import scaffold from './commands/scaffold.js';
 import setup from './commands/setup.js';
 import startup from './commands/startup.js';
-import calculateProbabilities from './helperFunctions/calculator.js';
-import { triggerUpdate } from './helperFunctions/updateIfNeeded.js';
+import calculateProbabilities from './utils/calculator.js';
+import { triggerUpdate } from './utils/updateIfNeeded.js';
 
 program.name('tb');
 

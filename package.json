@@ -35,7 +35,6 @@
     "Node.js"
   ],
   "dependencies": {
-    "@aneuhold/be-ts-lib": "^1.0.79",
     "@aneuhold/core-ts-lib": "^2.0.6",
     "commander": "^12.1.0",
     "fluent-ffmpeg": "^2.1.2",
