@@ -9,6 +9,7 @@ import fpull from './commands/fpull.js';
 import mergeAllVideos from './commands/mergeAllVideos.js';
 import mergeVideos from './commands/mergeVideos.js';
 import open from './commands/open.js';
+import pkg from './commands/pkg.js';
 import scaffold from './commands/scaffold.js';
 import setup from './commands/setup.js';
 import startup from './commands/startup.js';
@@ -153,6 +154,20 @@ program
   )
   .action(async () => {
     await mergeAllVideos();
+  });
+
+program
+  .command('pkg')
+  .description(
+    'Performs actions related to package publishing. This is ' +
+      'typically used inside a package.json file as one of the scripts.'
+  )
+  .argument(
+    '[packageAction]',
+    'The package action to perform. Supported actions are: validateJsr, publishJsr.'
+  )
+  .action(async (packageAction: string) => {
+    await pkg(packageAction);
   });
 
 // Run the thang
