@@ -30,7 +30,7 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
 - `tb startup` Will run the startup script for the current system with no arguments
 - `tb scaffold [projectType] [projectName]` Will build the given project type with the given project name as a new folder in the current working directory named with the given `projectName`.
 
-### Commands specifically for package.json scripts
+### Commands specifically for `package.json` scripts
 
 - `tb pkg validateJsr` Will run a few steps, where if one fails, the next do not proceed:
   1.  Check if there are any pending changes that haven't been committed
@@ -38,8 +38,6 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
   1.  Run `jsr publish --allow-dirty --dry-run` to ensure it passes the checks of JSR
   1.  Revert the change to the local `jsr.json` file
 - `tb pkg publishJsr` Will do the same steps as above, but the `jsr` command will be `jsr publish --allow-dirty`. If running locally, this will prompt you to login with your local browser to JSR and permit the publish. In CI, it should handle this without any intervention if the JSR GitHub action is used.
-
-> Both of the above commands require a dev dependency on `jsr`.
 
 ## ⚠️ Potential Issues
 

@@ -93,6 +93,7 @@ __metadata:
     commander: "npm:^12.1.0"
     eslint: "npm:^9.13.0"
     fluent-ffmpeg: "npm:^2.1.2"
+    jsr: "npm:^0.13.2"
     node-fetch: "npm:^2"
     prettier: "npm:^3.3.3"
     rimraf: "npm:^5.0.5"
@@ -2992,6 +2993,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jsr@npm:^0.13.2":
+  version: 0.13.2
+  resolution: "jsr@npm:0.13.2"
+  dependencies:
+    kolorist: "npm:^1.8.0"
+    node-stream-zip: "npm:^1.15.0"
+    semiver: "npm:^1.1.0"
+  bin:
+    jsr: dist/bin.js
+  checksum: 10c0/96dd6a0821bcff65ac0de6b8724cc75cf0bdc2981824708e31232360c23403473bf0cc083b3ea4a9ea15b285f4415df197353fc22ab3611de22cc24ccd94ad4a
+  languageName: node
+  linkType: hard
+
 "jwa@npm:^1.4.1":
   version: 1.4.1
   resolution: "jwa@npm:1.4.1"
@@ -3026,6 +3040,13 @@ __metadata:
   version: 0.35.0
   resolution: "known-css-properties@npm:0.35.0"
   checksum: 10c0/04a4a2859d62670bb25b5b28091a1f03f6f0d3298a5ed3e7476397c5287b98c434f6dd9c004a0c67a53b7f21acc93f83c972e98c122f568d4d0bd21fd2b90fb6
+  languageName: node
+  linkType: hard
+
+"kolorist@npm:^1.8.0":
+  version: 1.8.0
+  resolution: "kolorist@npm:1.8.0"
+  checksum: 10c0/73075db44a692bf6c34a649f3b4b3aea4993b84f6b754cbf7a8577e7c7db44c0bad87752bd23b0ce533f49de2244ce2ce03b7b1b667a85ae170a94782cc50f9b
   languageName: node
   linkType: hard
 
@@ -3389,6 +3410,13 @@ __metadata:
   bin:
     node-gyp: bin/node-gyp.js
   checksum: 10c0/00630d67dbd09a45aee0a5d55c05e3916ca9e6d427ee4f7bc392d2d3dc5fad7449b21fc098dd38260a53d9dcc9c879b36704a1994235d4707e7271af7e9a835b
+  languageName: node
+  linkType: hard
+
+"node-stream-zip@npm:^1.15.0":
+  version: 1.15.0
+  resolution: "node-stream-zip@npm:1.15.0"
+  checksum: 10c0/429fce95d7e90e846adbe096c61d2ea8d18defc155c0345d25d0f98dd6fc72aeb95039318484a4e0a01dc3814b6d0d1ae0fe91847a29669dff8676ec064078c9
   languageName: node
   linkType: hard
 
@@ -3902,6 +3930,13 @@ __metadata:
   version: 2.1.2
   resolution: "safer-buffer@npm:2.1.2"
   checksum: 10c0/7e3c8b2e88a1841c9671094bbaeebd94448111dd90a81a1f606f3f67708a6ec57763b3b47f06da09fc6054193e0e6709e77325415dc8422b04497a8070fa02d4
+  languageName: node
+  linkType: hard
+
+"semiver@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "semiver@npm:1.1.0"
+  checksum: 10c0/f208555fcdf8726d25a5d5acd5079b1f6a274a9be291da6981c70867cca9abd43721648b338bac914fbc7874e2594217a5943a2e91410ce24b5a80a641d4468b
   languageName: node
   linkType: hard
 
