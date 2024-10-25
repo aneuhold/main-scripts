@@ -32,12 +32,14 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
 
 ### Commands specifically for `package.json` scripts
 
-- `tb pkg validateJsr` Will run a few steps, where if one fails, the next do not proceed:
+- `tb pkg validateJsr` Will run a few steps, where if one fails, the next do not proceed, with exception of reverting the updates to `jsr.json`. That always runs if it was changed:
   1.  Check if there are any pending changes that haven't been committed
   1.  Update the current working directory's `jsr.json` `version` field to match the `version` field in the `package.json` in the same directory
   1.  Run `jsr publish --allow-dirty --dry-run` to ensure it passes the checks of JSR
   1.  Revert the change to the local `jsr.json` file
 - `tb pkg publishJsr` Will do the same steps as above, but the `jsr` command will be `jsr publish --allow-dirty`. If running locally, this will prompt you to login with your local browser to JSR and permit the publish. In CI, it should handle this without any intervention if the JSR GitHub action is used.
+
+> The above do require `jsr` as a dev dependency
 
 ## ⚠️ Potential Issues
 
