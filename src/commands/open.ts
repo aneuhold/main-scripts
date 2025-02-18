@@ -1,8 +1,10 @@
 import { Logger, StringService } from '@aneuhold/core-ts-lib';
+import path from 'path';
 import projects, { FolderName, Project } from '../config/projects.js';
 import ChromeService from '../services/applications/ChromeService.js';
 import OSFileSystemService from '../services/applications/OSFileSystemService.js';
 import CLIService from '../services/CLIService.js';
+import FileSearchService from '../services/FileSearchService.js';
 import CurrentEnv from '../utils/CurrentEnv.js';
 
 /**
@@ -62,9 +64,74 @@ async function runApplication(appName: AppName) {
   }
 }
 
-async function openSolutionFile(solutionFilePath?: string) {
+async function openSolutionFile(solutionFilePath: string) {
   Logger.success(`Opening ${solutionFilePath} in Rider...`);
   await CLIService.execCmdWithTimeout(`rider "${solutionFilePath}"`, 4000);
+}
+
+async function openVSCode() {
+  Logger.success(`Opening current directory in VS Code...`);
+  await CLIService.execCmdWithTimeout(`code .`, 4000);
+}
+
+async function findAndOpenProject(): Promise<void> {
+  const currentDir = process.cwd();
+
+  // Check for package.json in current directory
+  const hasPackageJson = await FileSearchService.fileExistsInDir(
+    currentDir,
+    'package.json'
+  );
+  if (hasPackageJson) {
+    await openVSCode();
+    return;
+  }
+
+  // Check for solution files in current directory
+  const currentDirFiles = await CurrentEnv.fileNamesInDir();
+  const solutionFiles = currentDirFiles.filter(
+    (file) => StringService.getFileNameExtension(file) === 'sln'
+  );
+
+  if (solutionFiles.length === 1) {
+    await openSolutionFile(solutionFiles[0]);
+    return;
+  }
+
+  // If no immediate solution file found, search deeper
+  if (solutionFiles.length === 0) {
+    const deepSolutionFiles = await FileSearchService.findFilesWithExtension(
+      currentDir,
+      'sln'
+    );
+
+    if (deepSolutionFiles.length === 0) {
+      await openVSCode();
+      return;
+    }
+
+    if (deepSolutionFiles.length === 1) {
+      await openSolutionFile(deepSolutionFiles[0]);
+      return;
+    }
+
+    if (deepSolutionFiles.length > 1) {
+      const relativePaths = deepSolutionFiles.map((file) =>
+        path.relative(currentDir, file)
+      );
+      const selectedRelativePath =
+        await CLIService.selectFromList(relativePaths);
+      await openSolutionFile(path.join(currentDir, selectedRelativePath));
+      return;
+    }
+  }
+
+  // Handle multiple solution files in current directory
+  if (solutionFiles.length > 1) {
+    const selectedFile = await CLIService.selectFromList(solutionFiles);
+    await openSolutionFile(selectedFile);
+    return;
+  }
 }
 
 /**
@@ -92,24 +159,5 @@ export default async function open(
     return;
   }
 
-  const fileNamesInDir = await CurrentEnv.fileNamesInDir();
-  const filesWithSlnExtension = fileNamesInDir.filter(
-    (fileName) => StringService.getFileNameExtension(fileName) === 'sln'
-  );
-
-  if (filesWithSlnExtension.length > 1) {
-    Logger.failure(
-      `There were more than 1 solution files that were found. The solution files that were found were: `
-    );
-    console.log(filesWithSlnExtension);
-    return;
-  }
-  if (filesWithSlnExtension.length > 0) {
-    await openSolutionFile(filesWithSlnExtension[0]);
-    return;
-  }
-
-  // All else fails, open VS Code 😁
-  Logger.success(`Opening current directory in VS Code...`);
-  await CLIService.execCmdWithTimeout(`code .`, 4000);
+  await findAndOpenProject();
 }

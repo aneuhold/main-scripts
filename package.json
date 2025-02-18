@@ -2,7 +2,7 @@
   "name": "@aneuhold/main-scripts",
   "author": "Anton G. Neuhold Jr.",
   "license": "MIT",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "description": "Main scripts for use personally on any platform",
   "packageManager": "yarn@4.5.1",
   "type": "module",
@@ -36,6 +36,7 @@
   ],
   "dependencies": {
     "@aneuhold/core-ts-lib": "^2.0.6",
+    "@inquirer/prompts": "^7.3.2",
     "commander": "^12.1.0",
     "fluent-ffmpeg": "^2.1.2",
     "node-fetch": "^2"

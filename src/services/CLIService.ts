@@ -1,8 +1,9 @@
+import { Logger, sleep } from '@aneuhold/core-ts-lib';
+import { select } from '@inquirer/prompts';
 import { ExecOptions, exec as normalExec, spawn } from 'child_process';
 import * as rl from 'readline';
 import util from 'util';
 import CurrentEnv, { OperatingSystemType } from '../utils/CurrentEnv.js';
-import { Logger, sleep } from '@aneuhold/core-ts-lib';
 
 /**
  * The promisified version of the {@link normalExec} function.
@@ -182,5 +183,20 @@ export default class CLIService {
         resolve(input);
       });
     });
+  }
+
+  /**
+   * Presents a list of options to the user and returns the selected option using inquirer
+   */
+  static async selectFromList(options: string[]): Promise<string> {
+    if (options.length === 0) throw new Error('No options provided');
+    if (options.length === 1) return options[0];
+
+    const answer = await select({
+      message: 'Select a package manager',
+      choices: options.map((option) => ({ title: option, value: option }))
+    });
+
+    return answer;
   }
 }
