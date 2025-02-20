@@ -78,7 +78,7 @@ export default class CurrentEnv {
           );
       }
     } else if (currentOs === OperatingSystemType.MacOSX) {
-      // Mighbt want to use process.env.SHELL for Linux environments
+      // Might want to use process.env.SHELL for Linux environments
     }
     return ShellType.Unknown;
   }
@@ -136,5 +136,54 @@ export default class CurrentEnv {
 
   public static folderName(): string {
     return path.basename(path.resolve('.'));
+  }
+
+  /**
+   * Gets the command that should be used to open .sln files on the current system.
+   *
+   * @returns A promise that resolves to the command string to use, or null if no
+   * valid command is found. The next string following the returned command should
+   * be the path to the .sln file.
+   */
+  public static async getSolutionFileCommand(): Promise<string> {
+    const visualStudioCommand = 'start devenv ';
+    const riderCommand = 'rider ';
+    const vsCodeCommand = 'code ';
+
+    if (CurrentEnv.os === OperatingSystemType.Windows) {
+      try {
+        const { output } = await CLIService.execCmd(
+          '(Get-ItemProperty HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.sln\\UserChoice).ProgId'
+        );
+        if (output.includes('Rider')) {
+          return riderCommand;
+        } else if (output.includes('VisualStudio')) {
+          return visualStudioCommand;
+        }
+      } catch {
+        Logger.verbose.failure('Could not determine .sln file association');
+      }
+    } else if (CurrentEnv.os === OperatingSystemType.MacOSX) {
+      try {
+        // Check for Rider first
+        const { output: riderOutput } = await CLIService.execCmd(
+          'mdfind "kMDItemCFBundleIdentifier == com.jetbrains.rider"'
+        );
+        if (riderOutput.length > 0) {
+          return riderCommand;
+        }
+        // Check for Visual Studio first
+        const { output: vsOutput } = await CLIService.execCmd(
+          'mdfind "kMDItemCFBundleIdentifier == com.microsoft.visual-studio"'
+        );
+        if (vsOutput.length > 0) {
+          return visualStudioCommand;
+        }
+      } catch {
+        Logger.verbose.failure('Could not find Visual Studio or Rider');
+      }
+    }
+    // Fallback to VS Code
+    return vsCodeCommand;
   }
 }

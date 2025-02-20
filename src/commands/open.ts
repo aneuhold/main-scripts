@@ -65,8 +65,10 @@ async function runApplication(appName: AppName) {
 }
 
 async function openSolutionFile(solutionFilePath: string) {
-  Logger.success(`Opening ${solutionFilePath} in Rider...`);
-  await CLIService.execCmdWithTimeout(`rider "${solutionFilePath}"`, 4000);
+  const solutionFileCommand = await CurrentEnv.getSolutionFileCommand();
+  const fullCommand = `${solutionFileCommand}"${solutionFilePath}"`;
+  Logger.success(`Opening ${solutionFilePath} with "${fullCommand}"`);
+  await CLIService.execCmdWithTimeout(fullCommand, 4000);
 }
 
 async function openVSCode() {
