@@ -193,7 +193,7 @@ export default class CLIService {
     if (options.length === 1) return options[0];
 
     const answer = await select({
-      message: 'Select a package manager',
+      message: 'Select a solution file',
       choices: options.map((option) => ({ title: option, value: option }))
     });
 
