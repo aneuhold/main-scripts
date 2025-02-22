@@ -2,22 +2,22 @@
   "name": "@aneuhold/main-scripts",
   "author": "Anton G. Neuhold Jr.",
   "license": "MIT",
-  "version": "2.0.10",
+  "version": "2.0.11",
   "description": "Main scripts for use personally on any platform",
   "packageManager": "yarn@4.5.1",
   "type": "module",
   "scripts": {
     "refresh": "yarn build && npm uninstall -g @aneuhold/main-scripts && npm i -g",
-    "build": "rimraf lib && tsc --project tsconfig.build.json && shx cp -r src/templates/template-folders lib/src/templates",
+    "build": "rimraf lib && tsc --project tsconfig.build.json && shx cp -r src/templates/template-folders lib/templates && shx cp package.json lib/package.json",
     "lint": "eslint",
     "upgrade:core": "yarn up '@aneuhold/*'",
     "upgrade:all": "yarn up",
     "reset:global": "npm uninstall -g @aneuhold/main-scripts && npm i -g @aneuhold/main-scripts"
   },
-  "main": "lib/src/index.js",
-  "module": "lib/src/index.js",
+  "main": "lib/index.js",
+  "module": "lib/index.js",
   "bin": {
-    "tb": "lib/src/index.js"
+    "tb": "lib/index.js"
   },
   "files": [
     "lib/**/*"
@@ -35,22 +35,22 @@
     "Node.js"
   ],
   "dependencies": {
-    "@aneuhold/core-ts-lib": "^2.0.6",
+    "@aneuhold/core-ts-lib": "^2.0.10",
     "@inquirer/prompts": "^7.3.2",
     "commander": "^12.1.0",
-    "fluent-ffmpeg": "^2.1.2",
-    "node-fetch": "^2"
+    "fluent-ffmpeg": "^2.1.3",
+    "node-fetch": "^2.7.0"
   },
   "devDependencies": {
-    "@aneuhold/eslint-config": "^1.0.37",
+    "@aneuhold/eslint-config": "^1.0.67",
     "@types/fluent-ffmpeg": "^2.1.24",
-    "@types/node": "^20.11.16",
-    "@types/node-fetch": "^2.6.11",
-    "eslint": "^9.13.0",
-    "prettier": "^3.3.3",
-    "rimraf": "^5.0.5",
-    "shx": "^0.3.3",
-    "tsx": "^4.19.1",
-    "typescript": "^5.6.3"
+    "@types/node": "^20.17.19",
+    "@types/node-fetch": "^2.6.12",
+    "eslint": "^9.21.0",
+    "prettier": "^3.5.2",
+    "rimraf": "^5.0.10",
+    "shx": "^0.3.4",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
   }
 }

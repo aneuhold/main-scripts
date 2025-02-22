@@ -1,5 +1,7 @@
 import { DateService, Logger } from '@aneuhold/core-ts-lib';
-import packageJson from '../../package.json' assert { type: 'json' };
+import { readFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import CLIService from '../services/CLIService.js';
 import Store from '../utils/Store.js';
 import CurrentEnv from './CurrentEnv.js';
@@ -53,6 +55,7 @@ export async function updateIfNeeded(): Promise<void> {
     );
     return;
   }
+  const packageJson = await readPackageJson();
   const { didComplete, output } = await CLIService.execCmd(
     `npm outdated -g ${packageJson.name}`
   );
@@ -66,4 +69,13 @@ export async function updateIfNeeded(): Promise<void> {
       Logger.verbose.success(`Package is up to date. Continuing...`);
     }
   }
+}
+
+async function readPackageJson(): Promise<{ name: string }> {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  const packageJsonPath = join(__dirname, '../package.json');
+  return JSON.parse(await readFile(packageJsonPath, 'utf-8')) as {
+    name: string;
+  };
 }
