@@ -150,40 +150,42 @@ export default class CurrentEnv {
     const riderCommand = 'rider ';
     const vsCodeCommand = 'code ';
 
+    // Check for Rider first
+    if (await CurrentEnv.commandExists('rider')) {
+      return riderCommand;
+    }
+
+    // Check for Visual Studio
     if (CurrentEnv.os === OperatingSystemType.Windows) {
-      try {
-        const { output } = await CLIService.execCmd(
-          '(Get-ItemProperty HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.sln\\UserChoice).ProgId'
-        );
-        if (output.includes('Rider')) {
-          return riderCommand;
-        } else if (output.includes('VisualStudio')) {
-          return visualStudioCommand;
-        }
-      } catch {
-        Logger.verbose.failure('Could not determine .sln file association');
+      if (await CurrentEnv.commandExists('devenv')) {
+        return visualStudioCommand;
       }
     } else if (CurrentEnv.os === OperatingSystemType.MacOSX) {
-      try {
-        // Check for Rider first
-        const { output: riderOutput } = await CLIService.execCmd(
-          'mdfind "kMDItemCFBundleIdentifier == com.jetbrains.rider"'
-        );
-        if (riderOutput.length > 0) {
-          return riderCommand;
-        }
-        // Check for Visual Studio first
-        const { output: vsOutput } = await CLIService.execCmd(
-          'mdfind "kMDItemCFBundleIdentifier == com.microsoft.visual-studio"'
-        );
-        if (vsOutput.length > 0) {
-          return visualStudioCommand;
-        }
-      } catch {
-        Logger.verbose.failure('Could not find Visual Studio or Rider');
+      const { output: visualStudioResult } = await CLIService.execCmd(
+        'mdfind "kMDItemCFBundleIdentifier == com.microsoft.visual-studio"'
+      );
+      if (visualStudioResult.length > 0) {
+        return visualStudioCommand;
       }
     }
+
     // Fallback to VS Code
     return vsCodeCommand;
+  }
+
+  /**
+   * Checks if a command exists in the current environment.
+   */
+  private static async commandExists(command: string): Promise<boolean> {
+    try {
+      const cmd =
+        CurrentEnv.os === OperatingSystemType.Windows
+          ? `where ${command}`
+          : `which ${command}`;
+      const result = await CLIService.execCmd(cmd);
+      return result.didComplete;
+    } catch {
+      return false;
+    }
   }
 }
