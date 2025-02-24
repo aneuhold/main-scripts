@@ -48,6 +48,10 @@ async function openApplication(appName: string, methodName?: string) {
   }
 }
 
+/**
+ *
+ * @param appName
+ */
 async function runApplication(appName: AppName) {
   switch (appName) {
     case AppName.chrome:
@@ -64,6 +68,10 @@ async function runApplication(appName: AppName) {
   }
 }
 
+/**
+ *
+ * @param solutionFilePath
+ */
 async function openSolutionFile(solutionFilePath: string) {
   const solutionFileCommand = await CurrentEnv.getSolutionFileCommand();
   const fullCommand = `${solutionFileCommand}"${solutionFilePath}"`;
@@ -71,11 +79,17 @@ async function openSolutionFile(solutionFilePath: string) {
   await CLIService.execCmdWithTimeout(fullCommand, 4000);
 }
 
+/**
+ *
+ */
 async function openVSCode() {
   Logger.success(`Opening current directory in VS Code...`);
   await CLIService.execCmdWithTimeout(`code .`, 4000);
 }
 
+/**
+ *
+ */
 async function findAndOpenProject(): Promise<void> {
   const currentDir = process.cwd();
 
@@ -123,7 +137,7 @@ async function findAndOpenProject(): Promise<void> {
       );
       const selectedRelativePath =
         await CLIService.selectFromList(relativePaths);
-      await openSolutionFile(path.join(currentDir, selectedRelativePath));
+      await openSolutionFile(selectedRelativePath);
       return;
     }
   }
@@ -138,6 +152,9 @@ async function findAndOpenProject(): Promise<void> {
 
 /**
  * The main entry-point for the `open` command.
+ *
+ * @param appName
+ * @param methodName
  */
 export default async function open(
   appName?: string,
