@@ -146,7 +146,7 @@ export default class CurrentEnv {
    * be the path to the .sln file.
    */
   public static async getSolutionFileCommand(): Promise<string> {
-    const visualStudioCommand = 'start devenv ';
+    const visualStudioCommand = 'devenv ';
     const riderCommand = 'rider ';
     const vsCodeCommand = 'code ';
 
@@ -175,12 +175,14 @@ export default class CurrentEnv {
 
   /**
    * Checks if a command exists in the current environment.
+   *
+   * @param command
    */
   private static async commandExists(command: string): Promise<boolean> {
     try {
       const cmd =
         CurrentEnv.os === OperatingSystemType.Windows
-          ? `where ${command}`
+          ? `get-command ${command}`
           : `which ${command}`;
       const result = await CLIService.execCmd(cmd);
       return result.didComplete;
