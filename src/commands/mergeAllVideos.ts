@@ -1,7 +1,10 @@
-import { Logger } from '@aneuhold/core-ts-lib';
+import { DR } from '@aneuhold/core-ts-lib';
 import fs from 'fs';
 import mergeVideos from './mergeVideos.js';
 
+/**
+ *
+ */
 export default async function mergeAllVideos() {
   // Get all folder names in the current directory
   const currentDir = process.cwd();
@@ -10,10 +13,10 @@ export default async function mergeAllVideos() {
   for (const videoFolderName of folderNames) {
     try {
       await mergeVideos(videoFolderName);
-      Logger.info(`Merged videos in ${videoFolderName} folder`);
+      DR.logger.info(`Merged videos in ${videoFolderName} folder`);
     } catch {
-      Logger.error(`Error merging videos in ${videoFolderName} folder`);
-      Logger.info('Trying next folder...');
+      DR.logger.error(`Error merging videos in ${videoFolderName} folder`);
+      DR.logger.info('Trying next folder...');
     }
   }
 }

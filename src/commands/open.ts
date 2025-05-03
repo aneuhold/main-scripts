@@ -1,4 +1,4 @@
-import { Logger, StringService } from '@aneuhold/core-ts-lib';
+import { DR, StringService } from '@aneuhold/core-ts-lib';
 import path from 'path';
 import projects, { FolderName, Project } from '../config/projects.js';
 import ChromeService from '../services/applications/ChromeService.js';
@@ -38,7 +38,7 @@ async function openApplication(appName: string, methodName?: string) {
     }
     await runApplication(appName as AppName);
   } else {
-    Logger.error(
+    DR.logger.error(
       `The app with the name "${appName}" is not one of the programmed ` +
         `apps. See below for a list of programmed apps:`
     );
@@ -75,7 +75,7 @@ async function runApplication(appName: AppName) {
 async function openSolutionFile(solutionFilePath: string) {
   const solutionFileCommand = await CurrentEnv.getSolutionFileCommand();
   const fullCommand = `${solutionFileCommand}"${solutionFilePath}"`;
-  Logger.success(`Opening ${solutionFilePath} with "${fullCommand}"`);
+  DR.logger.success(`Opening ${solutionFilePath} with "${fullCommand}"`);
   await CLIService.execCmdWithTimeout(fullCommand, 4000);
 }
 
@@ -83,7 +83,7 @@ async function openSolutionFile(solutionFilePath: string) {
  *
  */
 async function openVSCode() {
-  Logger.success(`Opening current directory in VS Code...`);
+  DR.logger.success(`Opening current directory in VS Code...`);
   await CLIService.execCmdWithTimeout(`code .`, 4000);
 }
 

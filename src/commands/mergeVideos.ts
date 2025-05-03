@@ -1,4 +1,4 @@
-import { Logger } from '@aneuhold/core-ts-lib';
+import { DR } from '@aneuhold/core-ts-lib';
 import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 import path from 'path';
@@ -8,9 +8,11 @@ import path from 'path';
  * the videos.
  *
  * This uses the ffmpeg library to merge the videos together.
+ *
+ * @param pathToFolder
  */
 export default async function mergeVideos(pathToFolder: string) {
-  Logger.info(`Merging videos in ${pathToFolder}...`);
+  DR.logger.info(`Merging videos in ${pathToFolder}...`);
 
   // Get the current directory and fetch each file url in videosToDownload, which
   // will be downloaded to that directory
@@ -70,23 +72,28 @@ export default async function mergeVideos(pathToFolder: string) {
 
     ffmpegCommand
       .on('start', () => {
-        Logger.info(`Merging videos...`);
+        DR.logger.info(`Merging videos...`);
       })
       .on('end', () => {
-        Logger.info(`Merged videos`);
+        DR.logger.info(`Merged videos`);
         resolve();
       });
     ffmpegCommand.on('error', (err, stdout, stderr) => {
       // All outputs have to be logged to see detailed error messages
-      Logger.error(JSON.stringify(err));
-      Logger.error(stdout as string);
-      Logger.error(stderr as string);
+      DR.logger.error(JSON.stringify(err));
+      DR.logger.error(stdout as string);
+      DR.logger.error(stderr as string);
       reject(new Error('Error merging videos'));
     });
     ffmpegCommand.mergeToFile(outputFilePath, tempFolderPath);
   });
 }
 
+/**
+ *
+ * @param mp4Videos
+ * @param pathToVideos
+ */
 async function convertAllVideosToConsistentSize(
   mp4Videos: string[],
   pathToVideos: string
@@ -94,13 +101,18 @@ async function convertAllVideosToConsistentSize(
   // Convert all videos to 1920x1080
 
   for (const video of mp4Videos) {
-    Logger.info(`Converting ${video} to 1920x1080...`);
+    DR.logger.info(`Converting ${video} to 1920x1080...`);
 
     await convertVideoToConsistentSize(video, pathToVideos);
-    Logger.info(`Converted ${video} to 1920x1080`);
+    DR.logger.info(`Converted ${video} to 1920x1080`);
   }
 }
 
+/**
+ *
+ * @param videoName
+ * @param pathToVideos
+ */
 async function convertVideoToConsistentSize(
   videoName: string,
   pathToVideos: string
@@ -116,17 +128,17 @@ async function convertVideoToConsistentSize(
       .videoCodec('h264_nvenc')
       .size('1920x1080')
       .on('start', () => {
-        Logger.info(`Converting video...`);
+        DR.logger.info(`Converting video...`);
       })
       .on('end', () => {
-        Logger.info(`Converted video`);
+        DR.logger.info(`Converted video`);
         resolve();
       })
       .on('error', (err, stdout, stderr) => {
         // All outputs have to be logged to see detailed error messages
-        Logger.error(JSON.stringify(err));
-        Logger.error(stdout as string);
-        Logger.error(stderr as string);
+        DR.logger.error(JSON.stringify(err));
+        DR.logger.error(stdout as string);
+        DR.logger.error(stderr as string);
         reject(new Error('Error converting videos'));
       })
       .save(videoPath);

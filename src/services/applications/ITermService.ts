@@ -1,4 +1,4 @@
-import { Logger } from '@aneuhold/core-ts-lib';
+import { DR } from '@aneuhold/core-ts-lib';
 import OsaScriptBuilder, {
   OsaScriptTellBlock
 } from '../../utils/OsaScriptBuilder.js';
@@ -8,6 +8,9 @@ export default class ITermService {
   /**
    * Splits the iTerm terminal horzontally and runs each command in a separate
    * pane.
+   *
+   * @param commands
+   * @param cwd
    */
   static async splitHorizontallyAndRunCommands(commands: string[], cwd = '') {
     const terminalWindowTellBlock: OsaScriptTellBlock = {
@@ -41,7 +44,7 @@ export default class ITermService {
     const osaScriptBuilder = new OsaScriptBuilder();
     osaScriptBuilder.addTellBlock(iTermApplicationTellBlock);
     const osaScript = osaScriptBuilder.getFullCommand();
-    Logger.verbose.info(`OsaScript: ${osaScript}`);
+    DR.logger.verbose.info(`OsaScript: ${osaScript}`);
     await CLIService.execCmd(osaScript);
   }
 }

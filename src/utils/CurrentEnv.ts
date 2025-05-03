@@ -1,4 +1,4 @@
-import { Logger } from '@aneuhold/core-ts-lib';
+import { DR } from '@aneuhold/core-ts-lib';
 import { readdir } from 'fs/promises';
 import path from 'path';
 import CLIService from '../services/CLIService.js';
@@ -73,7 +73,7 @@ export default class CurrentEnv {
         case 'Core':
           return ShellType.PowerShellCore;
         default:
-          Logger.verbose.failure(
+          DR.logger.verbose.failure(
             `No recognizable shell returned for Windows environment.`
           );
       }
@@ -112,9 +112,9 @@ export default class CurrentEnv {
       return;
     }
 
-    Logger.info(`Executing the following command: "${cmd}"`);
+    DR.logger.info(`Executing the following command: "${cmd}"`);
     const { output } = await CLIService.execCmd(cmd);
-    Logger.info(output);
+    DR.logger.info(output);
 
     process.exit();
   }

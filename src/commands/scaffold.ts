@@ -1,4 +1,4 @@
-import { Logger } from '@aneuhold/core-ts-lib';
+import { DR } from '@aneuhold/core-ts-lib';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -19,6 +19,11 @@ const pathToTemplates = path.join(
   'template-folders'
 );
 
+/**
+ *
+ * @param templatePath
+ * @param newProjectPath
+ */
 function createDirectoryContents(templatePath: string, newProjectPath: string) {
   const filesToCreate = fs.readdirSync(templatePath);
 
@@ -55,7 +60,7 @@ function createDirectoryContents(templatePath: string, newProjectPath: string) {
 function copyTemplateToSubDir(pathToTemplate: string, projectName: string) {
   const newProjectPath = path.join(process.cwd(), projectName);
   fs.mkdirSync(newProjectPath);
-  Logger.info(`Copying template to ${newProjectPath}`);
+  DR.logger.info(`Copying template to ${newProjectPath}`);
   createDirectoryContents(pathToTemplate, newProjectPath);
 }
 
@@ -65,6 +70,7 @@ function copyTemplateToSubDir(pathToTemplate: string, projectName: string) {
  *
  * @param projectType
  * @param projectName
+ * @param shouldListProjectTypes
  */
 export default async function scaffold(
   projectType?: string,
@@ -72,24 +78,26 @@ export default async function scaffold(
   shouldListProjectTypes?: boolean
 ): Promise<void> {
   if (shouldListProjectTypes) {
-    Logger.info('The possible project types are: ');
+    DR.logger.info('The possible project types are: ');
     console.table(templates, ['name', 'description']);
     process.exit();
   }
   if (!projectType) {
-    Logger.error('No project type was given. See below for possible options:');
+    DR.logger.error(
+      'No project type was given. See below for possible options:'
+    );
     console.table(templates, ['name', 'description']);
     process.exit();
   }
   if (!(projectType in templates)) {
-    Logger.error(
+    DR.logger.error(
       `No project type found with name: ${projectType}. Please ` +
         `either add one to the "templates" folder or use one of the ones below:`
     );
     console.table(templates, ['name', 'description']);
     process.exit();
   }
-  Logger.info(`The desired project type is: ${projectType}`);
+  DR.logger.info(`The desired project type is: ${projectType}`);
 
   let chosenProjectName: string;
   if (!projectName) {
@@ -100,18 +108,18 @@ export default async function scaffold(
   } else {
     chosenProjectName = projectName;
   }
-  Logger.info(`The desired project name is: ${chosenProjectName}`);
+  DR.logger.info(`The desired project name is: ${chosenProjectName}`);
 
   const template = templates[projectType as ProjectType];
   // Get the path to the template folder
 
   const pathToTemplate = path.join(pathToTemplates, template.folderName);
 
-  Logger.verbose.info(`The path to the template is ${pathToTemplate}`);
+  DR.logger.verbose.info(`The path to the template is ${pathToTemplate}`);
 
   copyTemplateToSubDir(pathToTemplate, chosenProjectName);
 
-  Logger.success(`Successfully created new project ${chosenProjectName}`);
-  Logger.info(`Use "cd ${chosenProjectName}" to move into that directory`);
+  DR.logger.success(`Successfully created new project ${chosenProjectName}`);
+  DR.logger.info(`Use "cd ${chosenProjectName}" to move into that directory`);
   process.exit();
 }

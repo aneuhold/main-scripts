@@ -1,4 +1,4 @@
-import { Logger } from '@aneuhold/core-ts-lib';
+import { DR } from '@aneuhold/core-ts-lib';
 import fs, { writeFile } from 'fs';
 import fetch from 'node-fetch';
 import path from 'path';
@@ -10,11 +10,13 @@ const writeFilePromise = promisify(writeFile);
 /**
  * Downloads videos from the internet to the provided folder path using the
  * locally setup `videosToDownload.ts` file.
+ *
+ * @param downloadInParallel
  */
 export default async function downloadVideos(
   downloadInParallel = true
 ): Promise<string[]> {
-  Logger.info('Getting videos to download...');
+  DR.logger.info('Getting videos to download...');
 
   // Get the current directory and fetch each file url in videosToDownload, which
   // will be downloaded to that directory
@@ -26,7 +28,7 @@ export default async function downloadVideos(
     const newFolderName = videoSeries.title;
     videoFolderNames.push(newFolderName);
     const newFolderPath = path.join(currentDir, newFolderName);
-    Logger.info(`Creating folder ${newFolderName} at ${newFolderPath}...`);
+    DR.logger.info(`Creating folder ${newFolderName} at ${newFolderPath}...`);
     fs.mkdirSync(newFolderPath);
 
     // Download each video
@@ -45,6 +47,12 @@ export default async function downloadVideos(
   return videoFolderNames;
 }
 
+/**
+ *
+ * @param url
+ * @param index
+ * @param newFolderPath
+ */
 async function downloadVideoAndLogInfo(
   url: string,
   index: number,
@@ -52,13 +60,16 @@ async function downloadVideoAndLogInfo(
 ) {
   const videoName = `${index + 1}.mp4`;
   const videoPath = path.join(newFolderPath, videoName);
-  Logger.info(`Downloading ${videoName} to ${newFolderPath}...`);
+  DR.logger.info(`Downloading ${videoName} to ${newFolderPath}...`);
   await download(url, videoPath);
-  Logger.info(`Downloaded ${videoName} to ${newFolderPath}`);
+  DR.logger.info(`Downloaded ${videoName} to ${newFolderPath}`);
 }
 
 /**
  * Downloads a file from a url to a local path
+ *
+ * @param url
+ * @param dest
  */
 async function download(url: string, dest: string) {
   await fetch(url)

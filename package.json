@@ -2,7 +2,7 @@
   "name": "@aneuhold/main-scripts",
   "author": "Anton G. Neuhold Jr.",
   "license": "MIT",
-  "version": "2.0.13",
+  "version": "2.1.0",
   "description": "Main scripts for use personally on any platform",
   "packageManager": "yarn@4.5.1",
   "type": "module",
@@ -35,14 +35,14 @@
     "Node.js"
   ],
   "dependencies": {
-    "@aneuhold/core-ts-lib": "^2.0.10",
+    "@aneuhold/core-ts-lib": "^2.1.1",
     "@inquirer/prompts": "^7.3.2",
     "commander": "^12.1.0",
     "fluent-ffmpeg": "^2.1.3",
     "node-fetch": "^2.7.0"
   },
   "devDependencies": {
-    "@aneuhold/eslint-config": "^1.0.67",
+    "@aneuhold/eslint-config": "^1.0.89",
     "@types/fluent-ffmpeg": "^2.1.24",
     "@types/node": "^20.17.19",
     "@types/node-fetch": "^2.6.12",
