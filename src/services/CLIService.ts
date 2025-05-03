@@ -1,4 +1,4 @@
-import { Logger, sleep } from '@aneuhold/core-ts-lib';
+import { DR, sleep } from '@aneuhold/core-ts-lib';
 import { select } from '@inquirer/prompts';
 import { ExecOptions, exec as normalExec, spawn } from 'child_process';
 import * as rl from 'readline';
@@ -65,12 +65,13 @@ export default class CLIService {
       execOptions.shell = 'pwsh';
     }
 
-    Logger.verbose.info(`Executing command: ${commandToExecute}`);
+    DR.logger.verbose.info(`Executing command: ${commandToExecute}`);
     try {
       const { stdout, stderr } = await execute(commandToExecute, execOptions);
       if (stderr) {
         if (logError) {
-          Logger.error(`There was an error executing ${cmd}. Details are printed below:
+          DR.logger
+            .error(`There was an error executing ${cmd}. Details are printed below:
             ${stderr}`);
         }
         return {
@@ -78,13 +79,13 @@ export default class CLIService {
           output: stderr
         };
       }
-      Logger.verbose.info(`Output from stdout is: ${stdout}`);
+      DR.logger.verbose.info(`Output from stdout is: ${stdout}`);
       return {
         didComplete: true,
         output: stdout
       };
     } catch (err) {
-      Logger.verbose
+      DR.logger.verbose
         .error(`There was an error executing the "exec" function. Details are printed below:
         ${err as string}`);
       return {
@@ -127,6 +128,7 @@ export default class CLIService {
    * `spawn` function. For example this could be `npm`.
    * @param args the arguments to pass to the command. For example this could be
    * `['install', 'react']`.
+   * @param currentWorkingDirectory
    */
   static async spawnCmd(
     cmd: string,
@@ -141,7 +143,8 @@ export default class CLIService {
       const spawnedCmd = spawn(cmd, args, execOptions);
 
       spawnedCmd.on('error', (err) => {
-        Logger.error(`There was an error executing the "spawn" function. Details are printed below:
+        DR.logger
+          .error(`There was an error executing the "spawn" function. Details are printed below:
       ${err.message}`);
         resolve({
           didComplete: false,
@@ -150,14 +153,14 @@ export default class CLIService {
       });
       spawnedCmd.stdout.on('data', (data) => {
         output += data as string;
-        Logger.info(data as string, true);
+        DR.logger.info(data as string, true);
       });
       spawnedCmd.stderr.on('data', (data) => {
         output += data as string;
-        Logger.info(data as string, true);
+        DR.logger.info(data as string, true);
       });
       spawnedCmd.on('close', (exitCode) => {
-        Logger.info(`Command "${cmd}" exited with code ${exitCode}`);
+        DR.logger.info(`Command "${cmd}" exited with code ${exitCode}`);
         resolve({
           didComplete: true,
           output
@@ -187,6 +190,8 @@ export default class CLIService {
 
   /**
    * Presents a list of options to the user and returns the selected option using inquirer
+   *
+   * @param options
    */
   static async selectFromList(options: string[]): Promise<string> {
     if (options.length === 0) throw new Error('No options provided');

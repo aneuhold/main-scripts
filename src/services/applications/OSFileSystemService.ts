@@ -1,6 +1,6 @@
+import { DR, FileSystemService } from '@aneuhold/core-ts-lib';
 import { access, appendFile, readFile, writeFile } from 'fs/promises';
 import path from 'path';
-import { FileSystemService, Logger } from '@aneuhold/core-ts-lib';
 import CurrentEnv, { OperatingSystemType } from '../../utils/CurrentEnv.js';
 import CLIService from '../CLIService.js';
 
@@ -18,7 +18,7 @@ export default class OSFileSystemService {
       await OSFileSystemService.openMacNugetCache();
       return;
     }
-    Logger.error('Not implemented for this OS yet.');
+    DR.logger.error('Not implemented for this OS yet.');
   }
 
   /**
@@ -28,6 +28,8 @@ export default class OSFileSystemService {
    *
    * @param folderPath the path to the folder which contains the file that should
    * be updated
+   * @param fileName
+   * @param textToInsert
    */
   static async findAndInsertText(
     folderPath: string,
@@ -43,12 +45,12 @@ export default class OSFileSystemService {
       const fileContents = await readFile(filePath);
       if (!fileContents.includes(textToInsert)) {
         await appendFile(filePath, `\n${textToInsert}`);
-        Logger.info(`Added "${textToInsert}" to "${filePath}"`);
+        DR.logger.info(`Added "${textToInsert}" to "${filePath}"`);
       } else {
-        Logger.info(`"${textToInsert}" already exists in "${filePath}"`);
+        DR.logger.info(`"${textToInsert}" already exists in "${filePath}"`);
       }
     } catch {
-      Logger.info(
+      DR.logger.info(
         `File at "${filePath}" didn't exist. Creating it now and adding "${textToInsert}" to it.`
       );
       await writeFile(filePath, textToInsert);

@@ -1,4 +1,4 @@
-import { Logger } from '@aneuhold/core-ts-lib';
+import { DR } from '@aneuhold/core-ts-lib';
 import CLIService from '../services/CLIService.js';
 import CurrentEnv, { OperatingSystemType } from '../utils/CurrentEnv.js';
 
@@ -11,10 +11,12 @@ enum CleanTarget {
 
 /**
  * The main entry-point for the `clean` command.
+ *
+ * @param cleanTarget
  */
 export default async function clean(cleanTarget?: string): Promise<void> {
   if (!cleanTarget) {
-    Logger.error(
+    DR.logger.error(
       `No target was specified. See below for a list of valid targets:`
     );
     logValidCleanTargets();
@@ -25,7 +27,7 @@ export default async function clean(cleanTarget?: string): Promise<void> {
 
   // Check if the target is one of the valid CleanTarget values
   if (!(cleanTarget in CleanTarget)) {
-    Logger.error(
+    DR.logger.error(
       `The target "${cleanTarget}" is not a valid target. See below ` +
         `for a list of valid targets:`
     );
@@ -45,7 +47,7 @@ export default async function clean(cleanTarget?: string): Promise<void> {
  * but it still works. It doesn't work without using the profile for some reason.
  */
 async function cleanBranches() {
-  Logger.success(
+  DR.logger.success(
     `Removing all git branches besides the main branch locally...`
   );
   if (CurrentEnv.os === OperatingSystemType.Windows) {
@@ -56,16 +58,19 @@ async function cleanBranches() {
       undefined,
       true
     );
-    Logger.info(returnValue.output);
+    DR.logger.info(returnValue.output);
     return;
   }
   // Execute the bash version of the command
   const returnValue = await CLIService.execCmd(
     `git branch | grep -v "main" | xargs git branch -D`
   );
-  Logger.info(returnValue.output);
+  DR.logger.info(returnValue.output);
 }
 
+/**
+ *
+ */
 function logValidCleanTargets() {
   Object.keys(CleanTarget).forEach((printTarget) => {
     console.log(`- ${printTarget}\n`);

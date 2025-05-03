@@ -1,6 +1,6 @@
 #!/usr/bin/env node --no-warnings
 
-import { Logger } from '@aneuhold/core-ts-lib';
+import { DR } from '@aneuhold/core-ts-lib';
 import { program } from 'commander';
 import clean from './commands/clean.js';
 import downloadAndMergeVideos from './commands/downloadAndMergeVideos.js';
@@ -22,8 +22,7 @@ program
   .option('-v, --verbose', 'run with verbose logging')
   .hook('preAction', (thisCommand) => {
     if (thisCommand.opts().verbose) {
-      Logger.verboseLoggingEnabled = true;
-      Logger.verbose.info('Verbose logging enabled...');
+      DR.logger.verbose.info('Verbose logging enabled...');
     }
   });
 
@@ -32,7 +31,7 @@ program
   .argument('[args...]')
   .description('Runs a test command to make sure the package is working')
   .action((args) => {
-    Logger.info(`You entered the following args: ${JSON.stringify(args)}`);
+    DR.logger.info(`You entered the following args: ${JSON.stringify(args)}`);
     calculateProbabilities();
   });
 

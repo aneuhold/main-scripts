@@ -1,4 +1,4 @@
-import { Logger } from '@aneuhold/core-ts-lib';
+import { DR } from '@aneuhold/core-ts-lib';
 import path from 'path';
 import ITermService from '../services/applications/ITermService.js';
 import CLIService from '../services/CLIService.js';
@@ -177,6 +177,7 @@ const projects: { [folderName in FolderName]: Project } = {
  * ran in their own terminal
  * @param subPath the sub-path of the main folder that the commands should
  * be ran in
+ * @param installCommand
  */
 function setupPiSubTerminalsFunc(
   folderName: FolderName,
@@ -186,7 +187,7 @@ function setupPiSubTerminalsFunc(
 ) {
   return async () => {
     const project = projects[folderName];
-    Logger.info(`Setting up ${project.folderName}...`);
+    DR.logger.info(`Setting up ${project.folderName}...`);
     const currentPath = path.resolve('.', subPath);
 
     if (CurrentEnv.terminal())
@@ -194,14 +195,14 @@ function setupPiSubTerminalsFunc(
         CurrentEnv.terminal() !== TerminalType.WindowsTerminal &&
         CurrentEnv.terminal() !== TerminalType.ITerm2
       ) {
-        Logger.failure(
+        DR.logger.failure(
           `Setup for ${folderName} not established for anything but Windows Terminal and iTerm2.`
         );
         return;
       }
 
     // Install pacakges
-    Logger.info('Installing yarn packages...');
+    DR.logger.info('Installing yarn packages...');
     const { output: yarnInstallOutput } = await CLIService.execCmd(
       installCommand,
       false,
@@ -223,6 +224,11 @@ function setupPiSubTerminalsFunc(
 // https://superuser.com/questions/1564090/how-to-pass-commands-into-the-shell-opened-in-new-windows-terminal
 // The order of the commands matters when executing windows terminal.
 // It might be nice to setup a class that does this for you.
+/**
+ *
+ * @param separateTerminalCommands
+ * @param currentPath
+ */
 async function runWindowsTerminalCommands(
   separateTerminalCommands: string[],
   currentPath: string
@@ -239,6 +245,11 @@ async function runWindowsTerminalCommands(
   );
 }
 
+/**
+ *
+ * @param separateTerminalCommands
+ * @param currentPath
+ */
 async function runITerm2Commands(
   separateTerminalCommands: string[],
   currentPath: string

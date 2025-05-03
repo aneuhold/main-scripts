@@ -1,4 +1,4 @@
-import { DateService, Logger } from '@aneuhold/core-ts-lib';
+import { DateService, DR } from '@aneuhold/core-ts-lib';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,14 +12,16 @@ import CurrentEnv from './CurrentEnv.js';
  *
  * This does not trigger an update if it hasn't been updated.
  *
- * @returns {boolean} true if it has already been updated today and false if
+ * @returns true if it has already been updated today and false if
  * not
  */
 async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
   const lastCheckDate = await Store.get('lastUpdateCheckDate');
-  Logger.verbose.info(`lastCheckDate is: ${lastCheckDate}`);
+  DR.logger.verbose.info(`lastCheckDate is: ${lastCheckDate}`);
   if (!lastCheckDate) {
-    Logger.verbose.info("Last check date wasn't there yet, adding that now...");
+    DR.logger.verbose.info(
+      "Last check date wasn't there yet, adding that now..."
+    );
     await Store.set('lastUpdateCheckDate', new Date().toString());
     return false;
   }
@@ -27,7 +29,7 @@ async function hasAlreadyBeenUpdatedToday(): Promise<boolean> {
     await Store.set('lastUpdateCheckDate', new Date().toString());
     return true;
   }
-  Logger.verbose.info('Last check date was before today...');
+  DR.logger.verbose.info('Last check date was before today...');
   await Store.set('lastUpdateCheckDate', new Date().toString());
   return false;
 }
@@ -50,7 +52,7 @@ export async function triggerUpdate(): Promise<void> {
 export async function updateIfNeeded(): Promise<void> {
   // Check if the check has already happened today
   if (await hasAlreadyBeenUpdatedToday()) {
-    Logger.verbose.info(
+    DR.logger.verbose.info(
       'Package update has already been checked today. Continuing...'
     );
     return;
@@ -62,15 +64,18 @@ export async function updateIfNeeded(): Promise<void> {
   if (didComplete) {
     const updateIsNeeded = output.length !== 0;
     if (updateIsNeeded) {
-      Logger.verbose.info(`Output of outdated command is: ${output}`);
-      Logger.failure('Update is needed. Installing update now...');
+      DR.logger.verbose.info(`Output of outdated command is: ${output}`);
+      DR.logger.failure('Update is needed. Installing update now...');
       await triggerUpdate();
     } else {
-      Logger.verbose.success(`Package is up to date. Continuing...`);
+      DR.logger.verbose.success(`Package is up to date. Continuing...`);
     }
   }
 }
 
+/**
+ *
+ */
 async function readPackageJson(): Promise<{ name: string }> {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
