@@ -68,21 +68,39 @@ export default class CLIService {
     DR.logger.verbose.info(`Executing command: ${commandToExecute}`);
     try {
       const { stdout, stderr } = await execute(commandToExecute, execOptions);
-      if (stderr) {
+
+      const hasStdoutContent = stdout && stdout.trim() !== '';
+      const hasStderrContent = stderr && stderr.trim() !== '';
+
+      if (hasStdoutContent) {
+        DR.logger.verbose.info(
+          `Standard output from command "${cmd}":\\n${stdout}`
+        );
+      }
+
+      if (hasStderrContent) {
         if (logError) {
-          DR.logger
-            .error(`There was an error executing ${cmd}. Details are printed below:
-            ${stderr}`);
+          DR.logger.error(
+            `Error output (stderr) from command "${cmd}":\\n${stderr}`
+          );
         }
+
+        let combinedOutput = '';
+        if (hasStdoutContent) {
+          combinedOutput += `--- stdout ---\\n${stdout.trim()}\\n`;
+        }
+        combinedOutput += `--- stderr ---\\n${stderr.trim()}`;
+
         return {
-          didComplete: false,
-          output: stderr
+          didComplete: false, // Treat as not fully successful if there's stderr
+          output: combinedOutput.trim()
         };
       }
-      DR.logger.verbose.info(`Output from stdout is: ${stdout}`);
+
+      // If stderr is empty or only whitespace
       return {
         didComplete: true,
-        output: stdout
+        output: stdout || ''
       };
     } catch (err) {
       DR.logger.verbose
@@ -128,7 +146,8 @@ export default class CLIService {
    * `spawn` function. For example this could be `npm`.
    * @param args the arguments to pass to the command. For example this could be
    * `['install', 'react']`.
-   * @param currentWorkingDirectory
+   * @param currentWorkingDirectory the current working directory to spawn the
+   * command in. If not provided, it will use the current working directory.
    */
   static async spawnCmd(
     cmd: string,
@@ -191,7 +210,7 @@ export default class CLIService {
   /**
    * Presents a list of options to the user and returns the selected option using inquirer
    *
-   * @param options
+   * @param options the list of options to present to the user
    */
   static async selectFromList(options: string[]): Promise<string> {
     if (options.length === 0) throw new Error('No options provided');
