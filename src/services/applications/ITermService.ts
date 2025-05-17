@@ -6,11 +6,11 @@ import CLIService from '../CLIService.js';
 
 export default class ITermService {
   /**
-   * Splits the iTerm terminal horzontally and runs each command in a separate
+   * Splits the iTerm terminal horizontally and runs each command in a separate
    * pane.
    *
-   * @param commands
-   * @param cwd
+   * @param commands The commands to run in each pane.
+   * @param cwd The current working directory for the commands.
    */
   static async splitHorizontallyAndRunCommands(commands: string[], cwd = '') {
     const terminalWindowTellBlock: OsaScriptTellBlock = {

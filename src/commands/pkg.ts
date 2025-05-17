@@ -6,8 +6,9 @@ export enum PackageAction {
 }
 
 /**
+ * Performs a package action, such as validating or publishing a JSR package.
  *
- * @param packageAction
+ * @param packageAction The package action to perform.
  */
 export default async function pkg(packageAction: string): Promise<void> {
   if (!(packageAction in PackageAction)) {
@@ -32,14 +33,14 @@ export default async function pkg(packageAction: string): Promise<void> {
 }
 
 /**
- *
+ * Validates the JSR package for publishing.
  */
 async function validateJsr() {
   await PackageService.validateJsrPublish();
 }
 
 /**
- *
+ * Publishes the JSR package.
  */
 async function publishJsr() {
   await PackageService.publishToJsr();

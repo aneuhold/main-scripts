@@ -27,6 +27,9 @@ export default class DockerService {
     DR.logger.info('Docker desktop is running.');
   }
 
+  /**
+   * Checks if Docker Desktop is currently running.
+   */
   static async checkIfDockerDesktopIsRunning(): Promise<boolean> {
     const currentOS = CurrentEnv.os;
     if (currentOS === OperatingSystemType.Windows) {
@@ -48,7 +51,7 @@ export default class DockerService {
    *
    * This does include the quotes
    *
-   * @param os
+   * @param os The operating system type.
    */
   static getDockerPath(os: OperatingSystemType): string | null {
     switch (os) {

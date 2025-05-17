@@ -12,7 +12,7 @@ enum CleanTarget {
 /**
  * The main entry-point for the `clean` command.
  *
- * @param cleanTarget
+ * @param cleanTarget The target to clean.
  */
 export default async function clean(cleanTarget?: string): Promise<void> {
   if (!cleanTarget) {
@@ -69,7 +69,7 @@ async function cleanBranches() {
 }
 
 /**
- *
+ * Logs the valid clean targets to the console.
  */
 function logValidCleanTargets() {
   Object.keys(CleanTarget).forEach((printTarget) => {

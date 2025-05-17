@@ -9,6 +9,9 @@ import CLIService from '../CLIService.js';
  * the current system.
  */
 export default class OSFileSystemService {
+  /**
+   * Opens the NuGet cache folder for the current operating system.
+   */
   static async openNugetCache(): Promise<void> {
     if (CurrentEnv.os === OperatingSystemType.Windows) {
       await OSFileSystemService.openWindowsNugetCache();
@@ -28,8 +31,8 @@ export default class OSFileSystemService {
    *
    * @param folderPath the path to the folder which contains the file that should
    * be updated
-   * @param fileName
-   * @param textToInsert
+   * @param fileName The name of the file to update.
+   * @param textToInsert The text to insert into the file.
    */
   static async findAndInsertText(
     folderPath: string,
@@ -57,6 +60,9 @@ export default class OSFileSystemService {
     }
   }
 
+  /**
+   * Opens the Windows NuGet cache folder.
+   */
   private static async openWindowsNugetCache() {
     await Promise.all([
       CLIService.execCmd(`ii $HOME/localNuget`),
@@ -64,6 +70,9 @@ export default class OSFileSystemService {
     ]);
   }
 
+  /**
+   * Opens the macOS NuGet cache folder.
+   */
   private static async openMacNugetCache() {
     await Promise.all([
       CLIService.execCmd(`open $HOME/localNuget`),

@@ -37,6 +37,11 @@ const researchTowers: ResearchTower[] = [
   }
 ];
 
+/**
+ * Calculates the cost of a specified number of upgrades.
+ *
+ * @param numUpgrades The number of upgrades.
+ */
 function calculateUpgradeCost(numUpgrades: number): number {
   let currentUpgradeCost = 20;
   let cost = 0;
@@ -54,11 +59,19 @@ researchTowers.forEach((tower) => {
   totalCost += calculateUpgradeCost(tower.damageUpgrade);
 });
 
+/**
+ * Determines if a point is obtained based on a percentage.
+ *
+ * @param percentage The percentage to check.
+ */
 function getsPoint(percentage: number) {
   const randomNumber = Math.random();
   return randomNumber <= percentage;
 }
 
+/**
+ * Calculates and logs probabilities related to research towers.
+ */
 export default function calculateProbabilities(): void {
   const numberOfRounds = 100;
   let numDamageIncrease = 0;

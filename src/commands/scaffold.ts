@@ -20,9 +20,10 @@ const pathToTemplates = path.join(
 );
 
 /**
+ * Creates the directory contents for a new project from a template.
  *
- * @param templatePath
- * @param newProjectPath
+ * @param templatePath The path to the template.
+ * @param newProjectPath The path to the new project.
  */
 function createDirectoryContents(templatePath: string, newProjectPath: string) {
   const filesToCreate = fs.readdirSync(templatePath);
@@ -54,8 +55,8 @@ function createDirectoryContents(templatePath: string, newProjectPath: string) {
  * Copies the template at the given path to a new folder with the given project
  * name.
  *
- * @param pathToTemplate
- * @param projectName
+ * @param pathToTemplate The path to the template folder.
+ * @param projectName The name of the new project.
  */
 function copyTemplateToSubDir(pathToTemplate: string, projectName: string) {
   const newProjectPath = path.join(process.cwd(), projectName);
@@ -65,12 +66,11 @@ function copyTemplateToSubDir(pathToTemplate: string, projectName: string) {
 }
 
 /**
- * Scaffolds out a project given the project type and project name as a sub
- * folder in the current working directory.
+ * Scaffolds a new project based on a project type and project name.
  *
- * @param projectType
- * @param projectName
- * @param shouldListProjectTypes
+ * @param projectType The type of project to scaffold.
+ * @param projectName The name of the new project.
+ * @param shouldListProjectTypes Whether to list available project types.
  */
 export default async function scaffold(
   projectType?: string,

@@ -37,7 +37,7 @@ export enum TerminalType {
  */
 export default class CurrentEnv {
   /**
-   * Returns the type of terminal the current environment is using.
+   * Gets the type of terminal the current environment is running.
    */
   public static terminal(): TerminalType {
     // See https://stackoverflow.com/questions/59733731/how-to-detect-if-running-in-the-new-windows-terminal
@@ -52,7 +52,7 @@ export default class CurrentEnv {
   }
 
   /**
-   * Returns the type of shell the current environment is using.
+   * Gets the type of shell the current environment is running.
    *
    * This might be arbitrary because it seems that the exec command will use
    * whatever the default shell is or whatever is specified as the shell
@@ -84,15 +84,14 @@ export default class CurrentEnv {
   }
 
   /**
-   * Gets all file names in the current directory.
+   * Gets the names of files in the current directory.
    */
   public static async fileNamesInDir(): Promise<string[]> {
     return readdir(path.resolve('.'));
   }
 
   /**
-   * Runs the startup script for the current system. This command exits the
-   * package.
+   * Runs the startup script for the current environment.
    *
    * The startup scripts are defined in the
    * [dotfiles repo](https://github.com/aneuhold/dotfiles).
@@ -120,7 +119,7 @@ export default class CurrentEnv {
   }
 
   /**
-   * Determines the type of operating system in the current environment.
+   * Gets the current operating system.
    *
    * This looks to be O(1) complexity.
    */
@@ -134,6 +133,9 @@ export default class CurrentEnv {
     return OperatingSystemType.Unknown;
   }
 
+  /**
+   * Gets the name of the current folder.
+   */
   public static folderName(): string {
     return path.basename(path.resolve('.'));
   }

@@ -49,8 +49,9 @@ async function openApplication(appName: string, methodName?: string) {
 }
 
 /**
+ * Runs the specified application.
  *
- * @param appName
+ * @param appName The name of the application to run.
  */
 async function runApplication(appName: AppName) {
   switch (appName) {
@@ -151,10 +152,10 @@ async function findAndOpenProject(): Promise<void> {
 }
 
 /**
- * The main entry-point for the `open` command.
+ * Opens a project or application.
  *
- * @param appName
- * @param methodName
+ * @param appName The name of the app or project to open.
+ * @param methodName The name of the method to run with that app if it exists.
  */
 export default async function open(
   appName?: string,

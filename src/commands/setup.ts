@@ -3,7 +3,7 @@ import projects, { FolderName, Project } from '../config/projects.js';
 import CurrentEnv from '../utils/CurrentEnv.js';
 
 /**
- *
+ * Sets up the development environment based on the current project.
  */
 export default async function setup(): Promise<void> {
   const project = getProject();
@@ -20,7 +20,7 @@ export default async function setup(): Promise<void> {
 }
 
 /**
- *
+ * Gets the project configuration for the current folder.
  */
 function getProject(): Project | undefined {
   const currentFolderName = CurrentEnv.folderName();

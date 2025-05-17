@@ -2,7 +2,7 @@ import { DR } from '@aneuhold/core-ts-lib';
 import CLIService from '../services/CLIService.js';
 
 /**
- *
+ * Runs `git fetch -a` and then `git pull`.
  */
 export default async function fpull(): Promise<void> {
   const { output: output1 } = await CLIService.execCmd(`git fetch -a`, false);

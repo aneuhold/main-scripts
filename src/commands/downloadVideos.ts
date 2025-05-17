@@ -48,10 +48,11 @@ export default async function downloadVideos(
 }
 
 /**
+ * Downloads a video from a given URL and logs the download information.
  *
- * @param url
- * @param index
- * @param newFolderPath
+ * @param url The url of the video to download.
+ * @param index The index of the video in the list of videos to download.
+ * @param newFolderPath The path to the folder where the video should be downloaded.
  */
 async function downloadVideoAndLogInfo(
   url: string,
@@ -68,8 +69,8 @@ async function downloadVideoAndLogInfo(
 /**
  * Downloads a file from a url to a local path
  *
- * @param url
- * @param dest
+ * @param url The url of the file to download.
+ * @param dest The destination path for the downloaded file.
  */
 async function download(url: string, dest: string) {
   await fetch(url)

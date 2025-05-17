@@ -21,16 +21,20 @@ export default class OsaScriptBuilder {
   private currentScript: OsaScriptSection[] = [];
 
   /**
-   * There's no need to escape single quotes with this. That is already done
+   * Adds a command to the OSA script.
+   * There\'s no need to escape single quotes with this. That is already done
    * in the class.
+   *
+   * @param command The command to add.
    */
   public addCommand(command: string): void {
     this.currentScript.push(command);
   }
 
   /**
-   * There's no need to escape single quotes with this. That is already done
-   * in the class.
+   * Adds a tell block to the OSA script.
+   *
+   * @param tellBlock The tell block to add.
    */
   public addTellBlock(tellBlock: OsaScriptTellBlock): void {
     this.currentScript.push(tellBlock);
@@ -50,6 +54,11 @@ export default class OsaScriptBuilder {
     return stringifiedScript;
   }
 
+  /**
+   * Stringifies an OSA script section.
+   *
+   * @param section The section to stringify.
+   */
   private stringifySection(section: OsaScriptSection): string {
     if (typeof section === 'string') {
       return ` -e '${OsaScriptBuilder.escapeSingleQuotes(section)}'`;
@@ -65,10 +74,9 @@ export default class OsaScriptBuilder {
   }
 
   /**
-   * Single quotes are escaped by splitting the string in two, then adding a
-   * single quote to the end of the first half, and combining the two halves.
+   * Escapes single quotes in a string.
    *
-   * By putting no space inbetween the two halves, the two halves are combined.
+   * @param stringToEscape The string to escape.
    */
   private static escapeSingleQuotes(stringToEscape: string): string {
     return stringToEscape.replace(/'/g, `'\\''`);

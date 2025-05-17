@@ -90,9 +90,10 @@ export default async function mergeVideos(pathToFolder: string) {
 }
 
 /**
+ * Converts all videos in the given list to a consistent size.
  *
- * @param mp4Videos
- * @param pathToVideos
+ * @param mp4Videos The list of mp4 videos to convert.
+ * @param pathToVideos The path to the folder containing the videos.
  */
 async function convertAllVideosToConsistentSize(
   mp4Videos: string[],
@@ -109,9 +110,10 @@ async function convertAllVideosToConsistentSize(
 }
 
 /**
+ * Converts a single video to a consistent size.
  *
- * @param videoName
- * @param pathToVideos
+ * @param videoName The name of the video to convert.
+ * @param pathToVideos The path to the folder containing the video.
  */
 async function convertVideoToConsistentSize(
   videoName: string,
