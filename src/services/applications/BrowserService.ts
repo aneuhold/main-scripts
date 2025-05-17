@@ -35,7 +35,7 @@ export default class BrowserService {
         return;
     }
 
-    DR.logger.info(`Executing: ${command}`);
+    DR.logger.verbose.info(`Executing: ${command}`);
     const { didComplete, output } = await CLIService.execCmd(command);
     if (!didComplete) {
       DR.logger.error(`Failed to open URL: ${url}. Output: ${output}`);

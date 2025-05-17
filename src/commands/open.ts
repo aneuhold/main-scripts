@@ -3,6 +3,7 @@ import path from 'path';
 import projects, { FolderName, Project } from '../config/projects.js';
 import BrowserService from '../services/applications/BrowserService.js';
 import ChromeService from '../services/applications/ChromeService.js';
+import GitService from '../services/applications/GitService.js';
 import OSFileSystemService from '../services/applications/OSFileSystemService.js';
 import CLIService from '../services/CLIService.js';
 import FileSearchService from '../services/FileSearchService.js';
@@ -77,55 +78,6 @@ async function runApplication(appName: AppName) {
 }
 
 /**
- * Opens the current repository's page in the default browser.
- */
-async function openRepositoryPage(): Promise<void> {
-  try {
-    const gitRemoteCommand = 'git config --get remote.origin.url';
-    DR.logger.info(`Executing: ${gitRemoteCommand}`);
-    const { output: remoteUrlOutput, didComplete } =
-      await CLIService.execCmd(gitRemoteCommand);
-
-    if (!didComplete || !remoteUrlOutput.trim()) {
-      DR.logger.error(
-        'Could not get remote origin URL. Are you in a git repository with a remote named "origin"?'
-      );
-      return;
-    }
-
-    let repoUrl = remoteUrlOutput.trim();
-    DR.logger.info(`Raw remote URL: ${repoUrl}`);
-
-    // Convert SSH URL to HTTP URL
-    if (repoUrl.startsWith('git@')) {
-      repoUrl = repoUrl
-        .replace(':', '/')
-        .replace('git@', 'https://')
-        .replace(/\\.git$/, ''); // Ensure .git at the end is removed
-    } else if (repoUrl.endsWith('.git')) {
-      repoUrl = repoUrl.slice(0, -4);
-    }
-
-    // Ensure it's an HTTP/HTTPS URL before logging success or attempting to open
-    if (!repoUrl.startsWith('http://') && !repoUrl.startsWith('https://')) {
-      DR.logger.info(
-        // Changed from warn to info as warn doesn't exist
-        `Converted URL "${repoUrl}" is not a standard HTTP/HTTPS URL. Attempting to open anyway.`
-      );
-    } else {
-      DR.logger.info(`Processed repository URL: ${repoUrl}`);
-    }
-
-    await BrowserService.openUrl(repoUrl);
-  } catch (e: unknown) {
-    // Changed error type from any to unknown
-    const error = e instanceof Error ? e : new Error(String(e)); // Ensure error is an Error instance
-    DR.logger.error('Failed to open repository page.');
-    DR.logger.error(error.message);
-  }
-}
-
-/**
  * Opens the specified solution file using the system's default program.
  *
  * @param solutionFilePath The absolute or relative path to the .sln file.
@@ -135,6 +87,20 @@ async function openSolutionFile(solutionFilePath: string) {
   const fullCommand = `${solutionFileCommand}"${solutionFilePath}"`;
   DR.logger.success(`Opening ${solutionFilePath} with "${fullCommand}"`);
   await CLIService.execCmdWithTimeout(fullCommand, 4000);
+}
+
+/**
+ * Opens the current repository's page in the default browser.
+ */
+async function openRepositoryPage(): Promise<void> {
+  const repoUrl = await GitService.getCurrentGitRepositoryUrl();
+  if (repoUrl) {
+    await BrowserService.openUrl(repoUrl);
+  } else {
+    DR.logger.error(
+      'Repository URL could not be determined. Cannot open in browser.'
+    );
+  }
 }
 
 /**
