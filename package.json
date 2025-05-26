@@ -42,7 +42,7 @@
     "node-fetch": "^2.7.0"
   },
   "devDependencies": {
-    "@aneuhold/eslint-config": "^1.0.94",
+    "@aneuhold/eslint-config": "^1.0.99",
     "@types/fluent-ffmpeg": "^2.1.24",
     "@types/node": "^20.17.19",
     "@types/node-fetch": "^2.6.12",
