@@ -12,10 +12,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aneuhold/core-ts-lib@npm:^2.1.7":
-  version: 2.1.7
-  resolution: "@aneuhold/core-ts-lib@npm:2.1.7"
-  checksum: 10c0/aad64f134a13c53a83e66c72592d0ae69b5d1a1e7ebc85050d8ff8454f0ee86468acc850e6dd48eceaddbafedb3a031ea6b4f228215c89cf5cf28f80215a3d8e
+"@aneuhold/core-ts-lib@npm:^2.1.9":
+  version: 2.1.9
+  resolution: "@aneuhold/core-ts-lib@npm:2.1.9"
+  checksum: 10c0/89d3c32dec4920e601900b9e20f8831680c67e18667493393151c718c0354191f81701a28ba2e5888d1b1066b6818b4989289354199633b102e58a3bbc603f07
   languageName: node
   linkType: hard
 
@@ -48,7 +48,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@aneuhold/main-scripts@workspace:."
   dependencies:
-    "@aneuhold/core-ts-lib": "npm:^2.1.7"
+    "@aneuhold/core-ts-lib": "npm:^2.1.9"
     "@aneuhold/eslint-config": "npm:^1.0.99"
     "@inquirer/prompts": "npm:^7.3.2"
     "@types/fluent-ffmpeg": "npm:^2.1.24"
