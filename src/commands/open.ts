@@ -1,4 +1,4 @@
-import { DR, StringService } from '@aneuhold/core-ts-lib';
+import { DR } from '@aneuhold/core-ts-lib';
 import path from 'path';
 import projects, { FolderName, Project } from '../config/projects.js';
 import BrowserService from '../services/applications/BrowserService.js';
@@ -122,55 +122,60 @@ async function findAndOpenProject(): Promise<void> {
     currentDir,
     'package.json'
   );
-  if (hasPackageJson) {
+
+  // Search for solution files
+  const solutionFiles = await FileSearchService.findFilesWithExtension(
+    currentDir,
+    'sln'
+  );
+
+  // If only package.json exists, open VS Code
+  if (hasPackageJson && solutionFiles.length === 0) {
     await openVSCode();
     return;
   }
 
-  // Check for solution files in current directory
-  const currentDirFiles = await CurrentEnv.fileNamesInDir();
-  const solutionFiles = currentDirFiles.filter(
-    (file) => StringService.getFileNameExtension(file) === 'sln'
-  );
+  // If only solution files exist (no package.json)
+  if (!hasPackageJson) {
+    if (solutionFiles.length === 1) {
+      await openSolutionFile(solutionFiles[0]);
+      return;
+    }
 
-  if (solutionFiles.length === 1) {
-    await openSolutionFile(solutionFiles[0]);
-    return;
-  }
-
-  // If no immediate solution file found, search deeper
-  if (solutionFiles.length === 0) {
-    const deepSolutionFiles = await FileSearchService.findFilesWithExtension(
-      currentDir,
-      'sln'
-    );
-
-    if (deepSolutionFiles.length === 0) {
+    if (solutionFiles.length === 0) {
       await openVSCode();
       return;
     }
 
-    if (deepSolutionFiles.length === 1) {
-      await openSolutionFile(deepSolutionFiles[0]);
-      return;
-    }
-
-    if (deepSolutionFiles.length > 1) {
-      const relativePaths = deepSolutionFiles.map((file) =>
-        path.relative(currentDir, file)
-      );
-      const selectedRelativePath =
-        await CLIService.selectFromList(relativePaths);
-      await openSolutionFile(selectedRelativePath);
-      return;
-    }
+    // Multiple solution files exist
+    const relativePaths = solutionFiles.map((file) =>
+      path.relative(currentDir, file)
+    );
+    const selectedRelativePath = await CLIService.selectFromList(relativePaths);
+    await openSolutionFile(selectedRelativePath);
+    return;
   }
 
-  // Handle multiple solution files in current directory
-  if (solutionFiles.length > 1) {
-    const selectedFile = await CLIService.selectFromList(solutionFiles);
-    await openSolutionFile(selectedFile);
-    return;
+  // Both package.json and solution files exist - present options
+  const options: string[] = [];
+  const optionMap: Map<string, () => Promise<void>> = new Map();
+
+  // Add VS Code option at the top
+  const vsCodeOption = 'Root with VS Code';
+  options.push(vsCodeOption);
+  optionMap.set(vsCodeOption, () => openVSCode());
+
+  // Add solution files from current directory
+  solutionFiles.forEach((file) => {
+    const relativePath = path.relative(currentDir, file);
+    options.push(relativePath);
+    optionMap.set(relativePath, () => openSolutionFile(file));
+  });
+
+  const selectedOption = await CLIService.selectFromList(options);
+  const action = optionMap.get(selectedOption);
+  if (action) {
+    await action();
   }
 }
 
