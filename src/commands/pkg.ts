@@ -2,7 +2,8 @@ import { DR, PackageService } from '@aneuhold/core-ts-lib';
 
 export enum PackageAction {
   validateJsr = 'validateJsr',
-  publishJsr = 'publishJsr'
+  publishJsr = 'publishJsr',
+  validateNpm = 'validateNpm'
 }
 
 /**
@@ -27,6 +28,9 @@ export default async function pkg(packageAction: string): Promise<void> {
     case PackageAction.publishJsr:
       await publishJsr();
       break;
+    case PackageAction.validateNpm:
+      await validateNpm();
+      break;
     default:
       break;
   }
@@ -44,4 +48,11 @@ async function validateJsr() {
  */
 async function publishJsr() {
   await PackageService.publishToJsr();
+}
+
+/**
+ * Validates the npm package for publishing.
+ */
+async function validateNpm() {
+  await PackageService.validateNpmPublish();
 }

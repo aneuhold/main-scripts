@@ -163,7 +163,7 @@ program
   )
   .argument(
     '[packageAction]',
-    'The package action to perform. Supported actions are: validateJsr, publishJsr.'
+    'The package action to perform. Supported actions are: validateJsr, publishJsr, validateNpm.'
   )
   .action(async (packageAction: string) => {
     await pkg(packageAction);

@@ -38,8 +38,9 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
   1.  Run `jsr publish --allow-dirty --dry-run` to ensure it passes the checks of JSR
   1.  Revert the change to the local `jsr.json` file
 - `tb pkg publishJsr` Will do the same steps as above, but the `jsr` command will be `jsr publish --allow-dirty`. If running locally, this will prompt you to login with your local browser to JSR and permit the publish. In CI, it should handle this without any intervention if the JSR GitHub action is used.
+- `tb pkg validateNpm` Will validate the current project for publishing to npm by running `npm publish --access public --dry-run` and checking for version conflicts on the npm registry.
 
-> The above do require `jsr` as a dev dependency
+> The JSR commands require `jsr` as a dev dependency
 
 ## ⚠️ Potential Issues
 
