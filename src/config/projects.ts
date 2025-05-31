@@ -195,7 +195,7 @@ function setupPiSubTerminalsFunc(
         CurrentEnv.terminal() !== TerminalType.WindowsTerminal &&
         CurrentEnv.terminal() !== TerminalType.ITerm2
       ) {
-        DR.logger.failure(
+        DR.logger.error(
           `Setup for ${folderName} not established for anything but Windows Terminal and iTerm2.`
         );
         return;

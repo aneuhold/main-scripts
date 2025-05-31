@@ -56,7 +56,7 @@ class Store {
         await access(LOCALDATA_PATH);
         DR.logger.verbose.success(`${LOCALDATA_PATH} exists.`);
       } catch {
-        DR.logger.verbose.failure(
+        DR.logger.verbose.error(
           `${LOCALDATA_PATH} doesn't exist. Creating now...`
         );
         await mkdir(LOCALDATA_PATH);

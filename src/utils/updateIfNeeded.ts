@@ -65,7 +65,7 @@ export async function updateIfNeeded(): Promise<void> {
     const updateIsNeeded = output.length !== 0;
     if (updateIsNeeded) {
       DR.logger.verbose.info(`Output of outdated command is: ${output}`);
-      DR.logger.failure('Update is needed. Installing update now...');
+      DR.logger.error('Update is needed. Installing update now...');
       await triggerUpdate();
     } else {
       DR.logger.verbose.success(`Package is up to date. Continuing...`);

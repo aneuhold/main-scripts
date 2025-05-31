@@ -73,7 +73,7 @@ export default class CurrentEnv {
         case 'Core':
           return ShellType.PowerShellCore;
         default:
-          DR.logger.verbose.failure(
+          DR.logger.verbose.error(
             `No recognizable shell returned for Windows environment.`
           );
       }

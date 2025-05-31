@@ -12,7 +12,7 @@ export enum PackageAction {
  */
 export default async function pkg(packageAction: string): Promise<void> {
   if (!(packageAction in PackageAction)) {
-    DR.logger.failure(`The package action ${packageAction} is not supported.`);
+    DR.logger.error(`The package action ${packageAction} is not supported.`);
     DR.logger.info(`The supported package actions are:`);
     Object.keys(PackageAction).forEach((name) => {
       console.log(`- ${name}\n`);

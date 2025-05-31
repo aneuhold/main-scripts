@@ -13,7 +13,7 @@ export default async function setup(): Promise<void> {
   if (project?.setup) {
     await project.setup();
   } else {
-    DR.logger.failure(
+    DR.logger.error(
       `There are no settings for the folder with name ${CurrentEnv.folderName()}. Please add them to the main-scripts project.`
     );
   }
