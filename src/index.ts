@@ -9,7 +9,7 @@ import fpull from './commands/fpull.js';
 import mergeAllVideos from './commands/mergeAllVideos.js';
 import mergeVideos from './commands/mergeVideos.js';
 import open from './commands/open.js';
-import pkg from './commands/pkg.js';
+import pkg, { PackageOptions } from './commands/pkg.js';
 import scaffold from './commands/scaffold.js';
 import setup from './commands/setup.js';
 import startup from './commands/startup.js';
@@ -163,10 +163,27 @@ program
   )
   .argument(
     '[packageAction]',
-    'The package action to perform. Supported actions are: validateJsr, publishJsr, validateNpm.'
+    'The package action to perform. Supported actions are: validateJsr, publishJsr, validateNpm, publishNpm, testStringReplacement.'
   )
-  .action(async (packageAction: string) => {
-    await pkg(packageAction);
+  .option(
+    '-a, --alternative-names <names...>',
+    'Alternative package names to use for publishing/validation'
+  )
+  .option(
+    '-o, --original-string <string>',
+    'Original string for testStringReplacement action'
+  )
+  .option(
+    '-n, --new-string <string>',
+    'New string for testStringReplacement action'
+  )
+  .action(async (packageAction: string, options: PackageOptions) => {
+    await pkg(
+      packageAction,
+      options.alternativeNames,
+      options.originalString,
+      options.newString
+    );
   });
 
 // Run the thang
