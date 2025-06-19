@@ -163,7 +163,11 @@ program
   )
   .argument(
     '[packageAction]',
-    'The package action to perform. Supported actions are: validateJsr, publishJsr, validateNpm, publishNpm, testStringReplacement.'
+    'The package action to perform. Supported actions are: validateJsr, publishJsr, validateNpm, publishNpm, testStringReplacement, prepare.'
+  )
+  .argument(
+    '[versionType]',
+    'For prepare action: version type (patch, minor, major). Defaults to patch if not specified.'
   )
   .option(
     '-a, --alternative-names <names...>',
@@ -177,14 +181,21 @@ program
     '-n, --new-string <string>',
     'New string for testStringReplacement action'
   )
-  .action(async (packageAction: string, options: PackageOptions) => {
-    await pkg(
-      packageAction,
-      options.alternativeNames,
-      options.originalString,
-      options.newString
-    );
-  });
+  .action(
+    async (
+      packageAction: string,
+      versionType: string,
+      options: PackageOptions
+    ) => {
+      await pkg(
+        packageAction,
+        versionType,
+        options.alternativeNames,
+        options.originalString,
+        options.newString
+      );
+    }
+  );
 
 // Run the thang
 void (async () => {
