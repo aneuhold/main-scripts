@@ -29,6 +29,7 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
 - `tb setup` Will setup the development environment according to the current working directory name. If settings have not been determined yet for the directory name, shell, or terminal, then it will inform you and won't do anything else.
 - `tb startup` Will run the startup script for the current system with no arguments
 - `tb scaffold [projectType] [projectName]` Will build the given project type with the given project name as a new folder in the current working directory named with the given `projectName`.
+- `tb pkg [packageAction]` Performs actions related to package publishing. Supported actions are: `validateJsr`, `publishJsr`, `validateNpm`, `publishNpm`, `testStringReplacement`. This is typically used inside a package.json file as one of the scripts.
 
 ### Commands specifically for `package.json` scripts
 
@@ -39,6 +40,29 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
   1.  Revert the change to the local `jsr.json` file
 - `tb pkg publishJsr` Will do the same steps as above, but the `jsr` command will be `jsr publish --allow-dirty`. If running locally, this will prompt you to login with your local browser to JSR and permit the publish. In CI, it should handle this without any intervention if the JSR GitHub action is used.
 - `tb pkg validateNpm` Will validate the current project for publishing to npm by running `npm publish --access public --dry-run` and checking for version conflicts on the npm registry.
+- `tb pkg publishNpm` Will publish the current project to npm by running `npm publish --access public` after performing validation checks.
+- `tb pkg testStringReplacement -o "original" -n "new"` Will test the string replacement functionality used by the package service to replace package names during publishing.
+
+#### Package Command Options
+
+All package commands support the following options:
+
+- `-a, --alternative-names <names...>` Specify alternative package names to use for publishing/validation. This allows you to test or publish the same package under multiple names.
+- `-o, --original-string <string>` For `testStringReplacement` action: the original string to replace.
+- `-n, --new-string <string>` For `testStringReplacement` action: the new string to replace it with.
+
+#### Examples
+
+```bash
+# Validate JSR publishing with alternative package names
+tb pkg validateJsr -a @scope/alt-name @scope/another-name
+
+# Publish to npm with multiple package names
+tb pkg publishNpm -a @company/package-v1 @company/package-v2
+
+# Test string replacement functionality
+tb pkg testStringReplacement -o "@old/package-name" -n "@new/package-name"
+```
 
 > The JSR commands require `jsr` as a dev dependency
 
@@ -83,19 +107,3 @@ This consists of the following steps:
 - Run `yarn build`
 - Packs the files only including the the `./lib` folder and the [default things included](https://docs.npmjs.com/cli/v7/using-npm/developers). This does mean that the `package.json` is going to be in the package twice. But that is okay because the `package.json` that is in the `lib` folder will only be used to reference values. It isn't used for commands or locations of any anything.
 - Pushing to main will automatically publish it to NPM
-
-### 🚧 Commands to be Built
-
-- `tb scaffold node` Scaffolds a node project. Ideas on steps are below:
-  - Intialize git and ask for a repo link and all that (setup a dedicated step / js file for this because it will be re-used)
-  - Initialize npm (package.json)
-    - Add the name from the name given
-    - Add the scripts with the name given
-  - Create README.md
-  - Setup ESLINT with JSON config then update the config with specific values if needed
-  - Add Typescript and the tsconfig.json file
-  - Add prettier and the .prettierrc.json file
-  - Update the tsconfig.json to match what is in this project at the moment probably.
-  - Setup the build command in the package.json
-  - Ideas on implementation
-    - There needs to be a way to create the package.json, perhaps it needs to be built in memory first then written? Not sure. Maybe use npm init first and then grab that file? Looks like npm init might not work because it is interactive.
