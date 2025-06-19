@@ -1,4 +1,4 @@
-import { DR, PackageService } from '@aneuhold/core-ts-lib';
+import { DR, PackageService, VersionType } from '@aneuhold/core-ts-lib';
 
 export type PackageOptions = {
   alternativeNames?: string[];
@@ -11,19 +11,22 @@ export enum PackageAction {
   publishJsr = 'publishJsr',
   validateNpm = 'validateNpm',
   publishNpm = 'publishNpm',
-  testStringReplacement = 'testStringReplacement'
+  testStringReplacement = 'testStringReplacement',
+  prepare = 'prepare'
 }
 
 /**
  * Performs a package action, such as validating or publishing a JSR/npm package.
  *
  * @param packageAction The package action to perform.
+ * @param versionType For prepare action: the type of version bump (patch, minor, major). For other actions, this can be used as a generic second argument.
  * @param alternativePackageNames Optional alternative package names to use.
  * @param originalString For testStringReplacement: the original string to replace.
  * @param newString For testStringReplacement: the new string to replace it with.
  */
 export default async function pkg(
   packageAction: string,
+  versionType?: string,
   alternativePackageNames?: string[],
   originalString?: string,
   newString?: string
@@ -52,6 +55,9 @@ export default async function pkg(
       break;
     case PackageAction.testStringReplacement:
       await testStringReplacement(originalString, newString);
+      break;
+    case PackageAction.prepare:
+      await prepare(versionType);
       break;
     default:
       break;
@@ -111,4 +117,28 @@ async function testStringReplacement(
     return;
   }
   await PackageService.testStringReplacement(originalString, newString);
+}
+
+/**
+ * Prepares the package by bumping the version if needed and initializing changelog.
+ *
+ * @param versionType The type of version bump (patch, minor, major). Defaults to patch.
+ */
+async function prepare(versionType?: string) {
+  const validVersionTypes = ['patch', 'minor', 'major'];
+  let parsedVersionType: VersionType | undefined;
+
+  if (versionType) {
+    if (!validVersionTypes.includes(versionType)) {
+      DR.logger.error(
+        `Invalid version type: ${versionType}. Valid types are: ${validVersionTypes.join(', ')}`
+      );
+      return;
+    }
+    parsedVersionType = versionType as VersionType;
+  }
+
+  await PackageService.bumpVersionIfNeededAndInitializeChangelog(
+    parsedVersionType
+  );
 }
