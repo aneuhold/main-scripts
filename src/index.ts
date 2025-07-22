@@ -229,14 +229,10 @@ program
 program
   .command('dev')
   .description(
-    'Starts development mode with nodemon to watch for changes and automatically publish updates using local-npm-registry'
+    'Starts development mode with nodemon to watch for changes. Auto-detects the current project and runs in the first packageJsonPath directory.'
   )
-  .argument(
-    '[packagePrefix]',
-    'The package prefix to start development mode for (e.g., "client-core", "spa"). If not provided, will auto-detect the current project. To see options, run this command without arguments.'
-  )
-  .action(async (packagePrefix: string) => {
-    await dev(packagePrefix);
+  .action(async () => {
+    await dev();
   });
 
 // Run the thang

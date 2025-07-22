@@ -1,139 +1,117 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import path from 'path';
-import localNpmPackages from '../config/localNpmPackages.js';
 import projects from '../config/projects.js';
 import CLIService from '../services/CLIService.js';
 
 /**
- * Starts a development watch mode using nodemon and local-npm-registry.
- * This command will watch for file changes and automatically publish the package.
- *
- * @param packagePrefix The prefix of the package to start development mode for. If not provided, will try to detect the current project.
+ * Starts a development watch mode using nodemon.
+ * This command will watch for file changes and run the configured nodemon arguments.
+ * It detects the current project and runs in the directory of the first packageJsonPath.
  */
-export default async function dev(packagePrefix?: string): Promise<void> {
-  let targetProject;
-  let targetPackageName;
+export default async function dev(): Promise<void> {
+  // Try to detect the current project based on the current directory
+  const currentDir = path.basename(process.cwd());
 
-  if (!packagePrefix) {
-    // Try to detect the current project based on the current directory
-    const currentDir = path.basename(process.cwd());
+  // Find a project that matches the current directory name
+  const targetProject = Object.values(projects).find(
+    (project) => project.folderName === currentDir
+  );
 
-    // Find a project that matches the current directory name
-    targetProject = Object.values(projects).find(
-      (project) => project.folderName === currentDir
+  if (!targetProject) {
+    DR.logger.error(
+      `Could not detect a project configuration for the current directory "${currentDir}". ` +
+        'Please ensure you are in a configured project directory. ' +
+        'Available projects:'
     );
-
-    if (!targetProject) {
-      DR.logger.error(
-        `Could not detect a project configuration for the current directory "${currentDir}". ` +
-          'Please specify a package prefix or ensure you are in a configured project directory. ' +
-          'See below for available options:'
-      );
-      logAvailablePackages();
-      return;
-    }
-
-    // For auto-detection, we need the project to have nodemon args
-    if (!targetProject.nodemonArgs || targetProject.nodemonArgs.length === 0) {
-      DR.logger.error(
-        `The current project "${targetProject.folderName}" does not have nodemon arguments configured for development mode.`
-      );
-      return;
-    }
-
-    DR.logger.info(`Auto-detected project: ${targetProject.folderName}`);
-  } else {
-    // Manual selection by package prefix
-    const normalizedPrefix = packagePrefix.toLowerCase();
-
-    // Get the package name from the localNpmPackages configuration
-    targetPackageName = localNpmPackages[normalizedPrefix];
-    if (!targetPackageName) {
-      DR.logger.error(
-        `The package prefix "${packagePrefix}" does not match any available packages. See below for available options:`
-      );
-      logAvailablePackages();
-      return;
-    }
-
-    // Find the corresponding project by checking which project can be used for this package
-    targetProject = Object.values(projects).find((project) => {
-      return project.nodemonArgs && project.nodemonArgs.length > 0;
-    });
-
-    if (!targetProject) {
-      DR.logger.error(
-        'No project is configured with nodemon arguments for development mode.'
-      );
-      return;
-    }
+    logAvailableProjects();
+    return;
   }
 
-  // Determine the working directory
-  let workingDirectory = process.cwd();
+  // Check if the project has nodemon args configured
+  if (
+    !targetProject.nodemonArgs ||
+    Object.keys(targetProject.nodemonArgs).length === 0
+  ) {
+    DR.logger.error(
+      `The current project "${targetProject.folderName}" does not have nodemon arguments configured for development mode.`
+    );
+    return;
+  }
+
+  // Get the base working directory from the first packageJsonPath or current directory
+  let baseWorkingDirectory = process.cwd();
   if (
     targetProject.packageJsonPaths &&
     targetProject.packageJsonPaths.length > 0
   ) {
     // Use the directory containing the first package.json
     const packageJsonPath = targetProject.packageJsonPaths[0];
-    workingDirectory = path.resolve(
-      workingDirectory,
+    baseWorkingDirectory = path.resolve(
+      baseWorkingDirectory,
       path.dirname(packageJsonPath)
     );
   }
 
-  const displayName = targetPackageName || targetProject.folderName;
-  DR.logger.info(`Starting development mode for "${displayName}"...`);
-  DR.logger.info(`Working directory: ${workingDirectory}`);
-  DR.logger.info('Press Ctrl+C to stop watching...');
+  DR.logger.info(
+    `Starting development mode for "${targetProject.folderName}"...`
+  );
 
-  try {
-    // Use spawnCmd for long-running nodemon process
-    const args = targetProject.nodemonArgs;
-    const { output, didComplete } = await CLIService.spawnCmd(
-      'nodemon',
-      args,
-      workingDirectory
-    );
+  // Run nodemon for each configured path
+  const nodemonProcesses = Object.entries(targetProject.nodemonArgs).map(
+    async ([relativePath, args], index) => {
+      const workingDirectory = path.resolve(baseWorkingDirectory, relativePath);
 
-    if (didComplete) {
-      DR.logger.info('Development mode stopped.');
-    } else {
-      DR.logger.error('Development mode was interrupted.');
+      DR.logger.info(`[${index + 1}] Working directory: ${workingDirectory}`);
+      DR.logger.info(`[${index + 1}] Running: nodemon ${args.join(' ')}`);
+
+      try {
+        const { output, didComplete } = await CLIService.spawnCmd(
+          'nodemon',
+          args,
+          workingDirectory
+        );
+
+        if (didComplete) {
+          DR.logger.info(`[${index + 1}] Development mode stopped.`);
+        } else {
+          DR.logger.error(`[${index + 1}] Development mode was interrupted.`);
+        }
+
+        if (output.trim()) {
+          console.log(`[${index + 1}] ${output}`);
+        }
+      } catch (error) {
+        DR.logger.error(
+          `[${index + 1}] Error starting development mode: ${String(error)}`
+        );
+      }
     }
+  );
 
-    if (output.trim()) {
-      console.log(output);
-    }
-  } catch (error) {
-    DR.logger.error(`Error starting development mode: ${String(error)}`);
-  }
+  DR.logger.info('Press Ctrl+C to stop all watchers...');
+
+  // Wait for all nodemon processes to complete
+  await Promise.all(nodemonProcesses);
 }
 
 /**
- * Logs the available packages that can be used for development.
+ * Logs the available projects that can be used for development.
  */
-function logAvailablePackages() {
-  // Show available package prefixes
-  const availablePackages = Object.entries(localNpmPackages).map(
-    ([prefix, packageName]) => `- ${prefix} (${packageName})`
-  );
+function logAvailableProjects() {
+  const availableProjects = Object.values(projects)
+    .filter(
+      (project) =>
+        project.nodemonArgs && Object.keys(project.nodemonArgs).length > 0
+    )
+    .map((project) => `- ${project.folderName}`);
 
-  // Also show projects that can be auto-detected
-  const autoDetectableProjects = Object.values(projects)
-    .filter((project) => project.nodemonArgs && project.nodemonArgs.length > 0)
-    .map((project) => `- Auto-detectable: ${project.folderName}`);
-
-  console.log('Available package prefixes:');
-  availablePackages.forEach((packageInfo) => {
-    console.log(packageInfo);
-  });
-
-  if (autoDetectableProjects.length > 0) {
-    console.log('\nProjects that can be auto-detected (run dev without args):');
-    autoDetectableProjects.forEach((project) => {
-      console.log(project);
-    });
+  if (availableProjects.length === 0) {
+    console.log('No projects are configured for development mode.');
+    return;
   }
+
+  console.log('Projects configured for development:');
+  availableProjects.forEach((project) => {
+    console.log(project);
+  });
 }

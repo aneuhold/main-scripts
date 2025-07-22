@@ -14,7 +14,7 @@ export type Project = {
   packageJsonPaths?: string[];
   setup?: () => Promise<void>;
   refresh?: () => Promise<void>;
-  nodemonArgs?: string[];
+  nodemonArgs?: { [relativeFolderPath: string]: string[] };
 };
 
 export enum FolderName {
@@ -51,14 +51,9 @@ const projects: { [folderName in FolderName]: Project } = {
   },
   'client-core': {
     folderName: FolderName.clientCore,
-    nodemonArgs: [
-      '--ext',
-      'ts',
-      '--watch',
-      'src',
-      '--exec',
-      'local-npm publish'
-    ],
+    nodemonArgs: {
+      '.': ['--ext', 'ts', '--watch', 'src', '--exec', 'local-npm publish']
+    },
     setup: setupPiSubTerminalsFunc(
       FolderName.clientCore,
       ['yarn watch', 'yarn unlink:local'],
@@ -68,16 +63,6 @@ const projects: { [folderName in FolderName]: Project } = {
   },
   'pi-client-org-management': {
     folderName: FolderName.piClientOrgManagement,
-    nodemonArgs: [
-      '--ext',
-      'ts,tsx',
-      '--watch',
-      'src',
-      '--ignore',
-      'src/**/*.test.ts',
-      '--exec',
-      'npm run build && local-npm publish'
-    ],
     setup: setupPiSubTerminalsFunc(
       FolderName.piClientOrgManagement,
       ['yarn start'],
