@@ -3,6 +3,7 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { program } from 'commander';
 import clean from './commands/clean.js';
+import dev from './commands/dev.js';
 import downloadAndMergeVideos from './commands/downloadAndMergeVideos.js';
 import downloadVideos from './commands/downloadVideos.js';
 import fpull from './commands/fpull.js';
@@ -13,6 +14,8 @@ import pkg, { PackageOptions } from './commands/pkg.js';
 import scaffold from './commands/scaffold.js';
 import setup from './commands/setup.js';
 import startup from './commands/startup.js';
+import sub from './commands/sub.js';
+import unsub from './commands/unsub.js';
 import calculateProbabilities from './utils/calculator.js';
 import { triggerUpdate } from './utils/updateIfNeeded.js';
 
@@ -196,6 +199,45 @@ program
       );
     }
   );
+
+program
+  .command('sub')
+  .description(
+    'Subscribes to a package using local-npm-registry for automatic updates during development'
+  )
+  .argument(
+    '[packagePrefix]',
+    'The package prefix to subscribe to (e.g., "client-core", "spa"). To see options, run this command without arguments.'
+  )
+  .action(async (packagePrefix: string) => {
+    await sub(packagePrefix);
+  });
+
+program
+  .command('unsub')
+  .description(
+    'Unsubscribes from a package using local-npm-registry and resets to original version'
+  )
+  .argument(
+    '[packagePrefix]',
+    'The package prefix to unsubscribe from (e.g., "client-core", "spa"). If not provided, unsubscribes from all packages.'
+  )
+  .action(async (packagePrefix: string) => {
+    await unsub(packagePrefix);
+  });
+
+program
+  .command('dev')
+  .description(
+    'Starts development mode with nodemon to watch for changes and automatically publish updates using local-npm-registry'
+  )
+  .argument(
+    '[packagePrefix]',
+    'The package prefix to start development mode for (e.g., "client-core", "spa"). If not provided, will auto-detect the current project. To see options, run this command without arguments.'
+  )
+  .action(async (packagePrefix: string) => {
+    await dev(packagePrefix);
+  });
 
 // Run the thang
 void (async () => {

@@ -14,6 +14,7 @@ export type Project = {
   packageJsonPaths?: string[];
   setup?: () => Promise<void>;
   refresh?: () => Promise<void>;
+  nodemonArgs?: string[];
 };
 
 export enum FolderName {
@@ -50,6 +51,14 @@ const projects: { [folderName in FolderName]: Project } = {
   },
   'client-core': {
     folderName: FolderName.clientCore,
+    nodemonArgs: [
+      '--ext',
+      'ts',
+      '--watch',
+      'src',
+      '--exec',
+      'local-npm publish'
+    ],
     setup: setupPiSubTerminalsFunc(
       FolderName.clientCore,
       ['yarn watch', 'yarn unlink:local'],
@@ -59,6 +68,16 @@ const projects: { [folderName in FolderName]: Project } = {
   },
   'pi-client-org-management': {
     folderName: FolderName.piClientOrgManagement,
+    nodemonArgs: [
+      '--ext',
+      'ts,tsx',
+      '--watch',
+      'src',
+      '--ignore',
+      'src/**/*.test.ts',
+      '--exec',
+      'npm run build && local-npm publish'
+    ],
     setup: setupPiSubTerminalsFunc(
       FolderName.piClientOrgManagement,
       ['yarn start'],
@@ -90,7 +109,7 @@ const projects: { [folderName in FolderName]: Project } = {
   },
   'pi.diagnose': {
     folderName: FolderName.piDiagnose,
-    packageJsonPaths: ['package.json', 'client/package.json']
+    packageJsonPaths: ['PI.Client.Diagnose/client/package.json']
   }
 };
 
@@ -102,7 +121,7 @@ const projects: { [folderName in FolderName]: Project } = {
  * ran in their own terminal
  * @param subPath the sub-path of the main folder that the commands should
  * be ran in
- * @param installCommand
+ * @param installCommand the command to run for installing dependencies
  */
 function setupPiSubTerminalsFunc(
   folderName: FolderName,
@@ -150,9 +169,10 @@ function setupPiSubTerminalsFunc(
 // The order of the commands matters when executing windows terminal.
 // It might be nice to setup a class that does this for you.
 /**
+ * Runs Windows Terminal commands in separate panes.
  *
- * @param separateTerminalCommands
- * @param currentPath
+ * @param separateTerminalCommands the commands to run in separate terminals
+ * @param currentPath the current working directory
  */
 async function runWindowsTerminalCommands(
   separateTerminalCommands: string[],
@@ -171,9 +191,10 @@ async function runWindowsTerminalCommands(
 }
 
 /**
+ * Runs iTerm2 commands in separate panes.
  *
- * @param separateTerminalCommands
- * @param currentPath
+ * @param separateTerminalCommands the commands to run in separate terminals
+ * @param currentPath the current working directory
  */
 async function runITerm2Commands(
   separateTerminalCommands: string[],
