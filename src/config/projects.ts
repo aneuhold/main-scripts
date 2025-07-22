@@ -11,30 +11,20 @@ import CurrentEnv, { TerminalType } from '../utils/CurrentEnv.js';
 export type Project = {
   folderName: string;
   solutionFilePath?: string;
+  packageJsonPaths?: string[];
   setup?: () => Promise<void>;
   refresh?: () => Promise<void>;
 };
 
 export enum FolderName {
   piSpa = 'pi-spa',
-  piDiagnoseApiService = 'pi-diagnoseapiservice',
-  piCommonApiService = 'pi-commonapiservice',
-  piDiagnoseSurveyInsights = 'pi-diagnosesurveyinsights',
-  piBehavioralAssessmentApiService = 'pi-behavioralassessmentapiservice',
-  piDiagnosePulseReportsFunction = 'pi-diagnose-pulsereportsfunction',
-  piDesignApiService = 'pi-designapiservice',
-  piUserAccess = 'pi-useraccess',
-  piClientHire = 'pi-client-hire',
-  piClientDesign = 'pi-client-design',
-  piClientInspire = 'pi-client-inspire',
-  piPermissionsLib = 'pi-permissions-lib',
-  piClientDiagnose = 'pi-client-diagnose',
   piPlatform = 'pi-platform',
   clientCore = 'client-core',
   piClientOrgManagement = 'pi-client-org-management',
   piClientSurveyTaker = 'pi-client-surveytaker',
   piPerform = 'pi-perform',
-  piPermissionsMigrations = 'pi-permissions-migrations'
+  piPermissionsMigrations = 'pi-permissions-migrations',
+  piDiagnose = 'pi.diagnose'
 }
 
 /**
@@ -47,67 +37,6 @@ const projects: { [folderName in FolderName]: Project } = {
   'pi-spa': {
     folderName: FolderName.piSpa,
     setup: setupPiSubTerminalsFunc(FolderName.piSpa, [
-      'yarn client',
-      'yarn server'
-    ])
-  },
-  'pi-diagnoseapiservice': {
-    folderName: FolderName.piSpa,
-    solutionFilePath: 'PI.DiagnoseApiService.sln'
-  },
-  'pi-commonapiservice': {
-    folderName: FolderName.piCommonApiService,
-    solutionFilePath: path.join(
-      'PI.Core.CommonAPIService',
-      'PI.Core.CommonAPIService.sln'
-    )
-  },
-  'pi-diagnosesurveyinsights': {
-    folderName: FolderName.piDiagnoseSurveyInsights,
-    solutionFilePath: 'PI.DiagnoseSurveyInsights.sln'
-  },
-  'pi-behavioralassessmentapiservice': {
-    folderName: FolderName.piDiagnoseSurveyInsights,
-    solutionFilePath: 'PI.BehavioralAssessmentAPIService.sln'
-  },
-  'pi-designapiservice': {
-    folderName: FolderName.piDesignApiService,
-    solutionFilePath: 'PI.DesignAPIService.sln'
-  },
-  'pi-diagnose-pulsereportsfunction': {
-    folderName: FolderName.piDiagnosePulseReportsFunction,
-    solutionFilePath: path.join(
-      'PI.Diagnose.PulseReportsFunction',
-      'PI.Diagnose.PulseReportsFunction.sln'
-    )
-  },
-  'pi-useraccess': {
-    folderName: FolderName.piUserAccess,
-    solutionFilePath: 'pi-useraccess.sln'
-  },
-  'pi-client-hire': {
-    folderName: FolderName.piClientHire,
-    setup: setupPiSubTerminalsFunc(
-      FolderName.piClientHire,
-      ['yarn client', 'yarn server'],
-      'hire'
-    )
-  },
-  'pi-client-design': {
-    folderName: FolderName.piClientDesign,
-    setup: setupPiSubTerminalsFunc(
-      FolderName.piClientDesign,
-      ['yarn client', 'yarn server'],
-      'design'
-    )
-  },
-  'pi-permissions-lib': {
-    folderName: FolderName.piPermissionsLib,
-    solutionFilePath: 'PI.PermissionsLib.sln'
-  },
-  'pi-client-diagnose': {
-    folderName: FolderName.piClientDiagnose,
-    setup: setupPiSubTerminalsFunc(FolderName.piClientDiagnose, [
       'yarn client',
       'yarn server'
     ])
@@ -137,14 +66,6 @@ const projects: { [folderName in FolderName]: Project } = {
       'yarn'
     )
   },
-  'pi-client-inspire': {
-    folderName: FolderName.piClientInspire,
-    setup: setupPiSubTerminalsFunc(
-      FolderName.piClientInspire,
-      ['yarn client', 'yarn server'],
-      'inspire'
-    )
-  },
   'pi-client-surveytaker': {
     folderName: FolderName.piClientSurveyTaker,
     setup: setupPiSubTerminalsFunc(
@@ -166,6 +87,10 @@ const projects: { [folderName in FolderName]: Project } = {
   'pi-permissions-migrations': {
     folderName: FolderName.piPermissionsMigrations,
     solutionFilePath: 'PIPermissionsMigration.sln'
+  },
+  'pi.diagnose': {
+    folderName: FolderName.piDiagnose,
+    packageJsonPaths: ['package.json', 'client/package.json']
   }
 };
 
