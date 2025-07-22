@@ -11,30 +11,21 @@ import CurrentEnv, { TerminalType } from '../utils/CurrentEnv.js';
 export type Project = {
   folderName: string;
   solutionFilePath?: string;
+  packageJsonPaths?: string[];
   setup?: () => Promise<void>;
   refresh?: () => Promise<void>;
+  nodemonArgs?: { [relativeFolderPath: string]: string[] };
 };
 
 export enum FolderName {
   piSpa = 'pi-spa',
-  piDiagnoseApiService = 'pi-diagnoseapiservice',
-  piCommonApiService = 'pi-commonapiservice',
-  piDiagnoseSurveyInsights = 'pi-diagnosesurveyinsights',
-  piBehavioralAssessmentApiService = 'pi-behavioralassessmentapiservice',
-  piDiagnosePulseReportsFunction = 'pi-diagnose-pulsereportsfunction',
-  piDesignApiService = 'pi-designapiservice',
-  piUserAccess = 'pi-useraccess',
-  piClientHire = 'pi-client-hire',
-  piClientDesign = 'pi-client-design',
-  piClientInspire = 'pi-client-inspire',
-  piPermissionsLib = 'pi-permissions-lib',
-  piClientDiagnose = 'pi-client-diagnose',
   piPlatform = 'pi-platform',
   clientCore = 'client-core',
   piClientOrgManagement = 'pi-client-org-management',
   piClientSurveyTaker = 'pi-client-surveytaker',
   piPerform = 'pi-perform',
-  piPermissionsMigrations = 'pi-permissions-migrations'
+  piPermissionsMigrations = 'pi-permissions-migrations',
+  piDiagnose = 'pi.diagnose'
 }
 
 /**
@@ -51,67 +42,6 @@ const projects: { [folderName in FolderName]: Project } = {
       'yarn server'
     ])
   },
-  'pi-diagnoseapiservice': {
-    folderName: FolderName.piSpa,
-    solutionFilePath: 'PI.DiagnoseApiService.sln'
-  },
-  'pi-commonapiservice': {
-    folderName: FolderName.piCommonApiService,
-    solutionFilePath: path.join(
-      'PI.Core.CommonAPIService',
-      'PI.Core.CommonAPIService.sln'
-    )
-  },
-  'pi-diagnosesurveyinsights': {
-    folderName: FolderName.piDiagnoseSurveyInsights,
-    solutionFilePath: 'PI.DiagnoseSurveyInsights.sln'
-  },
-  'pi-behavioralassessmentapiservice': {
-    folderName: FolderName.piDiagnoseSurveyInsights,
-    solutionFilePath: 'PI.BehavioralAssessmentAPIService.sln'
-  },
-  'pi-designapiservice': {
-    folderName: FolderName.piDesignApiService,
-    solutionFilePath: 'PI.DesignAPIService.sln'
-  },
-  'pi-diagnose-pulsereportsfunction': {
-    folderName: FolderName.piDiagnosePulseReportsFunction,
-    solutionFilePath: path.join(
-      'PI.Diagnose.PulseReportsFunction',
-      'PI.Diagnose.PulseReportsFunction.sln'
-    )
-  },
-  'pi-useraccess': {
-    folderName: FolderName.piUserAccess,
-    solutionFilePath: 'pi-useraccess.sln'
-  },
-  'pi-client-hire': {
-    folderName: FolderName.piClientHire,
-    setup: setupPiSubTerminalsFunc(
-      FolderName.piClientHire,
-      ['yarn client', 'yarn server'],
-      'hire'
-    )
-  },
-  'pi-client-design': {
-    folderName: FolderName.piClientDesign,
-    setup: setupPiSubTerminalsFunc(
-      FolderName.piClientDesign,
-      ['yarn client', 'yarn server'],
-      'design'
-    )
-  },
-  'pi-permissions-lib': {
-    folderName: FolderName.piPermissionsLib,
-    solutionFilePath: 'PI.PermissionsLib.sln'
-  },
-  'pi-client-diagnose': {
-    folderName: FolderName.piClientDiagnose,
-    setup: setupPiSubTerminalsFunc(FolderName.piClientDiagnose, [
-      'yarn client',
-      'yarn server'
-    ])
-  },
   'pi-platform': {
     folderName: FolderName.piPlatform,
     setup: setupPiSubTerminalsFunc(FolderName.piPlatform, [
@@ -121,6 +51,16 @@ const projects: { [folderName in FolderName]: Project } = {
   },
   'client-core': {
     folderName: FolderName.clientCore,
+    nodemonArgs: {
+      '.': [
+        '--ignore',
+        'dist/',
+        '--ext',
+        'ts',
+        '--exec',
+        'yarn run build && cd dist/core && local-npm publish --ignore-scripts'
+      ]
+    },
     setup: setupPiSubTerminalsFunc(
       FolderName.clientCore,
       ['yarn watch', 'yarn unlink:local'],
@@ -135,14 +75,6 @@ const projects: { [folderName in FolderName]: Project } = {
       ['yarn start'],
       '',
       'yarn'
-    )
-  },
-  'pi-client-inspire': {
-    folderName: FolderName.piClientInspire,
-    setup: setupPiSubTerminalsFunc(
-      FolderName.piClientInspire,
-      ['yarn client', 'yarn server'],
-      'inspire'
     )
   },
   'pi-client-surveytaker': {
@@ -166,6 +98,10 @@ const projects: { [folderName in FolderName]: Project } = {
   'pi-permissions-migrations': {
     folderName: FolderName.piPermissionsMigrations,
     solutionFilePath: 'PIPermissionsMigration.sln'
+  },
+  'pi.diagnose': {
+    folderName: FolderName.piDiagnose,
+    packageJsonPaths: ['PI.Diagnose.Client/client/package.json']
   }
 };
 
@@ -177,7 +113,7 @@ const projects: { [folderName in FolderName]: Project } = {
  * ran in their own terminal
  * @param subPath the sub-path of the main folder that the commands should
  * be ran in
- * @param installCommand
+ * @param installCommand the command to run for installing dependencies
  */
 function setupPiSubTerminalsFunc(
   folderName: FolderName,
@@ -225,9 +161,10 @@ function setupPiSubTerminalsFunc(
 // The order of the commands matters when executing windows terminal.
 // It might be nice to setup a class that does this for you.
 /**
+ * Runs Windows Terminal commands in separate panes.
  *
- * @param separateTerminalCommands
- * @param currentPath
+ * @param separateTerminalCommands the commands to run in separate terminals
+ * @param currentPath the current working directory
  */
 async function runWindowsTerminalCommands(
   separateTerminalCommands: string[],
@@ -246,9 +183,10 @@ async function runWindowsTerminalCommands(
 }
 
 /**
+ * Runs iTerm2 commands in separate panes.
  *
- * @param separateTerminalCommands
- * @param currentPath
+ * @param separateTerminalCommands the commands to run in separate terminals
+ * @param currentPath the current working directory
  */
 async function runITerm2Commands(
   separateTerminalCommands: string[],
