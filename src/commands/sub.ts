@@ -1,6 +1,8 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import path from 'path';
-import localNpmPackages from '../config/localNpmPackages.js';
+import localNpmPackages, {
+  logAvailablePackages
+} from '../config/localNpmPackages.js';
 import projects from '../config/projects.js';
 import CLIService from '../services/CLIService.js';
 
@@ -58,7 +60,7 @@ export default async function sub(packagePrefix?: string): Promise<void> {
   DR.logger.info(`Running in ${workingDirectories.length} directory(ies)`);
 
   // Run subscription in all working directories
-  const results = await Promise.allSettled(
+  await Promise.allSettled(
     workingDirectories.map(async (workingDirectory, index) => {
       DR.logger.info(
         `[${index + 1}/${workingDirectories.length}] Running in: ${workingDirectory}`
@@ -73,65 +75,4 @@ export default async function sub(packagePrefix?: string): Promise<void> {
       return { workingDirectory, output, didComplete };
     })
   );
-
-  // Process results
-  let successCount = 0;
-  let failureCount = 0;
-
-  results.forEach((result, index) => {
-    if (result.status === 'fulfilled') {
-      const { workingDirectory, output, didComplete } = result.value;
-
-      if (didComplete) {
-        successCount++;
-        DR.logger.success(
-          `[${index + 1}] Successfully subscribed in ${path.basename(workingDirectory)}`
-        );
-      } else {
-        failureCount++;
-        DR.logger.error(
-          `[${index + 1}] Failed to subscribe in ${path.basename(workingDirectory)}`
-        );
-      }
-
-      if (output.trim()) {
-        console.log(`Output from ${path.basename(workingDirectory)}:`);
-        console.log(output);
-      }
-    } else {
-      failureCount++;
-      DR.logger.error(
-        `[${index + 1}] Error in ${path.basename(workingDirectories[index])}: ${String(result.reason)}`
-      );
-    }
-  });
-
-  // Summary
-  if (successCount > 0) {
-    DR.logger.success(
-      `Successfully subscribed to ${packageName} in ${successCount} location(s)`
-    );
-  }
-  if (failureCount > 0) {
-    DR.logger.error(`Failed to subscribe in ${failureCount} location(s)`);
-  }
-}
-
-/**
- * Logs the available packages that can be subscribed to.
- */
-function logAvailablePackages() {
-  const availablePackages = Object.entries(localNpmPackages).map(
-    ([prefix, packageName]) => `- ${prefix} (${packageName})`
-  );
-
-  if (availablePackages.length === 0) {
-    console.log('No projects are configured for package subscription.');
-    return;
-  }
-
-  console.log('Available packages:');
-  availablePackages.forEach((packageInfo) => {
-    console.log(packageInfo);
-  });
 }

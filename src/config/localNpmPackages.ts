@@ -15,4 +15,23 @@ const localNpmPackages: LocalNpmPackageConfig = {
   tap: '@predictiveindex/tapestry'
 };
 
+/**
+ * Logs the available packages that can be subscribed to or unsubscribed from.
+ */
+export function logAvailablePackages(): void {
+  const availablePackages = Object.entries(localNpmPackages).map(
+    ([prefix, packageName]) => `- ${prefix} (${packageName})`
+  );
+
+  if (availablePackages.length === 0) {
+    console.log('No projects are configured for package subscription.');
+    return;
+  }
+
+  console.log('Available packages:');
+  availablePackages.forEach((packageInfo) => {
+    console.log(packageInfo);
+  });
+}
+
 export default localNpmPackages;

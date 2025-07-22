@@ -1,6 +1,8 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import path from 'path';
-import localNpmPackages from '../config/localNpmPackages.js';
+import localNpmPackages, {
+  logAvailablePackages
+} from '../config/localNpmPackages.js';
 import projects from '../config/projects.js';
 import CLIService from '../services/CLIService.js';
 
@@ -79,7 +81,7 @@ export default async function unsub(packagePrefix?: string): Promise<void> {
   DR.logger.info(`Running in ${workingDirectories.length} directory(ies)`);
 
   // Run unsubscription in all working directories
-  const results = await Promise.allSettled(
+  await Promise.allSettled(
     workingDirectories.map(async (dir, index) => {
       DR.logger.info(
         `[${index + 1}/${workingDirectories.length}] Running in: ${dir}`
@@ -94,65 +96,4 @@ export default async function unsub(packagePrefix?: string): Promise<void> {
       return { workingDirectory: dir, output, didComplete };
     })
   );
-
-  // Process results
-  let successCount = 0;
-  let failureCount = 0;
-
-  results.forEach((result, index) => {
-    if (result.status === 'fulfilled') {
-      const { workingDirectory: dir, output, didComplete } = result.value;
-
-      if (didComplete) {
-        successCount++;
-        DR.logger.success(
-          `[${index + 1}] Successfully unsubscribed in ${path.basename(dir)}`
-        );
-      } else {
-        failureCount++;
-        DR.logger.error(
-          `[${index + 1}] Failed to unsubscribe in ${path.basename(dir)}`
-        );
-      }
-
-      if (output.trim()) {
-        console.log(`Output from ${path.basename(dir)}:`);
-        console.log(output);
-      }
-    } else {
-      failureCount++;
-      DR.logger.error(
-        `[${index + 1}] Error in ${path.basename(workingDirectories[index])}: ${String(result.reason)}`
-      );
-    }
-  });
-
-  // Summary
-  if (successCount > 0) {
-    DR.logger.success(
-      `Successfully unsubscribed from ${packageName} in ${successCount} location(s)`
-    );
-  }
-  if (failureCount > 0) {
-    DR.logger.error(`Failed to unsubscribe in ${failureCount} location(s)`);
-  }
-}
-
-/**
- * Logs the available packages that can be unsubscribed from.
- */
-function logAvailablePackages() {
-  const availablePackages = Object.entries(localNpmPackages).map(
-    ([prefix, packageName]) => `- ${prefix} (${packageName})`
-  );
-
-  if (availablePackages.length === 0) {
-    console.log('No projects are configured for package subscription.');
-    return;
-  }
-
-  console.log('Available packages:');
-  availablePackages.forEach((packageInfo) => {
-    console.log(packageInfo);
-  });
 }
