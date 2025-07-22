@@ -11,7 +11,7 @@ import CLIService from '../services/CLIService.js';
  */
 export default async function unsub(packagePrefix?: string): Promise<void> {
   // Determine the working directory - use current directory as default
-  let workingDirectory = process.cwd();
+  const workingDirectory = process.cwd();
 
   if (!packagePrefix) {
     // Unsubscribe from all packages
@@ -52,43 +52,89 @@ export default async function unsub(packagePrefix?: string): Promise<void> {
     return;
   }
 
-  // Try to find a project that might have specific package.json paths configured
+  // Find the project that matches the current directory
+  const currentDir = path.basename(workingDirectory);
   const matchingProject = Object.values(projects).find(
-    (project) => project.folderName === path.basename(workingDirectory)
+    (project) => project.folderName === currentDir
   );
+
+  let workingDirectories: string[] = [];
 
   if (
     matchingProject &&
     matchingProject.packageJsonPaths &&
     matchingProject.packageJsonPaths.length > 0
   ) {
-    const packageJsonPath = matchingProject.packageJsonPaths[0];
-    workingDirectory = path.resolve(
-      workingDirectory,
-      path.dirname(packageJsonPath)
+    // Use all directories containing package.json files
+    workingDirectories = matchingProject.packageJsonPaths.map(
+      (packageJsonPath) =>
+        path.resolve(workingDirectory, path.dirname(packageJsonPath))
     );
+  } else {
+    // Default to current directory
+    workingDirectories = [workingDirectory];
   }
 
   DR.logger.info(`Unsubscribing from package "${packageName}"...`);
+  DR.logger.info(`Running in ${workingDirectories.length} directory(ies)`);
 
-  try {
-    const { output, didComplete } = await CLIService.execCmd(
-      `local-npm unsubscribe ${packageName}`,
-      true,
-      workingDirectory
-    );
+  // Run unsubscription in all working directories
+  const results = await Promise.allSettled(
+    workingDirectories.map(async (dir, index) => {
+      DR.logger.info(
+        `[${index + 1}/${workingDirectories.length}] Running in: ${dir}`
+      );
 
-    if (didComplete) {
-      DR.logger.success(`Successfully unsubscribed from ${packageName}`);
+      const { output, didComplete } = await CLIService.execCmd(
+        `local-npm unsubscribe ${packageName}`,
+        true,
+        dir
+      );
+
+      return { workingDirectory: dir, output, didComplete };
+    })
+  );
+
+  // Process results
+  let successCount = 0;
+  let failureCount = 0;
+
+  results.forEach((result, index) => {
+    if (result.status === 'fulfilled') {
+      const { workingDirectory: dir, output, didComplete } = result.value;
+
+      if (didComplete) {
+        successCount++;
+        DR.logger.success(
+          `[${index + 1}] Successfully unsubscribed in ${path.basename(dir)}`
+        );
+      } else {
+        failureCount++;
+        DR.logger.error(
+          `[${index + 1}] Failed to unsubscribe in ${path.basename(dir)}`
+        );
+      }
+
+      if (output.trim()) {
+        console.log(`Output from ${path.basename(dir)}:`);
+        console.log(output);
+      }
     } else {
-      DR.logger.error(`Failed to unsubscribe from ${packageName}`);
+      failureCount++;
+      DR.logger.error(
+        `[${index + 1}] Error in ${path.basename(workingDirectories[index])}: ${String(result.reason)}`
+      );
     }
+  });
 
-    if (output.trim()) {
-      console.log(output);
-    }
-  } catch (error) {
-    DR.logger.error(`Error unsubscribing from package: ${String(error)}`);
+  // Summary
+  if (successCount > 0) {
+    DR.logger.success(
+      `Successfully unsubscribed from ${packageName} in ${successCount} location(s)`
+    );
+  }
+  if (failureCount > 0) {
+    DR.logger.error(`Failed to unsubscribe in ${failureCount} location(s)`);
   }
 }
 
