@@ -12,40 +12,19 @@ import CLIService from '../services/CLIService.js';
  * @param packagePrefix The prefix of the package to unsubscribe from (e.g., 'client-core' for '@company/client-core'). If not provided, unsubscribes from all packages.
  */
 export default async function unsub(packagePrefix?: string): Promise<void> {
-  // Determine the working directory - use current directory as default
   const workingDirectory = process.cwd();
 
   if (!packagePrefix) {
-    // Unsubscribe from all packages
     DR.logger.info('Unsubscribing from all packages...');
-
-    try {
-      const { output, didComplete } = await CLIService.execCmd(
-        'local-npm unsubscribe',
-        true,
-        workingDirectory
-      );
-
-      if (didComplete) {
-        DR.logger.success('Successfully unsubscribed from all packages');
-      } else {
-        DR.logger.error('Failed to unsubscribe from all packages');
-      }
-
-      if (output.trim()) {
-        console.log(output);
-      }
-    } catch (error) {
-      DR.logger.error(`Error unsubscribing from packages: ${String(error)}`);
-    }
+    const workingDirectories = getWorkingDirectories(workingDirectory);
+    await runUnsubscribeCommand(workingDirectories, 'local-npm unsubscribe');
     return;
   }
 
   // Unsubscribe from a specific package
   const normalizedPrefix = packagePrefix.toLowerCase();
-
-  // Get the package name from the localNpmPackages configuration
   const packageName = localNpmPackages[normalizedPrefix];
+
   if (!packageName) {
     DR.logger.error(
       `The package prefix "${packagePrefix}" does not match any available packages. See below for available options:`
@@ -54,33 +33,51 @@ export default async function unsub(packagePrefix?: string): Promise<void> {
     return;
   }
 
-  // Find the project that matches the current directory
+  DR.logger.info(`Unsubscribing from package "${packageName}"...`);
+  const workingDirectories = getWorkingDirectories(workingDirectory);
+  await runUnsubscribeCommand(
+    workingDirectories,
+    `local-npm unsubscribe ${packageName}`
+  );
+}
+
+/**
+ * Gets the working directories based on the current directory and project configuration.
+ *
+ * @param workingDirectory The current working directory
+ */
+function getWorkingDirectories(workingDirectory: string): string[] {
   const currentDir = path.basename(workingDirectory);
   const matchingProject = Object.values(projects).find(
     (project) => project.folderName === currentDir
   );
-
-  let workingDirectories: string[] = [];
 
   if (
     matchingProject &&
     matchingProject.packageJsonPaths &&
     matchingProject.packageJsonPaths.length > 0
   ) {
-    // Use all directories containing package.json files
-    workingDirectories = matchingProject.packageJsonPaths.map(
-      (packageJsonPath) =>
-        path.resolve(workingDirectory, path.dirname(packageJsonPath))
+    return matchingProject.packageJsonPaths.map((packageJsonPath) =>
+      path.resolve(workingDirectory, path.dirname(packageJsonPath))
     );
-  } else {
-    // Default to current directory
-    workingDirectories = [workingDirectory];
   }
 
-  DR.logger.info(`Unsubscribing from package "${packageName}"...`);
+  return [workingDirectory];
+}
+
+/**
+ * Runs the unsubscribe command in all working directories and processes the results.
+ *
+ * @param workingDirectories Array of directories to run the command in
+ * @param command The command to execute
+ * @param packageName Optional package name for success/failure messages
+ */
+async function runUnsubscribeCommand(
+  workingDirectories: string[],
+  command: string
+): Promise<void> {
   DR.logger.info(`Running in ${workingDirectories.length} directory(ies)`);
 
-  // Run unsubscription in all working directories
   await Promise.allSettled(
     workingDirectories.map(async (dir, index) => {
       DR.logger.info(
@@ -88,7 +85,7 @@ export default async function unsub(packagePrefix?: string): Promise<void> {
       );
 
       const { output, didComplete } = await CLIService.execCmd(
-        `local-npm unsubscribe ${packageName}`,
+        command,
         true,
         dir
       );

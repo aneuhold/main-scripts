@@ -52,7 +52,14 @@ const projects: { [folderName in FolderName]: Project } = {
   'client-core': {
     folderName: FolderName.clientCore,
     nodemonArgs: {
-      '.': ['--ext', 'ts', '--watch', 'src', '--exec', 'local-npm publish']
+      '.': [
+        '--ignore',
+        'dist/',
+        '--ext',
+        'ts',
+        '--exec',
+        'yarn run build && cd dist/core && local-npm publish --ignore-scripts'
+      ]
     },
     setup: setupPiSubTerminalsFunc(
       FolderName.clientCore,
@@ -94,7 +101,7 @@ const projects: { [folderName in FolderName]: Project } = {
   },
   'pi.diagnose': {
     folderName: FolderName.piDiagnose,
-    packageJsonPaths: ['PI.Client.Diagnose/client/package.json']
+    packageJsonPaths: ['PI.Diagnose.Client/client/package.json']
   }
 };
 
