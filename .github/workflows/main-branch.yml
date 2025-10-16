@@ -46,9 +46,8 @@ jobs:
       - name: Build
         run: yarn build
 
-      # Not sure if npm ci is needed. We do need later than 11.5.1 though for OIDC support
+      # We need later than 11.5.1 of NPM for OIDC support
       - name: Publish to npm
         run: |
           npm install -g npm@latest
-          npm ci
           npm publish --access public
