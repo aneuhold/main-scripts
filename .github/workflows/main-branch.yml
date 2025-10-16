@@ -18,6 +18,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          # It seems this may be required for OIDC to work properly, because it pulls in something
+          # related to auth according to the documentation: https://github.com/actions/setup-node
+          registry-url: 'https://registry.npmjs.org'
+
       - name: Setup yarn 4
         run: corepack enable
 
