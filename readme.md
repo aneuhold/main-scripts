@@ -23,6 +23,7 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
 
 - `tb help` Will emit all the commands and their options
 - `tb open` Will open the current directory in either VS Code, or Rider depending on the project as it is configured in [`projects.ts`](src/config/projects.ts).
+  - `tb open r` Will open the associated repo for the current directory
 - `tb test` Just emits a test echo to see if the package is working.
 - `tb update` Will force update this package.
 - `tb fpull` Will run `git fetch -a` then `git pull` in the current working directory.
