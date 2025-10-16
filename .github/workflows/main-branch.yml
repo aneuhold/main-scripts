@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # Required for testing actions that use OIDC to access other resources (like npm publish)
       id-token: write
 
     steps:
@@ -37,9 +38,6 @@ jobs:
 
       - name: Build
         run: yarn build
-
-      - name: Add Auth Token for npm
-        run: echo "//registry.npmjs.org/:_authToken=${{secrets.NPM_TOKEN}}" > ~/.npmrc
 
       - name: Publish to npm
         run: npm publish --access public
