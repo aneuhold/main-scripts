@@ -3,8 +3,8 @@ import path from 'path';
 import localNpmPackages, {
   logAvailablePackages
 } from '../config/localNpmPackages.js';
-import projects from '../config/projects.js';
 import CLIService from '../services/CLIService.js';
+import { ProjectConfigService } from '../services/ProjectConfigService.js';
 
 /**
  * Subscribes to a package using local-npm-registry.
@@ -35,9 +35,7 @@ export default async function sub(packagePrefix?: string): Promise<void> {
 
   // Find the project that matches the current directory
   const currentDir = path.basename(process.cwd());
-  const matchingProject = Object.values(projects).find(
-    (project) => project.folderName === currentDir
-  );
+  const matchingProject = await ProjectConfigService.getProject(currentDir);
 
   let workingDirectories: string[] = [];
 

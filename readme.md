@@ -17,6 +17,42 @@ npm install -g @aneuhold/main-scripts
 
 This can also be used as a dev dependency
 
+## 🔧 Configuration
+
+You can extend the built-in project configurations with your own custom projects by creating a configuration file. The configuration system uses [cosmiconfig](https://github.com/cosmiconfig/cosmiconfig), which searches for configuration in the following locations (in order):
+
+1. `~/.config/tb-main-scripts.json` (global configuration)
+2. `.tb-main-scripts.json` (project-specific)
+3. `package.json` with a `"tb-main-scripts"` property
+
+### Configuration Format
+
+Configuration files should contain a `projects` object where each key is the folder name of your project:
+
+```json
+{
+  "projects": {
+    "my-custom-project": {
+      "folderName": "my-custom-project",
+      "solutionFilePath": "MyProject.sln",
+      "packageJsonPaths": ["client/package.json"],
+      "nodemonArgs": {
+        ".": ["--ignore", "dist/", "--ext", "ts", "--exec", "npm run build"]
+      }
+    }
+  }
+}
+```
+
+### Configuration Properties
+
+Each project configuration supports the following properties:
+
+- `folderName` (required): The name of the project folder
+- `solutionFilePath` (optional): Relative path to a .NET solution file to open with `tb open`
+- `packageJsonPaths` (optional): Array of relative paths to package.json files for multi-package projects
+- `nodemonArgs` (optional): Object mapping relative paths to nodemon argument arrays for `tb dev` command
+
 ## ✅ Commands
 
 Each command starts with `tb`. That stands for Tiny Box but that isn't really important 😛.

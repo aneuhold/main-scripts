@@ -32,12 +32,12 @@ export enum FolderName {
 }
 
 /**
- * Contains the different projects that have settings based on the folder name.
+ * Contains the different built-in projects that have settings based on the folder name.
  *
  * The folder name is repeated in the key and the data structure for easier
  * access.
  */
-const projects: { [folderName in FolderName]: Project } = {
+const builtInProjects: Record<string, Project> = {
   'pi-spa': {
     folderName: FolderName.piSpa,
     setup: setupPiSubTerminalsFunc(FolderName.piSpa, [
@@ -125,7 +125,7 @@ function setupPiSubTerminalsFunc(
   installCommand = 'yarn yarn:all'
 ) {
   return async () => {
-    const project = projects[folderName];
+    const project = builtInProjects[folderName];
     DR.logger.info(`Setting up ${project.folderName}...`);
     const currentPath = path.resolve('.', subPath);
 
@@ -201,4 +201,4 @@ async function runITerm2Commands(
   );
 }
 
-export default projects;
+export default builtInProjects;
