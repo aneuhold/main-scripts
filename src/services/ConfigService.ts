@@ -158,4 +158,56 @@ export class ConfigService {
     await writeFile(configPath, configContent, 'utf-8');
     return configPath;
   }
+
+  /**
+   * Adds or updates a project configuration in the config file.
+   * Creates the config file if it doesn't exist.
+   *
+   * There's a bug in here where it doesn't start with the home directory config. It could
+   * potentially start with the project local config if it exists, which is not desired. Can
+   * fix later.
+   *
+   * @param folderName The name of the project folder
+   */
+  static async addProjectConfig(folderName: string): Promise<string> {
+    // Ensure config file exists
+    await this.initConfigFile();
+    const config = await this.loadConfig();
+
+    // Add or update the project
+    if (!config.projects) {
+      config.projects = {};
+    }
+    const projectConfig = this.createProjectTemplate(folderName);
+    config.projects[folderName] = projectConfig;
+
+    // Write back to file
+    const configPath = this.getHomeDirectoryConfigPath();
+    const configContent = JSON.stringify(config, null, 2);
+    await writeFile(configPath, configContent, 'utf-8');
+
+    return configPath;
+  }
+
+  /**
+   * Creates a template project configuration with all possible options.
+   *
+   * @param folderName The name of the project folder
+   * @returns A complete project configuration template
+   */
+  private static createProjectTemplate(
+    folderName: string
+  ): MainScriptsConfigProject {
+    return {
+      folderName,
+      solutionFilePath: '',
+      packageJsonPaths: [],
+      nodemonArgs: {},
+      worktreeConfig: {
+        extraFilesToCopy: [],
+        postCreateCommands: [],
+        autoSetup: false
+      }
+    };
+  }
 }

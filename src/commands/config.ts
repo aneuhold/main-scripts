@@ -3,13 +3,21 @@ import CLIService from '../services/CLIService.js';
 import { ConfigService } from '../services/ConfigService.js';
 
 /**
- * Shows the current configuration or initializes a new config file.
+ * Shows the current configuration, initializes a new config file, or manages project configs.
  *
  * @param action The action to perform: 'show' (default), 'init', or 'edit'
+ * @param folderName Optional folder name for 'init' action to create a project config
  */
-export default async function config(action?: string): Promise<void> {
+export default async function config(
+  action?: string,
+  folderName?: string
+): Promise<void> {
   if (action === 'init') {
-    await initConfig();
+    if (folderName) {
+      await initProjectConfig(folderName);
+    } else {
+      await initConfig();
+    }
   } else if (action === 'edit') {
     await editConfig();
   } else {
@@ -52,6 +60,21 @@ async function initConfig(): Promise<void> {
 
   DR.logger.info(`Created config file at: ${configPath}`);
   DR.logger.info('You can now edit this file to customize your configuration.');
+}
+
+/**
+ * Initializes a new project configuration with all available options.
+ *
+ * @param folderName The name of the project folder
+ */
+async function initProjectConfig(folderName: string): Promise<void> {
+  DR.logger.info(`Creating project configuration for folder: ${folderName}...`);
+
+  const configPath = await ConfigService.addProjectConfig(folderName);
+
+  DR.logger.success(
+    `Project configuration created for '${folderName}' in: ${configPath}`
+  );
 }
 
 /**

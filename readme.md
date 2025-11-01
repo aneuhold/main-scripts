@@ -68,6 +68,7 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
 - `tb config [action]` Shows the current configuration, initializes a new config file, or edits the existing config.
   - `tb config` or `tb config show` - Display current configuration
   - `tb config init` - Create a new config file with defaults
+  - `tb config init <folder-name>` - Create a project configuration template for the specified folder
   - `tb config edit` - Open the config file in VS Code
 - `tb dev` Starts development mode with nodemon to watch for changes. Auto-detects the current project and runs in the first packageJsonPath directory.
 - `tb sub [packagePrefix]` Subscribes to a package using local-npm-registry for automatic updates during development.

@@ -226,8 +226,12 @@ program
     '[action]',
     'The action to perform: "show" (default), "init" to create a new config file, or "edit" to open in VS Code'
   )
-  .action(async (action: string) => {
-    await config(action);
+  .argument(
+    '[folderName]',
+    'For init action: optional folder name to create a project configuration'
+  )
+  .action(async (action: string, folderName: string) => {
+    await config(action, folderName);
   });
 
 const worktreeCmd = program
