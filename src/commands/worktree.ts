@@ -86,7 +86,8 @@ export async function addWorktree(branchName?: string): Promise<void> {
     // Open the project in the appropriate editor
     await open();
 
-    DR.logger.info(`✓ Worktree created successfully at: ${targetPath}`);
+    DR.logger.success(`Worktree created successfully at: ${targetPath}
+cd ${targetPath}`);
   } catch (error) {
     DR.logger.error(
       `Failed to create worktree: ${ErrorUtils.getErrorString(error)}`
@@ -245,7 +246,7 @@ export async function removeWorktree(): Promise<void> {
     // Remove worktree (git will handle dirty check)
     await GitService.removeWorktree(targetPath);
 
-    DR.logger.info(`✓ Worktree removed: ${targetPath}`);
+    DR.logger.success(`Worktree removed: ${targetPath}`);
   } catch (error) {
     DR.logger.error(
       `Failed to remove worktree: ${ErrorUtils.getErrorString(error)}`

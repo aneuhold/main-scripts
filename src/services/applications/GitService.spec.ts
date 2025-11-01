@@ -108,6 +108,45 @@ describe('GitService', () => {
         process.chdir(originalCwd);
       }
     });
+
+    it('should create worktree from existing branch', async () => {
+      const testInstanceDir = TestUtils.getTestInstanceDir();
+
+      // Initialize a git repository with initial commit
+      await initializeGitRepo(testInstanceDir);
+
+      // Change to test directory
+      const originalCwd = process.cwd();
+      process.chdir(testInstanceDir);
+
+      try {
+        // First create a branch
+        await CLIService.execCmd(
+          'git branch feature-existing',
+          false,
+          testInstanceDir
+        );
+
+        const worktreePath = `${testInstanceDir}-wt-existing-branch`;
+
+        // Create a worktree from the existing 'feature-existing' branch
+        // This should succeed without trying to create a new branch with -b
+        await GitService.addWorktree('feature-existing', worktreePath);
+
+        // Verify it was created
+        const worktrees = await GitService.getWorktreesInfo();
+        expect(worktrees.length).toBe(2); // Main + new worktree
+
+        const featureWorktree = worktrees.find(
+          (wt) => wt.path === worktreePath && wt.branch === 'feature-existing'
+        );
+        expect(featureWorktree).toBeDefined();
+        expect(featureWorktree?.isMain).toBe(false);
+      } finally {
+        // Restore original directory
+        process.chdir(originalCwd);
+      }
+    });
   });
 
   describe('getWorktreesInfo', () => {

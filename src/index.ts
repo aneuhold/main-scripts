@@ -234,6 +234,7 @@ worktreeCmd
   });
 worktreeCmd
   .command('remove')
+  .alias('rm')
   .description('Remove a worktree (interactive selection)')
   .action(async () => {
     const { removeWorktree } = await import('./commands/worktree.js');

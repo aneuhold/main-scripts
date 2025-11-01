@@ -20,7 +20,6 @@ export default class GitService {
   > {
     try {
       const gitRemoteCommand = 'git config --get remote.origin.url';
-      DR.logger.verbose.info(`Executing: ${gitRemoteCommand}`);
       const { output: remoteUrlOutput, didComplete } =
         await CLIService.execCmd(gitRemoteCommand);
 
@@ -63,17 +62,26 @@ export default class GitService {
   }
 
   /**
-   * Creates a new git worktree with a new branch.
+   * Creates a new git worktree. If the branch exists, checks it out.
+   * If it doesn't exist, creates a new branch.
    *
-   * @param branchName The name of the new branch to create
+   * @param branchName The name of the branch to checkout or create
    * @param targetPath The path where the worktree should be created
    */
   public static async addWorktree(
     branchName: string,
     targetPath: string
   ): Promise<void> {
-    const command = `git worktree add -b ${branchName} "${targetPath}"`;
-    DR.logger.verbose.info(`Executing: ${command}`);
+    // Check if branch exists
+    const checkBranchCmd = `git show-ref --verify refs/heads/${branchName}`;
+    const { didComplete: branchExists } =
+      await CLIService.execCmd(checkBranchCmd);
+
+    // Use -b flag only if branch doesn't exist (creates new branch)
+    // Otherwise, just checkout the existing branch
+    const command = branchExists
+      ? `git worktree add "${targetPath}" ${branchName}`
+      : `git worktree add -b ${branchName} "${targetPath}"`;
 
     const { didComplete, output } = await CLIService.execCmd(command);
 
@@ -91,7 +99,6 @@ export default class GitService {
    */
   public static async getWorktreesInfo(): Promise<WorktreeInfo[]> {
     const command = 'git worktree list --porcelain';
-    DR.logger.verbose.info(`Executing: ${command}`);
 
     const { didComplete, output } = await CLIService.execCmd(command);
 
@@ -151,31 +158,12 @@ export default class GitService {
   ): Promise<void> {
     const forceFlag = force ? '--force' : '';
     const command = `git worktree remove ${forceFlag} "${targetPath}"`;
-    DR.logger.verbose.info(`Executing: ${command}`);
 
     const { didComplete, output } = await CLIService.execCmd(command);
 
     if (!didComplete) {
       throw new Error(`Failed to remove worktree: ${output}`);
     }
-
-    DR.logger.verbose.info(`Worktree removed successfully: ${targetPath}`);
-  }
-
-  /**
-   * Prunes stale worktree administrative data.
-   */
-  public static async pruneWorktrees(): Promise<void> {
-    const command = 'git worktree prune';
-    DR.logger.verbose.info(`Executing: ${command}`);
-
-    const { didComplete, output } = await CLIService.execCmd(command);
-
-    if (!didComplete) {
-      throw new Error(`Failed to prune worktrees: ${output}`);
-    }
-
-    DR.logger.verbose.info('Worktrees pruned successfully');
   }
 
   /**
