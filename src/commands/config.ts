@@ -1,14 +1,17 @@
 import { DR } from '@aneuhold/core-ts-lib';
+import CLIService from '../services/CLIService.js';
 import { ConfigService } from '../services/ConfigService.js';
 
 /**
  * Shows the current configuration or initializes a new config file.
  *
- * @param action The action to perform: 'show' (default) or 'init'
+ * @param action The action to perform: 'show' (default), 'init', or 'edit'
  */
 export default async function config(action?: string): Promise<void> {
   if (action === 'init') {
     await initConfig();
+  } else if (action === 'edit') {
+    await editConfig();
   } else {
     await showConfig();
   }
@@ -49,4 +52,21 @@ async function initConfig(): Promise<void> {
 
   DR.logger.info(`Created config file at: ${configPath}`);
   DR.logger.info('You can now edit this file to customize your configuration.');
+}
+
+/**
+ * Opens the config file in VS Code.
+ */
+async function editConfig(): Promise<void> {
+  const configPath = ConfigService.getHomeDirectoryConfigPath();
+  const configExists = await ConfigService.configExistsAtHomeDirectory();
+
+  if (!configExists) {
+    DR.logger.error(`Config file does not exist at: ${configPath}`);
+    DR.logger.info('Run "tb config init" to create one.');
+    return;
+  }
+
+  DR.logger.success(`Opening config file in VS Code...`);
+  await CLIService.execCmdWithTimeout(`code "${configPath}"`, 4000);
 }

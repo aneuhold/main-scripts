@@ -215,11 +215,11 @@ program
 program
   .command('config')
   .description(
-    'Shows the current configuration or initializes a new config file'
+    'Shows the current configuration, initializes a new config file, or edits the existing config'
   )
   .argument(
     '[action]',
-    'The action to perform: "show" (default) or "init" to create a new config file'
+    'The action to perform: "show" (default), "init" to create a new config file, or "edit" to open in VS Code'
   )
   .action(async (action: string) => {
     await config(action);

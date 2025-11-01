@@ -104,7 +104,7 @@ async function openRepositoryPage(): Promise<void> {
 }
 
 /**
- *
+ * Opens the current directory in VS Code.
  */
 async function openVSCode() {
   DR.logger.success(`Opening current directory in VS Code...`);

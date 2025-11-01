@@ -60,6 +60,19 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
 - `tb help` Will emit all the commands and their options
 - `tb open` Will open the current directory in either VS Code, or Rider depending on the project as it is configured in [`projects.ts`](src/config/projects.ts).
   - `tb open r` Will open the associated repo for the current directory
+- `tb clean [target]` Cleans up the provided target (e.g., branches). Run without arguments to see available options.
+- `tb worktree` or `tb wt` Manage git worktrees with project-aware configuration.
+  - `tb worktree add [branchName]` - Create a new worktree
+  - `tb worktree list` or `tb wt ls` - List all worktrees
+  - `tb worktree remove` or `tb wt rm` - Remove a worktree (interactive)
+  - `tb worktree cd` - Change directory to a worktree (interactive)
+- `tb config [action]` Shows the current configuration, initializes a new config file, or edits the existing config.
+  - `tb config` or `tb config show` - Display current configuration
+  - `tb config init` - Create a new config file with defaults
+  - `tb config edit` - Open the config file in VS Code
+- `tb dev` Starts development mode with nodemon to watch for changes. Auto-detects the current project and runs in the first packageJsonPath directory.
+- `tb sub [packagePrefix]` Subscribes to a package using local-npm-registry for automatic updates during development.
+- `tb unsub [packagePrefix]` Unsubscribes from a package using local-npm-registry and resets to original version.
 - `tb test` Just emits a test echo to see if the package is working.
 - `tb update` Will force update this package.
 - `tb fpull` Will run `git fetch -a` then `git pull` in the current working directory.
