@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "start": "yarn build && node lib/index.js"
+    "start": "pnpm build && node lib/index.js"
   },
   "type": "module",
   "repository": {

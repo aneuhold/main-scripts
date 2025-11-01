@@ -78,18 +78,18 @@ Sometimes it seems that permissions get messed up. The only solution seems to go
 ### 🏞 Flow for Writing New Commands
 
 1. Write the new command in the TypeScript files
-1. Test the command by running `yarn refresh`. Keep running this whenever you want to test the command again.
+1. Test the command by running `pnpm refresh`. Keep running this whenever you want to test the command again.
 1. When ready to deploy an update to the package
-   1. Run `yarn version patch`
-   1. Run `yarn lint`
+   1. Run `pnpm version patch`
+   1. Run `pnpm lint`
    1. Run `git push` to push to the main branch. Otherwise, feel free to make a PR + run checks + merge it.
-1. When done making changes to the package, use `yarn reset:global` to set the package to the npm registry version instead of having it linked locally.
+1. When done making changes to the package, use `pnpm reset:global` to set the package to the npm registry version instead of having it linked locally.
 
 ### `package.json` Commands
 
-- `yarn refresh` can be used for testing new commands. It will uninstall any previous global version of this package and then install the local version.
-- `yarn reset:global` will uninstall the global package and reinstall it from the npm registry instead of locally.
-- `yarn watch` uses nodemon to watch `src/`, auto-rebuilds and reinstalls globally on TS changes. Ignores `lib/` and `localData/`.
+- `pnpm refresh` can be used for testing new commands. It will uninstall any previous global version of this package and then install the local version.
+- `pnpm reset:global` will uninstall the global package and reinstall it from the npm registry instead of locally.
+- `pnpm watch` uses nodemon to watch `src/`, auto-rebuilds and reinstalls globally on TS changes. Ignores `lib/` and `localData/`.
 
 ## 🏢 Architecture
 
@@ -117,6 +117,6 @@ This consists of the following steps:
 
 ### Publish Process Description
 
-- Run `yarn build`
+- Run `pnpm build`
 - Packs the files only including the the `./lib` folder and the [default things included](https://docs.npmjs.com/cli/v7/using-npm/developers). This does mean that the `package.json` is going to be in the package twice. But that is okay because the `package.json` that is in the `lib` folder will only be used to reference values. It isn't used for commands or locations of any anything.
 - Pushing to main will automatically publish it to NPM

@@ -18,29 +18,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup yarn 4
-        run: corepack enable
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
 
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+      - uses: actions/setup-node@v4
         with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-cache-v1-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-cache-v1-
+          node-version: 'lts/*'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: yarn
+        run: pnpm install
 
       - name: Run build
-        run: yarn build
+        run: pnpm build
 
       - name: Run Linting
-        run: yarn lint
+        run: pnpm lint
 
       - name: Dry run publish to NPM
         run: npm publish --access public --dry-run
