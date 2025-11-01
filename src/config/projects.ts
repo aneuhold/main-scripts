@@ -14,6 +14,9 @@ export type Project = {
   packageJsonPaths?: string[];
   setup?: () => Promise<void>;
   refresh?: () => Promise<void>;
+  /**
+   * Can be set to provide nodemon arguments for when using
+   */
   nodemonArgs?: { [relativeFolderPath: string]: string[] };
 };
 
@@ -137,7 +140,7 @@ function setupPiSubTerminalsFunc(
         return;
       }
 
-    // Install pacakges
+    // Install packages
     DR.logger.info('Installing yarn packages...');
     const { output: yarnInstallOutput } = await CLIService.execCmd(
       installCommand,

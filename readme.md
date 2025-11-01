@@ -46,7 +46,7 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
 
 #### Package Command Options
 
-All package commands support the following options:
+All `pkg` commands support the following options:
 
 - `-a, --alternative-names <names...>` Specify alternative package names to use for publishing/validation. This allows you to test or publish the same package under multiple names.
 - `-o, --original-string <string>` For `testStringReplacement` action: the original string to replace.
@@ -73,10 +73,6 @@ tb pkg testStringReplacement -o "@old/package-name" -n "@new/package-name"
 
 Sometimes it seems that permissions get messed up. The only solution seems to go to the Program Files for `nodejs` and change the permissions for that folder to allow all local users to have full control. Otherwise installing anything with nodejs doesn't seem to work anymore.
 
-### Error About Promises.Any when Running Commands
-
-Node likely needs to be updated. Anything 14.x and earlier doesn't support ES2016 syntax pretty sure.
-
 ## 🛠️ Development
 
 ### 🏞 Flow for Writing New Commands
@@ -93,7 +89,23 @@ Node likely needs to be updated. Anything 14.x and earlier doesn't support ES201
 
 - `yarn refresh` can be used for testing new commands. It will uninstall any previous global version of this package and then install the local version.
 - `yarn reset:global` will uninstall the global package and reinstall it from the npm registry instead of locally.
-- `yarn add <package-name>` Use yarn to add packages preferably.
+- `yarn watch` uses nodemon to watch `src/`, auto-rebuilds and reinstalls globally on TS changes. Ignores `lib/` and `localData/`.
+
+## 🏢 Architecture
+
+### Dual Source Structure
+
+### Command Pattern
+
+- Entry point: `src/index.ts` using Commander.js for CLI parsing
+- Each command is a function in `src/commands/` (e.g., `fpull.ts`, `setup.ts`, `pkg.ts`)
+- Commands export a default async function that performs the action
+
+### Service Layer
+
+- **`CLIService`**: Executes shell commands via `exec()` (returns all output after completion) or `spawn()` (streams output). Handles cross-platform shell differences (PowerShell on Windows, Zsh/Bash on macOS/Linux)
+- **Application Services** (`src/services/applications/`): Abstractions for Chrome, Git, Docker, file system operations
+- **`CurrentEnv`**: Detects OS, shell, terminal type, and folder name. Critical for cross-platform behavior
 
 ### Build Process Description
 

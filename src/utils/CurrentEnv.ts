@@ -23,7 +23,7 @@ export enum OperatingSystemType {
 }
 
 /**
- * The type of terminal that the current enviornment is running.
+ * The type of terminal that the current environment is running.
  */
 export enum TerminalType {
   WindowsTerminal,

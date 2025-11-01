@@ -1,32 +1,36 @@
-## Overall
+#file:../readme.md
 
-Unless otherwise specified, always make suggested edits in the files directly instead of printing them out if you have access to the files.
+# Considerations for AI Agents
 
-## Project Features
+### Configuration-Driven Projects
 
-- Uses TypeScript for the source code
+- **`src/config/projects.ts`**: Defines `Project` type with properties like `folderName`, `solutionFilePath`, `packageJsonPaths`, `setup()`, `nodemonArgs`
+- Commands like `tb setup`, `tb dev`, `tb open` use `CurrentEnv.folderName()` to look up project config
+- Example: `client-core` project has `nodemonArgs` for `tb dev` to run nodemon with build + local-npm publish
 
-## Formatting
+### Key Patterns
 
-- Always add types when it is not clear what the type of something is. If a type is an object any larger than a single property, it should be a separately declared `type` and not defined inline.
-- When creating types in their own file, always use PascalCase for the type name.
-  - The file name should match primary type name that is being exported from the file.
-- Use arrow-functions where possible to reduce lines of code and simplify things
-- Always add JS Doc comments for methods, functions, and classes. Only add JSDoc comments for class properties if they are public, or they could be considered complex in their usage. Always add @param, but do not add @returns.
-- Never prefix a function or method with underscores.
-- Always order methods in a class by visibility (public, protected, private). If multiple methods have the same visibility, the order doesn't matter.
-- Use `async` and `await` for asynchronous code instead of `.then()`.
-- Use `const` and `let` instead of `var`.
+- **Platform Detection**: Use `CurrentEnv.os` to branch logic for Windows/macOS/Linux
+- **OSA Script Builder**: `OsaScriptBuilder` in `src/utils/` constructs AppleScript commands for iTerm2 automation on macOS
 
-## Logical Structure
+## Project-Specific Conventions
 
 ### Imports
 
-- Always use relative imports for files in the same package. Use package references (`import { something } from 'my-package'`) for files in other packages.
-- Never use `import * as something from '...'` syntax. Always use named imports.
-- Always import at the top of a file. Never inline imports within a function or method unless absolutely necessary.
+- Relative imports for same-package files: `import foo from './foo.js'`
+- Package imports for external deps: `import { DR } from '@aneuhold/core-ts-lib'`
+- **Always use `.js` extension** in imports, even for TypeScript files (required for ESM with `"type": "module"`)
 
-### Enums
+### Types and Enums
 
-- Always use PascalCase for enum names, and PascalCase for enum values.
-- Always use TypeScript `enum` instead of `const enum` or `type` for enums.
+- Inline types only for single properties; otherwise declare separate `type` with PascalCase
+- File names match primary exported type (e.g., `VideoSeriesInfo.ts` exports `VideoSeriesInfo`)
+- Use TypeScript `enum` (not `const enum` or union types) with PascalCase for names and values
+
+### Code Style
+
+- Arrow functions preferred for brevity
+- JSDoc comments required for functions, methods, classes. Include `@param`, omit `@returns`
+- Class method order: public, protected, private
+- No underscore prefixes for private methods
+- `async`/`await` over `.then()`
