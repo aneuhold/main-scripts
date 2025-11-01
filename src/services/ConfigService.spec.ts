@@ -103,13 +103,17 @@ describe('ConfigService', () => {
       ).toEqual(['client/package.json', 'server/package.json']);
     });
 
-    it('should return empty config when no config file exists', async () => {
+    it('should return default config when no config file exists', async () => {
       const testInstanceDir = TestUtils.getTestInstanceDir();
       TestUtils.changeToDirectory(testInstanceDir);
 
       const loadedConfig = await ConfigService.loadConfig();
 
-      expect(loadedConfig).toEqual({});
+      // Should return default config, not empty
+      expect(loadedConfig).toEqual({
+        projects: {},
+        worktreeBaseDir: '../'
+      });
     });
 
     it('should cache config after first load', async () => {

@@ -73,12 +73,14 @@ export default class GitService {
     branchName: string,
     targetPath: string
   ): Promise<void> {
-    const command = `git worktree add -b ${branchName} "${targetPath}" ${branchName}`;
+    const command = `git worktree add -b ${branchName} "${targetPath}"`;
     DR.logger.verbose.info(`Executing: ${command}`);
 
     const { didComplete, output } = await CLIService.execCmd(command);
 
-    if (!didComplete) {
+    // Git worktree writes informational messages to stderr, which causes didComplete to be false
+    // even when the command succeeds. Check for actual error patterns instead.
+    if (!didComplete && !output.includes('Preparing worktree')) {
       throw new Error(`Failed to create worktree: ${output}`);
     }
 
