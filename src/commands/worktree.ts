@@ -177,7 +177,7 @@ async function copyExtraFiles(patterns: string[]): Promise<void> {
       }
     }
 
-    DR.logger.info(`✓ Copied ${matchingFiles.length} files`);
+    DR.logger.success(`Copied ${matchingFiles.length} files`);
   } catch (error) {
     DR.logger.error(
       `Failed to copy extra files: ${ErrorUtils.getErrorString(error)}`
@@ -199,7 +199,7 @@ export async function listWorktrees(): Promise<void> {
 
     // Format worktrees for console.table
     const tableData = worktrees.map((wt) => ({
-      Status: wt.isMain ? 'Main' : 'Worktree',
+      Status: wt.isMain ? 'Base' : 'Worktree',
       Branch: wt.branch || '(detached)',
       Commit: wt.commit.slice(0, 8),
       Path: wt.path
@@ -250,43 +250,6 @@ export async function removeWorktree(): Promise<void> {
   } catch (error) {
     DR.logger.error(
       `Failed to remove worktree: ${ErrorUtils.getErrorString(error)}`
-    );
-  }
-}
-
-/**
- * Interactive directory change to a worktree.
- */
-export async function changeDirectory(): Promise<void> {
-  try {
-    const worktrees = await GitService.getWorktreesInfo();
-
-    if (worktrees.length === 0) {
-      DR.logger.error('No worktrees found');
-      return;
-    }
-
-    // Create choices for the prompt
-    const choices = worktrees.map((wt) => ({
-      name: `${wt.isMain ? '[Main] ' : '[Worktree] '}${wt.branch || '(detached)'} - ${wt.path}`,
-      value: wt.path
-    }));
-
-    // Show interactive prompt
-    const selectedPath = await select({
-      message: 'Select a worktree to switch to:',
-      choices
-    });
-
-    // Change to selected directory
-    process.chdir(selectedPath);
-    DR.logger.info(`Changed directory to: ${selectedPath}`);
-
-    // Open the project in the appropriate editor
-    await open();
-  } catch (error) {
-    DR.logger.error(
-      `Failed to change directory: ${ErrorUtils.getErrorString(error)}`
     );
   }
 }

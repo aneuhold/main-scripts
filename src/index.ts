@@ -16,6 +16,11 @@ import setup from './commands/setup.js';
 import startup from './commands/startup.js';
 import sub from './commands/sub.js';
 import unsub from './commands/unsub.js';
+import {
+  addWorktree,
+  listWorktrees,
+  removeWorktree
+} from './commands/worktree.js';
 import calculateProbabilities from './utils/calculator.js';
 import { triggerUpdate } from './utils/updateIfNeeded.js';
 
@@ -235,7 +240,6 @@ worktreeCmd
     'Create a new worktree (default action). Uses smart defaults if no branch name provided.'
   )
   .action(async (branchName: string | undefined) => {
-    const { addWorktree } = await import('./commands/worktree.js');
     await addWorktree(branchName);
   });
 worktreeCmd
@@ -243,7 +247,6 @@ worktreeCmd
   .alias('ls')
   .description('List all worktrees')
   .action(async () => {
-    const { listWorktrees } = await import('./commands/worktree.js');
     await listWorktrees();
   });
 worktreeCmd
@@ -251,15 +254,7 @@ worktreeCmd
   .alias('rm')
   .description('Remove a worktree (interactive selection)')
   .action(async () => {
-    const { removeWorktree } = await import('./commands/worktree.js');
     await removeWorktree();
-  });
-worktreeCmd
-  .command('cd')
-  .description('Interactively change directory to a worktree')
-  .action(async () => {
-    const { changeDirectory } = await import('./commands/worktree.js');
-    await changeDirectory();
   });
 
 // Run the thang

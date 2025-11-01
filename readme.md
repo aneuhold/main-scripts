@@ -65,7 +65,6 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
   - `tb worktree add [branchName]` - Create a new worktree
   - `tb worktree list` or `tb wt ls` - List all worktrees
   - `tb worktree remove` or `tb wt rm` - Remove a worktree (interactive)
-  - `tb worktree cd` - Change directory to a worktree (interactive)
 - `tb config [action]` Shows the current configuration, initializes a new config file, or edits the existing config.
   - `tb config` or `tb config show` - Display current configuration
   - `tb config init` - Create a new config file with defaults
