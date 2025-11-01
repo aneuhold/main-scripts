@@ -235,6 +235,41 @@ program
     await dev();
   });
 
+const worktreeCmd = program
+  .command('worktree')
+  .alias('wt')
+  .description('Manage git worktrees with project-aware configuration');
+worktreeCmd
+  .command('add [branchName]', { isDefault: true })
+  .description(
+    'Create a new worktree (default action). Uses smart defaults if no branch name provided.'
+  )
+  .action(async (branchName: string | undefined) => {
+    const { addWorktree } = await import('./commands/worktree.js');
+    await addWorktree(branchName);
+  });
+worktreeCmd
+  .command('list')
+  .description('List all worktrees')
+  .action(async () => {
+    const { listWorktrees } = await import('./commands/worktree.js');
+    await listWorktrees();
+  });
+worktreeCmd
+  .command('remove')
+  .description('Remove a worktree (interactive selection)')
+  .action(async () => {
+    const { removeWorktree } = await import('./commands/worktree.js');
+    await removeWorktree();
+  });
+worktreeCmd
+  .command('cd')
+  .description('Interactively change directory to a worktree')
+  .action(async () => {
+    const { changeDirectory } = await import('./commands/worktree.js');
+    await changeDirectory();
+  });
+
 // Run the thang
 void (async () => {
   await program.parseAsync();

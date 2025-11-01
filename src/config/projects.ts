@@ -2,6 +2,7 @@ import { DR } from '@aneuhold/core-ts-lib';
 import path from 'path';
 import ITermService from '../services/applications/ITermService.js';
 import CLIService from '../services/CLIService.js';
+import { MainScriptsConfigProject } from '../services/ConfigService.js';
 import CurrentEnv, { TerminalType } from '../utils/CurrentEnv.js';
 
 /**
@@ -9,16 +10,9 @@ import CurrentEnv, { TerminalType } from '../utils/CurrentEnv.js';
  * by the name of the folder in which it is contained.
  */
 export type Project = {
-  folderName: string;
-  solutionFilePath?: string;
-  packageJsonPaths?: string[];
   setup?: () => Promise<void>;
   refresh?: () => Promise<void>;
-  /**
-   * Can be set to provide nodemon arguments for when using
-   */
-  nodemonArgs?: { [relativeFolderPath: string]: string[] };
-};
+} & MainScriptsConfigProject;
 
 export enum FolderName {
   piSpa = 'pi-spa',

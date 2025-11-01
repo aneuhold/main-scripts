@@ -49,8 +49,7 @@ export default async function unsub(packagePrefix?: string): Promise<void> {
 async function getWorkingDirectories(
   workingDirectory: string
 ): Promise<string[]> {
-  const currentDir = path.basename(workingDirectory);
-  const matchingProject = await ProjectConfigService.getProject(currentDir);
+  const matchingProject = await ProjectConfigService.getCurrentProject();
 
   if (
     matchingProject &&

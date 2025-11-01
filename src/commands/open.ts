@@ -194,8 +194,7 @@ export default async function open(
     return;
   }
 
-  const currentFolderName = CurrentEnv.folderName();
-  const project = await ProjectConfigService.getProject(currentFolderName);
+  const project = await ProjectConfigService.getCurrentProject();
 
   // If there is already a solution file that should be chosen
   if (project?.solutionFilePath) {

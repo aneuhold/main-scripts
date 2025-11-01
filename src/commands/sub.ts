@@ -34,8 +34,7 @@ export default async function sub(packagePrefix?: string): Promise<void> {
   }
 
   // Find the project that matches the current directory
-  const currentDir = path.basename(process.cwd());
-  const matchingProject = await ProjectConfigService.getProject(currentDir);
+  const matchingProject = await ProjectConfigService.getCurrentProject();
 
   let workingDirectories: string[] = [];
 
