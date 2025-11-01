@@ -3,6 +3,7 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { program } from 'commander';
 import clean from './commands/clean.js';
+import config from './commands/config.js';
 import dev from './commands/dev.js';
 import downloadAndMergeVideos from './commands/downloadAndMergeVideos.js';
 import downloadVideos from './commands/downloadVideos.js';
@@ -209,6 +210,19 @@ program
   )
   .action(async () => {
     await dev();
+  });
+
+program
+  .command('config')
+  .description(
+    'Shows the current configuration or initializes a new config file'
+  )
+  .argument(
+    '[action]',
+    'The action to perform: "show" (default) or "init" to create a new config file'
+  )
+  .action(async (action: string) => {
+    await config(action);
   });
 
 const worktreeCmd = program

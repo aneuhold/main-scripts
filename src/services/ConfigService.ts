@@ -1,5 +1,8 @@
-import { DR, ErrorUtils } from '@aneuhold/core-ts-lib';
+import { DR, ErrorUtils, FileSystemService } from '@aneuhold/core-ts-lib';
 import { cosmiconfig } from 'cosmiconfig';
+import { access, writeFile } from 'fs/promises';
+import os from 'os';
+import path from 'path';
 
 /**
  * Full configuration schema for user config files.
@@ -73,7 +76,7 @@ export class ConfigService {
     const explorer = cosmiconfig(this.MODULE_NAME, {
       searchPlaces: [
         // User home directory config (JSON only)
-        `~/.config/${this.MODULE_NAME}.json`,
+        this.getHomeDirectoryConfigPath(),
         // Project directory configs (for dev dependency usage)
         `.${this.MODULE_NAME}.json`,
         // package.json field
@@ -112,5 +115,47 @@ export class ConfigService {
    */
   static clearCache(): void {
     this.cachedConfig = null;
+  }
+
+  /**
+   * Gets the path to the default config file location in the home directory.
+   */
+  static getHomeDirectoryConfigPath(): string {
+    return path.join(os.homedir(), '.config', `${this.MODULE_NAME}.json`);
+  }
+
+  /**
+   * Checks if a config file exists at the default location.
+   */
+  static async configExistsAtHomeDirectory(): Promise<boolean> {
+    try {
+      await access(this.getHomeDirectoryConfigPath());
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Initializes a new config file with default values at the default location.
+   *
+   * @returns The path to the created config file, or null if it already exists
+   */
+  static async initConfigFile(): Promise<string | null> {
+    const configPath = this.getHomeDirectoryConfigPath();
+    const configExists = await this.configExistsAtHomeDirectory();
+
+    if (configExists) {
+      return null;
+    }
+
+    const configDir = path.dirname(configPath);
+    await FileSystemService.checkOrCreateFolder(configDir);
+
+    const defaultConfig = { ...DEFAULT_CONFIG };
+    const configContent = JSON.stringify(defaultConfig, null, 2);
+
+    await writeFile(configPath, configContent, 'utf-8');
+    return configPath;
   }
 }
