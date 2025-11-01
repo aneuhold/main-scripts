@@ -1,4 +1,4 @@
-import { DR, sleep } from '@aneuhold/core-ts-lib';
+import { DR, ErrorUtils, sleep } from '@aneuhold/core-ts-lib';
 import { select } from '@inquirer/prompts';
 import { ExecOptions, exec as normalExec, spawn } from 'child_process';
 import * as rl from 'readline';
@@ -107,12 +107,14 @@ export default class CLIService {
         output: stdoutStr || ''
       };
     } catch (err) {
+      const errorMessage = ErrorUtils.getErrorString(err);
       DR.logger.verbose
         .error(`There was an error executing the "exec" function. Details are printed below:
-        ${err as string}`);
+        ${errorMessage}`);
+
       return {
         didComplete: false,
-        output: err as string
+        output: errorMessage
       };
     }
   }
@@ -166,12 +168,13 @@ export default class CLIService {
       const spawnedCmd = spawn(cmd, args, execOptions);
 
       spawnedCmd.on('error', (err) => {
+        const errorMessage = ErrorUtils.getErrorString(err);
         DR.logger
           .error(`There was an error executing the "spawn" function. Details are printed below:
-      ${err.message}`);
+      ${errorMessage}`);
         resolve({
           didComplete: false,
-          output: err.toString()
+          output: errorMessage
         });
       });
       spawnedCmd.stdout.on('data', (data) => {

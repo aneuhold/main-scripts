@@ -1,4 +1,4 @@
-import { DR } from '@aneuhold/core-ts-lib';
+import { DR, ErrorUtils } from '@aneuhold/core-ts-lib';
 import path from 'path';
 import CLIService from '../services/CLIService.js';
 import { ProjectConfigService } from '../services/ProjectConfigService.js';
@@ -83,7 +83,7 @@ export default async function dev(): Promise<void> {
         }
       } catch (error) {
         DR.logger.error(
-          `[${index + 1}] Error starting development mode: ${String(error)}`
+          `[${index + 1}] Error starting development mode: ${ErrorUtils.getErrorString(error)}`
         );
       }
     }

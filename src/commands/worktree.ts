@@ -1,5 +1,6 @@
 import {
   DR,
+  ErrorUtils,
   FileSystemService,
   GlobMatchingService
 } from '@aneuhold/core-ts-lib';
@@ -77,7 +78,7 @@ export async function addWorktree(branchName?: string): Promise<void> {
       try {
         await project.setup();
       } catch (error) {
-        DR.logger.error(`Setup failed: ${String(error)}`);
+        DR.logger.error(`Setup failed: ${ErrorUtils.getErrorString(error)}`);
         DR.logger.warn('Worktree created but setup encountered errors');
       }
     }
@@ -87,7 +88,9 @@ export async function addWorktree(branchName?: string): Promise<void> {
 
     DR.logger.info(`✓ Worktree created successfully at: ${targetPath}`);
   } catch (error) {
-    DR.logger.error(`Failed to create worktree: ${String(error)}`);
+    DR.logger.error(
+      `Failed to create worktree: ${ErrorUtils.getErrorString(error)}`
+    );
   }
 }
 
@@ -167,13 +170,17 @@ async function copyExtraFiles(patterns: string[]): Promise<void> {
         DR.logger.verbose.info(`Copying ${relativePath}...`);
         await copy(sourcePath, destPath, { overwrite: true });
       } catch (fileError) {
-        DR.logger.verbose.error(`Error copying file: ${String(fileError)}`);
+        DR.logger.verbose.error(
+          `Error copying file: ${ErrorUtils.getErrorString(fileError)}`
+        );
       }
     }
 
     DR.logger.info(`✓ Copied ${matchingFiles.length} files`);
   } catch (error) {
-    DR.logger.error(`Failed to copy extra files: ${String(error)}`);
+    DR.logger.error(
+      `Failed to copy extra files: ${ErrorUtils.getErrorString(error)}`
+    );
   }
 }
 
@@ -200,7 +207,9 @@ export async function listWorktrees(): Promise<void> {
     console.log('\n');
     console.table(tableData);
   } catch (error) {
-    DR.logger.error(`Failed to list worktrees: ${String(error)}`);
+    DR.logger.error(
+      `Failed to list worktrees: ${ErrorUtils.getErrorString(error)}`
+    );
   }
 }
 
@@ -238,7 +247,9 @@ export async function removeWorktree(): Promise<void> {
 
     DR.logger.info(`✓ Worktree removed: ${targetPath}`);
   } catch (error) {
-    DR.logger.error(`Failed to remove worktree: ${String(error)}`);
+    DR.logger.error(
+      `Failed to remove worktree: ${ErrorUtils.getErrorString(error)}`
+    );
   }
 }
 
@@ -273,6 +284,8 @@ export async function changeDirectory(): Promise<void> {
     // Open the project in the appropriate editor
     await open();
   } catch (error) {
-    DR.logger.error(`Failed to change directory: ${String(error)}`);
+    DR.logger.error(
+      `Failed to change directory: ${ErrorUtils.getErrorString(error)}`
+    );
   }
 }

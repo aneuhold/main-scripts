@@ -1,4 +1,4 @@
-import { DR } from '@aneuhold/core-ts-lib';
+import { DR, ErrorUtils } from '@aneuhold/core-ts-lib';
 import { cosmiconfig } from 'cosmiconfig';
 
 /**
@@ -95,7 +95,9 @@ export class ConfigService {
         DR.logger.verbose.info(`Loaded config from: ${result.filepath}`);
       }
     } catch (error) {
-      DR.logger.verbose.error(`Failed to load config: ${String(error)}`);
+      DR.logger.verbose.error(
+        `Failed to load config: ${ErrorUtils.getErrorString(error)}`
+      );
 
       // Purposefully spread to ensure it is a new object
       this.cachedConfig = { ...DEFAULT_CONFIG };
