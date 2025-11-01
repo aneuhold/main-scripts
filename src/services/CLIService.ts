@@ -69,27 +69,31 @@ export default class CLIService {
     try {
       const { stdout, stderr } = await execute(commandToExecute, execOptions);
 
-      const hasStdoutContent = stdout && stdout.trim() !== '';
-      const hasStderrContent = stderr && stderr.trim() !== '';
+      // Convert stdout and stderr to strings to handle Buffer types
+      const stdoutStr = stdout?.toString() || '';
+      const stderrStr = stderr?.toString() || '';
+
+      const hasStdoutContent = stdoutStr && stdoutStr.trim() !== '';
+      const hasStderrContent = stderrStr && stderrStr.trim() !== '';
 
       if (hasStdoutContent) {
         DR.logger.verbose.info(
-          `Standard output from command "${cmd}":\\n${stdout}`
+          `Standard output from command "${cmd}":\\n${stdoutStr}`
         );
       }
 
       if (hasStderrContent) {
         if (logError) {
           DR.logger.error(
-            `Error output (stderr) from command "${cmd}":\\n${stderr}`
+            `Error output (stderr) from command "${cmd}":\\n${stderrStr}`
           );
         }
 
         let combinedOutput = '';
         if (hasStdoutContent) {
-          combinedOutput += `--- stdout ---\\n${stdout.trim()}\\n`;
+          combinedOutput += `--- stdout ---\\n${stdoutStr.trim()}\\n`;
         }
-        combinedOutput += `--- stderr ---\\n${stderr.trim()}`;
+        combinedOutput += `--- stderr ---\\n${stderrStr.trim()}`;
 
         return {
           didComplete: false, // Treat as not fully successful if there's stderr
@@ -100,7 +104,7 @@ export default class CLIService {
       // If stderr is empty or only whitespace
       return {
         didComplete: true,
-        output: stdout || ''
+        output: stdoutStr || ''
       };
     } catch (err) {
       DR.logger.verbose
