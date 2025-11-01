@@ -65,4 +65,12 @@ export class ConfigService {
 
     return this.cachedConfig;
   }
+
+  /**
+   * Clears the cached configuration.
+   * Useful for testing to ensure fresh config loads.
+   */
+  static clearCache(): void {
+    this.cachedConfig = null;
+  }
 }
