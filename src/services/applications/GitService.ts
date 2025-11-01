@@ -1,4 +1,4 @@
-import { DR } from '@aneuhold/core-ts-lib';
+import { DR, ErrorUtils } from '@aneuhold/core-ts-lib';
 import path from 'path';
 import CLIService from '../CLIService.js';
 
@@ -56,9 +56,8 @@ export default class GitService {
       }
       return repoUrl;
     } catch (e: unknown) {
-      const error = e instanceof Error ? e : new Error(String(e)); // Ensure error is an Error instance
       DR.logger.error('Failed to get repository URL.');
-      DR.logger.error(error.message);
+      DR.logger.error(ErrorUtils.getErrorString(e));
       return undefined;
     }
   }
@@ -78,9 +77,7 @@ export default class GitService {
 
     const { didComplete, output } = await CLIService.execCmd(command);
 
-    // Git worktree writes informational messages to stderr, which causes didComplete to be false
-    // even when the command succeeds. Check for actual error patterns instead.
-    if (!didComplete && !output.includes('Preparing worktree')) {
+    if (!didComplete) {
       throw new Error(`Failed to create worktree: ${output}`);
     }
 
@@ -231,7 +228,7 @@ export default class GitService {
       return mainFolderName;
     } catch (error) {
       DR.logger.verbose.error(
-        `Failed to get main project from worktree: ${String(error)}`
+        `Failed to get main project from worktree: ${ErrorUtils.getErrorString(error)}`
       );
       return undefined;
     }

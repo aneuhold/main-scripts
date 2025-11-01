@@ -4,11 +4,6 @@ import tsLibConfig from '@aneuhold/eslint-config/src/ts-lib-config.js';
 export default [
   ...tsLibConfig,
   {
-    ignores: [
-      '**/template-folders/**'
-    ]
-  },
-  {
     // other override settings. e.g. for `files: ['**/*.test.*']`
     rules: {
       // Disabled due to bug in ESLint 9.39.0 that causes crashes with unified-signatures rule

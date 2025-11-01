@@ -65,7 +65,6 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
 - `tb fpull` Will run `git fetch -a` then `git pull` in the current working directory.
 - `tb setup` Will setup the development environment according to the current working directory name. If settings have not been determined yet for the directory name, shell, or terminal, then it will inform you and won't do anything else.
 - `tb startup` Will run the startup script for the current system with no arguments
-- `tb scaffold [projectType] [projectName]` Will build the given project type with the given project name as a new folder in the current working directory named with the given `projectName`.
 - `tb pkg [packageAction]` Performs actions related to package publishing. Supported actions are: `validateJsr`, `publishJsr`, `validateNpm`, `publishNpm`, `testStringReplacement`. This is typically used inside a package.json file as one of the scripts.
 
 ### Commands specifically for `package.json` scripts
@@ -149,7 +148,6 @@ This consists of the following steps:
 
 - Delete the `./lib` folder
 - Generate the files with TypeScript into the `./lib` folder, including `package.json` because it uses that in some parts of the code.
-- Copy over the templates from the templates folder and overwrite because TypeScript does not copy over anything that isn't `.ts`.
 
 ### Publish Process Description
 

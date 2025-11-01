@@ -11,7 +11,6 @@ import mergeAllVideos from './commands/mergeAllVideos.js';
 import mergeVideos from './commands/mergeVideos.js';
 import open from './commands/open.js';
 import pkg, { PackageOptions } from './commands/pkg.js';
-import scaffold from './commands/scaffold.js';
 import setup from './commands/setup.js';
 import startup from './commands/startup.js';
 import sub from './commands/sub.js';
@@ -81,29 +80,6 @@ program
   .action(async () => {
     await startup();
   });
-
-program
-  .command('scaffold')
-  .description('Scaffolds a project')
-  .argument(
-    '[projectType]',
-    'The type of project to scaffold. To see options, run this' +
-      ' command without arguments.'
-  )
-  .argument(
-    '[projectName]',
-    'The name of the project to start. This will be the root folder name.'
-  )
-  .option('-l, --list', 'List all available project types')
-  .action(
-    async (
-      projectType: string,
-      projectName: string,
-      options: { list: boolean }
-    ) => {
-      await scaffold(projectType, projectName, options.list);
-    }
-  );
 
 program
   .command('clean')
@@ -250,6 +226,7 @@ worktreeCmd
   });
 worktreeCmd
   .command('list')
+  .alias('ls')
   .description('List all worktrees')
   .action(async () => {
     const { listWorktrees } = await import('./commands/worktree.js');

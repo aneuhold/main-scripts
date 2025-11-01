@@ -10,7 +10,7 @@
     "refresh": "pnpm build && npm uninstall -g @aneuhold/main-scripts && npm i -g",
     "watch": "nodemon --ignore lib/ --ignore localData/ -e ts --exec \"pnpm build:without-rimraf && npm uninstall -g @aneuhold/main-scripts && npm i -g\"",
     "build": "rimraf lib && pnpm build:without-rimraf",
-    "build:without-rimraf": "tsc --project tsconfig.build.json && shx cp -r src/templates/template-folders lib/templates && shx cp package.json lib/package.json",
+    "build:without-rimraf": "tsc --project tsconfig.build.json && shx cp package.json lib/package.json",
     "lint": "eslint",
     "test": "vitest run",
     "upgrade:core": "pnpm update '@aneuhold/*' --latest",

@@ -4,9 +4,5 @@
     "outDir": "./lib"
   },
   "include": ["./src/**/*"],
-  "exclude": [
-    "./src/templates/template-folders/*",
-    "test-utils",
-    "**/*.spec.ts"
-  ]
+  "exclude": ["test-utils", "**/*.spec.ts"]
 }
