@@ -70,7 +70,6 @@ function getWorkingDirectories(workingDirectory: string): string[] {
  *
  * @param workingDirectories Array of directories to run the command in
  * @param command The command to execute
- * @param packageName Optional package name for success/failure messages
  */
 async function runUnsubscribeCommand(
   workingDirectories: string[],

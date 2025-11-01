@@ -11,7 +11,7 @@ const writeFilePromise = promisify(writeFile);
  * Downloads videos from the internet to the provided folder path using the
  * locally setup `videosToDownload.ts` file.
  *
- * @param downloadInParallel
+ * @param downloadInParallel Whether to download videos in parallel or sequentially.
  */
 export default async function downloadVideos(
   downloadInParallel = true

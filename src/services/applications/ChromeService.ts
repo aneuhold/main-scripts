@@ -11,6 +11,8 @@ export default class ChromeService {
    * operating system type.
    *
    * This does include the quotes
+   *
+   * @param os The operating system type.
    */
   static getChromePath(os: OperatingSystemType): string | null {
     switch (os) {

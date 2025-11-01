@@ -4,6 +4,11 @@ import path from 'path';
 export default class FileSearchService {
   /**
    * Searches for files with specific extensions recursively up to a maximum depth
+   *
+   * @param startPath The path to start searching from.
+   * @param extension The file extension to search for.
+   * @param maxDepth The maximum depth to search.
+   * @param currentDepth The current depth in the search.
    */
   static async findFilesWithExtension(
     startPath: string,
@@ -38,6 +43,9 @@ export default class FileSearchService {
 
   /**
    * Checks if a file exists in the given directory
+   *
+   * @param dirPath The directory path to check in.
+   * @param fileName The name of the file to check for.
    */
   static async fileExistsInDir(
     dirPath: string,

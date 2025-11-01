@@ -30,6 +30,9 @@ export async function setupAliases(): Promise<void> {
   }
 }
 
+/**
+ * Runs the startup script for the current environment.
+ */
 export default async function startup(): Promise<void> {
   await setupAliases();
   await CurrentEnv.runStartupScript();

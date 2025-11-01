@@ -178,7 +178,7 @@ export default class CurrentEnv {
   /**
    * Checks if a command exists in the current environment.
    *
-   * @param command
+   * @param command The command to check for.
    */
   private static async commandExists(command: string): Promise<boolean> {
     try {

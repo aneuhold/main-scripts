@@ -70,8 +70,8 @@ export default class CLIService {
       const { stdout, stderr } = await execute(commandToExecute, execOptions);
 
       // Convert stdout and stderr to strings to handle Buffer types
-      const stdoutStr = stdout?.toString() || '';
-      const stderrStr = stderr?.toString() || '';
+      const stdoutStr = stdout.toString() || '';
+      const stderrStr = stderr.toString() || '';
 
       const hasStdoutContent = stdoutStr && stdoutStr.trim() !== '';
       const hasStderrContent = stderrStr && stderrStr.trim() !== '';

@@ -4,7 +4,15 @@ import tsLibConfig from '@aneuhold/eslint-config/src/ts-lib-config.js';
 export default [
   ...tsLibConfig,
   {
+    ignores: [
+      '**/template-folders/**'
+    ]
+  },
+  {
     // other override settings. e.g. for `files: ['**/*.test.*']`
-    ignores: ['*/**/template-folders']
+    rules: {
+      // Disable this rule due to a bug in the plugin that causes crashes
+      '@typescript-eslint/unified-signatures': 'off'
+    }
   }
 ];
