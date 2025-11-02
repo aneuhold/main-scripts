@@ -131,6 +131,9 @@ export default class CurrentEnv {
     if (process.platform === 'darwin') {
       return OperatingSystemType.MacOSX;
     }
+    if (process.platform === 'linux') {
+      return OperatingSystemType.Linux;
+    }
     return OperatingSystemType.Unknown;
   }
 
