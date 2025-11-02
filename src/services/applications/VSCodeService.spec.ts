@@ -56,7 +56,8 @@ describe('VSCodeService', () => {
     // Mock the getWorkspaceStorageBaseDir method
     originalGetWorkspaceStorageBaseDir =
       VSCodeService.getWorkspaceStorageBaseDir.bind(VSCodeService);
-    VSCodeService.getWorkspaceStorageBaseDir = () => mockStorageBaseDir;
+    VSCodeService.getWorkspaceStorageBaseDir = () =>
+      Promise.resolve(mockStorageBaseDir);
   });
 
   afterAll(async () => {
@@ -75,9 +76,9 @@ describe('VSCodeService', () => {
   });
 
   describe('getWorkspaceStorageBaseDir', () => {
-    it('should return platform-specific workspace storage directory', () => {
+    it('should return platform-specific workspace storage directory', async () => {
       // Restore original for this test
-      const result = originalGetWorkspaceStorageBaseDir();
+      const result = await originalGetWorkspaceStorageBaseDir();
       expect(result).toBeDefined();
       expect(result).toContain('workspaceStorage');
     });

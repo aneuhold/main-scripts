@@ -51,7 +51,12 @@ Configuration files should contain a `projects` object where each key is the fol
 
 #### Global Configuration
 
-- `vsCodeAlternativeCommand` (optional): Command to use instead of `code` when opening VS Code. Use this to specify alternative editors like `cursor`, `windsurf`, etc. Defaults to `code`.
+- `vsCodeAlternativeCommand` (optional): Command to use instead of `code` when opening VS Code. Use this to specify alternative editors like `cursor`, `windsurf`, `ws`, `surf`, etc. Defaults to `code`.
+  - **Workspace Storage**: The tool automatically detects which editor settings directory to use based on the command:
+    - `code`, `code-insiders` → Uses VS Code settings (`~/Library/Application Support/Code` on macOS)
+    - `cursor` → Uses Cursor settings (`~/Library/Application Support/Cursor` on macOS)
+    - `ws`, `surf`, `windsurf` → Uses Windsurf settings (`~/Library/Application Support/Windsurf` on macOS)
+  - This ensures that when creating git worktrees, the correct editor's workspace storage is copied.
 - `worktreeBaseDir` (optional): Base directory for creating git worktrees. Defaults to `../`.
 - `projects` (optional): Object containing project-specific configurations.
 
@@ -62,7 +67,7 @@ Each project configuration supports the following properties:
 - `folderName` (required): The name of the project folder
 - `solutionFilePath` (optional): Relative path to a .NET solution file to open with `tb open`
 - `packageJsonPaths` (optional): Array of relative paths to package.json files for multi-package projects
-- `vsCodeAlternativeCommand` (optional): Command to use instead of `code` when opening VS Code for this specific project. Overrides the global setting.
+- `vsCodeAlternativeCommand` (optional): Command to use instead of `code` when opening VS Code for this specific project. Overrides the global setting. See global configuration for workspace storage behavior.
 - `nodemonArgs` (optional): Object mapping relative paths to nodemon argument arrays for `tb dev` command
 - `worktreeConfig` (optional): Configuration for git worktree behavior
   - `extraFilesToCopy` (optional): Array of file patterns to copy into new worktrees (e.g., `[".env", "environments/*"]`)

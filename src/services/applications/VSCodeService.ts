@@ -20,20 +20,27 @@ export type WorkspaceStorageInfo = {
 };
 
 /**
- * Service for interacting with VS Code workspace storage.
+ * Supported editor types for workspace storage
+ */
+enum EditorType {
+  VSCode = 'VSCode',
+  VSCodeInsiders = 'VSCodeInsiders',
+  Cursor = 'Cursor',
+  Windsurf = 'Windsurf'
+}
+
+/**
+ * Service for interacting with VS Code (and VS Code-based editors) workspace storage.
  *
- * VS Code stores workspace-specific data (including extension enabled/disabled state,
- * UI state, and other workspace preferences) in a platform-specific location:
- * - macOS: ~/Library/Application Support/Code/User/workspaceStorage/
- * - Windows: %APPDATA%\Code\User\workspaceStorage\
- * - Linux: ~/.config/Code/User/workspaceStorage/
+ * VS Code and its forks (Cursor, Windsurf, etc.) store workspace-specific data in platform-specific locations:
+ * - macOS: ~/Library/Application Support/{EditorName}/User/workspaceStorage/
+ * - Windows: %APPDATA%\{EditorName}\User\workspaceStorage\
+ * - Linux: ~/.config/{EditorName}/User/workspaceStorage/
  *
- * To navigate to this on Mac use:
- *
- * ```
- * cd "~/Library/Application Support/Code"
- * code .
- * ```
+ * To navigate to VS Code storage on Mac: `cd ~/Library/Application\ Support/Code`
+ * To navigate to VS Code Insiders storage on Mac: `cd ~/Library/Application\ Support/Code\ -\ Insiders`
+ * To navigate to Cursor storage on Mac: `cd ~/Library/Application\ Support/Cursor`
+ * To navigate to Windsurf storage on Mac: `cd ~/Library/Application\ Support/Windsurf`
  *
  * Each workspace gets a unique directory named by a hash of the workspace path.
  * Inside each directory:
@@ -48,17 +55,76 @@ export default class VSCodeService {
   private static readonly WORKSPACE_METADATA_FILE = 'workspace.json';
 
   /**
-   * Gets the base directory where VS Code stores workspace storage.
-   * This is platform-specific:
-   * - macOS: ~/Library/Application Support/Code/User/workspaceStorage/
-   * - Windows: %APPDATA%\Code\User\workspaceStorage\
-   * - Linux: ~/.config/Code/User/workspaceStorage/
+   * Command patterns mapped to their editor types
+   */
+  private static readonly COMMAND_TO_EDITOR_MAP: Record<string, EditorType> = {
+    // VS Code commands
+    code: EditorType.VSCode,
+    'code-insiders': EditorType.VSCodeInsiders,
+    // Cursor commands
+    cursor: EditorType.Cursor,
+    // Windsurf commands
+    ws: EditorType.Windsurf,
+    surf: EditorType.Windsurf,
+    windsurf: EditorType.Windsurf
+  };
+
+  /**
+   * Directory names for each editor type
+   */
+  private static readonly EDITOR_DIR_NAMES: Record<EditorType, string> = {
+    [EditorType.VSCode]: 'Code',
+    [EditorType.VSCodeInsiders]: 'Code - Insiders',
+    [EditorType.Cursor]: 'Cursor',
+    [EditorType.Windsurf]: 'Windsurf'
+  };
+
+  private static async getEditorCommand(): Promise<string> {
+    const config = await ConfigService.loadConfig();
+    const project = await ProjectConfigService.getCurrentProject();
+    // Priority: project-specific config > global config > default 'code'
+    return (
+      project?.vsCodeAlternativeCommand ??
+      config.vsCodeAlternativeCommand ??
+      'code'
+    );
+  }
+
+  /**
+   * Determines the editor type based on the configured command.
+   * Defaults to VSCode if the command is not recognized.
+   *
+   * @returns The editor type (VSCode, Cursor, or Windsurf)
+   */
+  private static async getEditorType(): Promise<EditorType> {
+    const command = await this.getEditorCommand();
+
+    // Normalize the command to lowercase for case-insensitive matching
+    const normalizedCommand = command.toLowerCase();
+
+    // Look up the editor type
+    return this.COMMAND_TO_EDITOR_MAP[normalizedCommand] ?? EditorType.VSCode;
+  }
+
+  /**
+   * Gets the base directory where the current editor stores workspace storage.
+   * This is platform-specific and editor-specific:
+   * - macOS: ~/Library/Application Support/{EditorName}/User/workspaceStorage/
+   * - Windows: %APPDATA%\{EditorName}\User\workspaceStorage\
+   * - Linux: ~/.config/{EditorName}/User/workspaceStorage/
+   *
+   * The editor name is determined by the configured `vsCodeAlternativeCommand`:
+   * - 'code', 'code-insiders' → 'Code'
+   * - 'cursor' → 'Cursor'
+   * - 'ws', 'surf', 'windsurf' → 'Windsurf'
    *
    * @returns The absolute path to the workspace storage base directory
    */
-  public static getWorkspaceStorageBaseDir(): string {
+  public static async getWorkspaceStorageBaseDir(): Promise<string> {
     const currentOs = CurrentEnv.os;
     const homeDir = CurrentEnv.homeDir();
+    const editorType = await this.getEditorType();
+    const editorDirName = this.EDITOR_DIR_NAMES[editorType];
 
     switch (currentOs) {
       case OperatingSystemType.MacOSX:
@@ -66,14 +132,14 @@ export default class VSCodeService {
           homeDir,
           'Library',
           'Application Support',
-          'Code',
+          editorDirName,
           'User',
           'workspaceStorage'
         );
       case OperatingSystemType.Windows:
         return path.join(
           process.env.APPDATA || path.join(homeDir, 'AppData', 'Roaming'),
-          'Code',
+          editorDirName,
           'User',
           'workspaceStorage'
         );
@@ -81,7 +147,7 @@ export default class VSCodeService {
         return path.join(
           homeDir,
           '.config',
-          'Code',
+          editorDirName,
           'User',
           'workspaceStorage'
         );
@@ -99,16 +165,9 @@ export default class VSCodeService {
    * @param targetPath The path to open. Defaults to '.' (current directory)
    */
   public static async openVSCode(targetPath: string = '.'): Promise<void> {
-    const config = await ConfigService.loadConfig();
-    const project = await ProjectConfigService.getCurrentProject();
+    const command = await this.getEditorCommand();
 
-    // Priority: project-specific config > global config > default 'code'
-    const command =
-      project?.vsCodeAlternativeCommand ??
-      config.vsCodeAlternativeCommand ??
-      'code';
-
-    DR.logger.success(`Opening ${targetPath} in VS Code...`);
+    DR.logger.success(`Opening ${targetPath} with ${command}...`);
     await CLIService.execCmdWithTimeout(`${command} ${targetPath}`, 4000);
   }
 
@@ -189,7 +248,7 @@ export default class VSCodeService {
       // Compute the workspace ID using VS Code's algorithm
       // This matches: src/vs/platform/workspaces/node/workspaces.ts
       const storageHash = await this.computeWorkspaceId(normalizedPath);
-      const storagePath = this.buildStoragePath(storageHash);
+      const storagePath = await this.buildStoragePath(storageHash);
 
       const storageAlreadyExists = await fs.pathExists(storagePath);
 
@@ -412,7 +471,7 @@ export default class VSCodeService {
     storageHash: string
   ): Promise<boolean> {
     try {
-      const storagePath = this.buildStoragePath(storageHash);
+      const storagePath = await this.buildStoragePath(storageHash);
 
       if (!(await fs.pathExists(storagePath))) {
         return false;
@@ -437,7 +496,7 @@ export default class VSCodeService {
     Array<{ storageHash: string; workspacePath: string }>
   > {
     try {
-      const baseDir = this.getWorkspaceStorageBaseDir();
+      const baseDir = await this.getWorkspaceStorageBaseDir();
       const workspaces: Array<{ storageHash: string; workspacePath: string }> =
         [];
 
@@ -551,7 +610,7 @@ export default class VSCodeService {
       await this.computeWorkspaceHashIfPossible(normalizedPath);
 
     if (computedHash) {
-      const storagePath = this.buildStoragePath(computedHash);
+      const storagePath = await this.buildStoragePath(computedHash);
       if (await fs.pathExists(storagePath)) {
         return {
           storageHash: computedHash,
@@ -573,7 +632,7 @@ export default class VSCodeService {
   private static async lookupStorageByMetadata(
     normalizedPath: string
   ): Promise<WorkspaceStorageInfo | undefined> {
-    const baseDir = this.getWorkspaceStorageBaseDir();
+    const baseDir = await this.getWorkspaceStorageBaseDir();
 
     if (!(await fs.pathExists(baseDir))) {
       return undefined;
@@ -626,8 +685,9 @@ export default class VSCodeService {
    * @param storageHash The workspace storage hash
    * @returns Absolute storage directory path
    */
-  private static buildStoragePath(storageHash: string): string {
-    return path.join(this.getWorkspaceStorageBaseDir(), storageHash);
+  private static async buildStoragePath(storageHash: string): Promise<string> {
+    const baseDir = await this.getWorkspaceStorageBaseDir();
+    return path.join(baseDir, storageHash);
   }
 
   /**
