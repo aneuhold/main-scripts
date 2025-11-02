@@ -42,6 +42,25 @@ export async function triggerUpdate(): Promise<void> {
 }
 
 /**
+ * Logs to the user if an update is needed for this package.
+ */
+export async function logIfUpdateNeeded(): Promise<void> {
+  const packageJson = await readPackageJson();
+  const { didComplete, output } = await CLIService.execCmd(
+    `npm outdated -g ${packageJson.name}`
+  );
+  if (didComplete) {
+    const updateIsNeeded = output.length !== 0;
+    if (updateIsNeeded) {
+      DR.logger.info(
+        `An update is available for this package. Please run ` +
+          `"npm install -g ${packageJson.name}" to update.`
+      );
+    }
+  }
+}
+
+/**
  * Checks if an update is needed for this package. If there is, then it updates
  * and passes in the arguments so that it can be called again once the update
  * is finished.
