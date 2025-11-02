@@ -30,6 +30,7 @@ program
   .option('-v, --verbose', 'run with verbose logging')
   .hook('preAction', (thisCommand) => {
     if (thisCommand.opts().verbose) {
+      DR.logger.setVerboseLogging(true);
       DR.logger.verbose.info('Verbose logging enabled...');
     }
   });

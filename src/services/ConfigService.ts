@@ -75,8 +75,6 @@ export class ConfigService {
 
     const explorer = cosmiconfig(this.MODULE_NAME, {
       searchPlaces: [
-        // User home directory config (JSON only)
-        this.getHomeDirectoryConfigPath(),
         // Project directory configs (for dev dependency usage)
         `.${this.MODULE_NAME}.json`,
         // package.json field
@@ -85,7 +83,22 @@ export class ConfigService {
     });
 
     try {
-      const result = await explorer.search();
+      const homeConfigPath = this.getHomeDirectoryConfigPath();
+      let result = null;
+
+      // Try to load from home directory first (for some reason I couldn't get this to work with
+      // searchPlaces. I don't know why as of 11/1/2025)
+      try {
+        result = await explorer.load(homeConfigPath);
+      } catch {
+        // File doesn't exist or can't be read, that's ok
+      }
+
+      // If not found in home directory, search from current directory
+      if (!result) {
+        result = await explorer.search();
+      }
+
       const userConfig = result?.config as MainScriptsConfig | undefined;
 
       // Merge user config with defaults
