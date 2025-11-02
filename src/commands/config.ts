@@ -1,5 +1,5 @@
 import { DR } from '@aneuhold/core-ts-lib';
-import CLIService from '../services/CLIService.js';
+import VSCodeService from '../services/applications/VSCodeService.js';
 import { ConfigService } from '../services/ConfigService.js';
 
 /**
@@ -91,5 +91,5 @@ async function editConfig(): Promise<void> {
   }
 
   DR.logger.success(`Opening config file in VS Code...`);
-  await CLIService.execCmdWithTimeout(`code "${configPath}"`, 4000);
+  await VSCodeService.openVSCode(`"${configPath}"`);
 }
