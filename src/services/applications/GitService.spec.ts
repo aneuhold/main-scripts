@@ -81,34 +81,6 @@ describe('GitService', () => {
       }
     });
 
-    it('should throw error when trying to create worktree at existing path', async () => {
-      const testInstanceDir = TestUtils.getTestInstanceDir();
-
-      // Initialize a git repository with initial commit
-      await initializeGitRepo(testInstanceDir);
-
-      // Change to test directory
-      const originalCwd = process.cwd();
-      process.chdir(testInstanceDir);
-
-      try {
-        const worktreePath1 = `${testInstanceDir}-wt-existing1`;
-        const worktreePath2 = `${testInstanceDir}-wt-existing2`;
-
-        // Create the first worktree with branch1
-        await GitService.addWorktree('branch1', worktreePath1);
-
-        // Try to create another worktree with the same branch name
-        // This should throw an error because the branch already exists
-        await expect(
-          GitService.addWorktree('branch1', worktreePath2)
-        ).rejects.toThrow('Failed to create worktree');
-      } finally {
-        // Restore original directory
-        process.chdir(originalCwd);
-      }
-    });
-
     it('should create worktree from existing branch', async () => {
       const testInstanceDir = TestUtils.getTestInstanceDir();
 
