@@ -16,6 +16,7 @@ import setup from './commands/setup.js';
 import startup from './commands/startup.js';
 import sub from './commands/sub.js';
 import unsub from './commands/unsub.js';
+import vscode from './commands/vscode.js';
 import {
   addWorktree,
   listWorktrees,
@@ -260,6 +261,15 @@ worktreeCmd
   .description('Remove a worktree (interactive selection)')
   .action(async () => {
     await removeWorktree();
+  });
+
+program
+  .command('vscode')
+  .description('Manage VS Code workspaces')
+  .argument('[command]', 'The command to execute (workspace/ws)')
+  .argument('[action]', 'The action to perform (list/ls)')
+  .action(async (command: string, action: string) => {
+    await vscode(command, action);
   });
 
 // Run the thang

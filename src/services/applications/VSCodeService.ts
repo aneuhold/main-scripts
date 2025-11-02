@@ -26,6 +26,13 @@ export type WorkspaceStorageInfo = {
  * - Windows: %APPDATA%\Code\User\workspaceStorage\
  * - Linux: ~/.config/Code/User/workspaceStorage/
  *
+ * To navigate to this on Mac use:
+ *
+ * ```
+ * cd "~/Library/Application Support/Code"
+ * code .
+ * ```
+ *
  * Each workspace gets a unique directory named by a hash of the workspace path.
  * Inside each directory:
  * - workspace.json: Identifies which folder this storage belongs to
@@ -108,24 +115,11 @@ export default class VSCodeService {
         return undefined;
       }
 
-      // Read all subdirectories in the workspace storage base directory
-      const entries = await fs.readdir(baseDir);
-
-      // Search for the workspace.json that matches our workspace path
-      const searchUri = `file://${normalizedPath}`;
+      const searchUri = this.pathToUri(normalizedPath);
+      const entries = await this.getWorkspaceStorageDirectories(baseDir);
 
       for (const entry of entries) {
-        const entryPath = path.join(baseDir, entry);
-        const entryStat = await fs.stat(entryPath);
-
-        if (!entryStat.isDirectory()) {
-          continue;
-        }
-
-        const workspaceJsonPath = path.join(entryPath, 'workspace.json');
-        if (!(await fs.pathExists(workspaceJsonPath))) {
-          continue;
-        }
+        const workspaceJsonPath = path.join(baseDir, entry, 'workspace.json');
 
         try {
           const workspaceData = (await fs.readJson(workspaceJsonPath)) as {
@@ -139,7 +133,7 @@ export default class VSCodeService {
 
             return {
               storageHash: entry,
-              storagePath: entryPath,
+              storagePath: path.join(baseDir, entry),
               workspacePath: normalizedPath
             };
           }
@@ -194,7 +188,7 @@ export default class VSCodeService {
 
       // Create workspace.json
       const workspaceJson = {
-        folder: `file://${normalizedPath}`
+        folder: this.pathToUri(normalizedPath)
       };
       const workspaceJsonPath = path.join(storagePath, 'workspace.json');
 
@@ -429,5 +423,124 @@ export default class VSCodeService {
       );
       return false;
     }
+  }
+
+  /**
+   * Lists all VS Code workspace storage directories with their folder paths.
+   *
+   * @returns Array of objects containing storageHash and workspacePath for each workspace
+   */
+  public static async listWorkspaces(): Promise<
+    Array<{ storageHash: string; workspacePath: string }>
+  > {
+    try {
+      const baseDir = this.getWorkspaceStorageBaseDir();
+      const workspaces: Array<{ storageHash: string; workspacePath: string }> =
+        [];
+
+      if (!(await fs.pathExists(baseDir))) {
+        return workspaces;
+      }
+
+      const entries = await this.getWorkspaceStorageDirectories(baseDir);
+
+      for (const entry of entries) {
+        const workspacePath = await this.readWorkspacePath(baseDir, entry);
+
+        if (workspacePath) {
+          workspaces.push({
+            storageHash: entry,
+            workspacePath
+          });
+        }
+      }
+
+      return workspaces;
+    } catch (error) {
+      DR.logger.error(
+        `Error listing workspaces: ${ErrorUtils.getErrorString(error)}`
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Gets all valid workspace storage directory names from the base directory.
+   *
+   * @param baseDir The workspace storage base directory
+   * @returns Array of directory names that contain workspace.json files
+   */
+  private static async getWorkspaceStorageDirectories(
+    baseDir: string
+  ): Promise<string[]> {
+    const entries = await fs.readdir(baseDir);
+    const directories: string[] = [];
+
+    for (const entry of entries) {
+      const entryPath = path.join(baseDir, entry);
+      const entryStat = await fs.stat(entryPath);
+
+      if (!entryStat.isDirectory()) {
+        continue;
+      }
+
+      const workspaceJsonPath = path.join(entryPath, 'workspace.json');
+      if (await fs.pathExists(workspaceJsonPath)) {
+        directories.push(entry);
+      }
+    }
+
+    return directories;
+  }
+
+  /**
+   * Reads the workspace path from a workspace.json file.
+   *
+   * @param baseDir The workspace storage base directory
+   * @param storageHash The storage directory hash name
+   * @returns The workspace path if found, undefined otherwise
+   */
+  private static async readWorkspacePath(
+    baseDir: string,
+    storageHash: string
+  ): Promise<string | undefined> {
+    try {
+      const workspaceJsonPath = path.join(
+        baseDir,
+        storageHash,
+        'workspace.json'
+      );
+      const workspaceData = (await fs.readJson(workspaceJsonPath)) as {
+        folder?: string;
+      };
+
+      if (workspaceData.folder) {
+        return this.uriToPath(workspaceData.folder);
+      }
+
+      return undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * Converts a file:// URI to a file system path.
+   *
+   * @param uri The file URI to convert
+   * @returns The file system path
+   */
+  private static uriToPath(uri: string): string {
+    return uri.replace('file://', '');
+  }
+
+  /**
+   * Converts a file system path to a file:// URI.
+   *
+   * @param filePath The file system path to convert
+   * @returns The file URI
+   */
+  private static pathToUri(filePath: string): string {
+    return `file://${filePath}`;
   }
 }
