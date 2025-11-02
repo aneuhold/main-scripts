@@ -83,9 +83,18 @@ export default class GitService {
       ? `git worktree add "${targetPath}" ${branchName}`
       : `git worktree add -b ${branchName} "${targetPath}"`;
 
-    const { didComplete, output } = await CLIService.execCmd(command);
+    const { didComplete, output } = await CLIService.execCmd(command, true);
 
     if (!didComplete) {
+      throw new Error(`Failed to create worktree: ${output}`);
+    }
+
+    // Additional check: verify the error message even if command "succeeded"
+    // Git might write errors to stderr but still exit with code 0 in some cases
+    if (
+      output.includes('is already used by worktree') ||
+      output.includes('already checked out')
+    ) {
       throw new Error(`Failed to create worktree: ${output}`);
     }
 
