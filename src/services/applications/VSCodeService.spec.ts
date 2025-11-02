@@ -3,7 +3,6 @@ import {
   pathExists,
   readFile,
   readJson,
-  remove,
   writeFile,
   writeJson
 } from 'fs-extra';
@@ -19,7 +18,6 @@ import {
   vi
 } from 'vitest';
 import { TestUtils } from '../../../test-utils/TestUtils.js';
-import CLIService from '../CLIService.js';
 import VSCodeService from './VSCodeService.js';
 
 // Mock the logger to avoid console noise during tests
@@ -323,80 +321,6 @@ describe('VSCodeService', () => {
       );
 
       expect(success).toBe(false);
-    });
-  });
-
-  describe('getDisabledExtensions', () => {
-    it('should return empty array when no workspace storage exists', async () => {
-      const nonExistentPath = '/nonexistent/workspace';
-
-      const disabled =
-        await VSCodeService.getDisabledExtensions(nonExistentPath);
-
-      expect(disabled).toEqual([]);
-    });
-
-    it('should return empty array when state.vscdb does not exist', async () => {
-      const testInstanceDir = TestUtils.getTestInstanceDir();
-
-      // Create workspace storage but no state.vscdb
-      const storageHash = 'no-state-db';
-      const storagePath = path.join(mockStorageBaseDir, storageHash);
-      await ensureDir(storagePath);
-      await writeJson(path.join(storagePath, 'workspace.json'), {
-        folder: `file://${testInstanceDir}`
-      });
-
-      const disabled =
-        await VSCodeService.getDisabledExtensions(testInstanceDir);
-
-      expect(disabled).toEqual([]);
-    });
-
-    it('should parse disabled extensions from state database', async () => {
-      const testInstanceDir = TestUtils.getTestInstanceDir();
-
-      // Create workspace storage with state.vscdb
-      const storageHash = 'with-disabled-ext';
-      const storagePath = path.join(mockStorageBaseDir, storageHash);
-      await ensureDir(storagePath);
-      await writeJson(path.join(storagePath, 'workspace.json'), {
-        folder: `file://${testInstanceDir}`
-      });
-
-      // Create a real SQLite database with mock data
-      const stateDbPath = path.join(storagePath, 'state.vscdb');
-      const disabledExtensions = [
-        { id: 'publisher.extension1', uuid: 'uuid-1' },
-        { id: 'publisher.extension2', uuid: 'uuid-2' }
-      ];
-
-      // Create SQLite database and table
-      const createTableResult = await CLIService.execCmd(
-        `sqlite3 "${stateDbPath}" "CREATE TABLE ItemTable (key TEXT PRIMARY KEY, value TEXT)"`
-      );
-      expect(createTableResult.didComplete).toBe(true);
-
-      // Insert the disabled extensions data using a temp SQL file to avoid escaping issues
-      const tmpSqlFile = path.join(storagePath, 'insert.sql');
-      await writeFile(
-        tmpSqlFile,
-        `INSERT INTO ItemTable (key, value) VALUES ('extensionsIdentifiers/disabled', '${JSON.stringify(disabledExtensions)}');`
-      );
-
-      const insertResult = await CLIService.execCmd(
-        `sqlite3 "${stateDbPath}" < "${tmpSqlFile}"`
-      );
-      expect(insertResult.didComplete).toBe(true);
-      await remove(tmpSqlFile);
-
-      const disabled =
-        await VSCodeService.getDisabledExtensions(testInstanceDir);
-
-      expect(disabled).toEqual([
-        'publisher.extension1',
-        'publisher.extension2'
-      ]);
     });
   });
 

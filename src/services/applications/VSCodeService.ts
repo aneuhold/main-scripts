@@ -3,7 +3,6 @@ import { createHash } from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
 import CurrentEnv, { OperatingSystemType } from '../../utils/CurrentEnv.js';
-import CLIService from '../CLIService.js';
 
 /**
  * Represents information about a VS Code workspace storage directory.
@@ -43,6 +42,8 @@ export type WorkspaceStorageInfo = {
  * which is particularly useful when creating git worktrees.
  */
 export default class VSCodeService {
+  private static readonly WORKSPACE_METADATA_FILE = 'workspace.json';
+
   /**
    * Gets the base directory where VS Code stores workspace storage.
    * This is platform-specific:
@@ -100,55 +101,25 @@ export default class VSCodeService {
     workspacePath: string
   ): Promise<WorkspaceStorageInfo | undefined> {
     try {
-      const baseDir = this.getWorkspaceStorageBaseDir();
-      const normalizedPath = path.normalize(workspacePath);
+      const normalizedPath = this.normalizeWorkspacePath(workspacePath);
 
       DR.logger.verbose.info(
         `Searching for workspace storage for: ${normalizedPath}`
       );
 
-      // Check if base directory exists for the workspace
-      if (!(await fs.pathExists(baseDir))) {
+      const storageInfo = await this.lookupStorageByWorkspace(normalizedPath);
+
+      if (!storageInfo) {
         DR.logger.verbose.info(
-          `Workspace storage base directory does not exist: ${baseDir}`
+          `No workspace storage found for: ${normalizedPath}`
         );
-        return undefined;
+      } else {
+        DR.logger.verbose.info(
+          `Found workspace storage: ${storageInfo.storageHash} for ${normalizedPath}`
+        );
       }
 
-      const searchUri = this.pathToUri(normalizedPath);
-      const entries = await this.getWorkspaceStorageDirectories(baseDir);
-
-      for (const entry of entries) {
-        const workspaceJsonPath = path.join(baseDir, entry, 'workspace.json');
-
-        try {
-          const workspaceData = (await fs.readJson(workspaceJsonPath)) as {
-            folder?: string;
-          };
-
-          if (workspaceData.folder === searchUri) {
-            DR.logger.verbose.info(
-              `Found workspace storage: ${entry} for ${normalizedPath}`
-            );
-
-            return {
-              storageHash: entry,
-              storagePath: path.join(baseDir, entry),
-              workspacePath: normalizedPath
-            };
-          }
-        } catch (jsonError) {
-          DR.logger.verbose.error(
-            `Error reading workspace.json in ${entry}: ${ErrorUtils.getErrorString(jsonError)}`
-          );
-          continue;
-        }
-      }
-
-      DR.logger.verbose.info(
-        `No workspace storage found for: ${normalizedPath}`
-      );
-      return undefined;
+      return storageInfo;
     } catch (error) {
       DR.logger.error(
         `Error finding workspace storage: ${ErrorUtils.getErrorString(error)}`
@@ -180,8 +151,7 @@ export default class VSCodeService {
     workspacePath: string
   ): Promise<WorkspaceStorageInfo> {
     try {
-      const baseDir = this.getWorkspaceStorageBaseDir();
-      const normalizedPath = path.normalize(workspacePath);
+      const normalizedPath = this.normalizeWorkspacePath(workspacePath);
 
       // Verify the workspace folder exists
       if (!(await fs.pathExists(normalizedPath))) {
@@ -194,36 +164,15 @@ export default class VSCodeService {
       // Compute the workspace ID using VS Code's algorithm
       // This matches: src/vs/platform/workspaces/node/workspaces.ts
       const storageHash = await this.computeWorkspaceId(normalizedPath);
-      const storagePath = path.join(baseDir, storageHash);
+      const storagePath = this.buildStoragePath(storageHash);
 
-      // Check if storage already exists
-      if (await fs.pathExists(storagePath)) {
-        DR.logger.verbose.info(
-          `Workspace storage already exists: ${storageHash} for ${normalizedPath}`
-        );
-        return {
-          storageHash,
-          storagePath,
-          workspacePath: normalizedPath
-        };
-      }
+      const storageAlreadyExists = await fs.pathExists(storagePath);
 
-      // Create the storage directory
       await fs.ensureDir(storagePath);
-
-      // Create workspace.json metadata file
-      const workspaceJson = {
-        folder: this.pathToUri(normalizedPath)
-      };
-      const workspaceJsonPath = path.join(storagePath, 'workspace.json');
-
-      await fs.writeFile(
-        workspaceJsonPath,
-        JSON.stringify(workspaceJson, null, 2)
-      );
+      await this.writeWorkspaceMetadata(storagePath, normalizedPath);
 
       DR.logger.verbose.info(
-        `Created workspace storage: ${storageHash} for ${normalizedPath}`
+        `${storageAlreadyExists ? 'Updated' : 'Created'} workspace storage: ${storageHash} for ${normalizedPath}`
       );
 
       return {
@@ -356,43 +305,23 @@ export default class VSCodeService {
         return false;
       }
 
-      // Create target workspace storage directory if it doesn't exist
+      // Create or refresh target workspace storage directory
       if (!targetStorage) {
         targetStorage = await this.createWorkspaceStorage(targetWorkspacePath);
+      } else if (overwrite) {
+        await this.writeWorkspaceMetadata(
+          targetStorage.storagePath,
+          targetStorage.workspacePath
+        );
       }
 
       DR.logger.verbose.info(`Target storage at: ${targetStorage.storagePath}`);
 
-      // Copy all files from source to target, excluding specified items
-      const items = await fs.readdir(sourceStorage.storagePath);
-
-      for (const item of items) {
-        // Skip workspace.json (already created) and excluded items
-        if (item === 'workspace.json' || exclude.includes(item)) {
-          DR.logger.verbose.info(`Skipping: ${item}`);
-          continue;
-        }
-
-        const sourcePath = path.join(sourceStorage.storagePath, item);
-        const targetPath = path.join(targetStorage.storagePath, item);
-
-        try {
-          const stats = await fs.stat(sourcePath);
-
-          if (stats.isDirectory()) {
-            DR.logger.verbose.info(`Copying directory: ${item}`);
-            await fs.copy(sourcePath, targetPath, { overwrite: true });
-          } else {
-            DR.logger.verbose.info(`Copying file: ${item}`);
-            await fs.copy(sourcePath, targetPath, { overwrite: true });
-          }
-        } catch (itemError) {
-          DR.logger.verbose.error(
-            `Error copying ${item}: ${ErrorUtils.getErrorString(itemError)}`
-          );
-          // Continue with other items even if one fails
-        }
-      }
+      await this.copyStorageContents({
+        sourcePath: sourceStorage.storagePath,
+        targetPath: targetStorage.storagePath,
+        exclude
+      });
 
       DR.logger.success(
         'Successfully copied VS Code workspace storage to worktree'
@@ -403,56 +332,6 @@ export default class VSCodeService {
         `Failed to copy workspace storage: ${ErrorUtils.getErrorString(error)}`
       );
       return false;
-    }
-  }
-
-  /**
-   * Gets the list of disabled extensions for a workspace by querying its state database.
-   *
-   * This reads from the state.vscdb SQLite database to determine which extensions
-   * are disabled for the workspace. Note that VS Code must have created the database
-   * first (by opening the workspace at least once).
-   *
-   * @param workspacePath The absolute path to the workspace folder
-   * @returns Array of extension IDs that are disabled, or empty array if none/error
-   */
-  public static async getDisabledExtensions(
-    workspacePath: string
-  ): Promise<string[]> {
-    try {
-      const storage = await this.findWorkspaceStorage(workspacePath);
-      if (!storage) {
-        DR.logger.verbose.info(
-          'No workspace storage found. No disabled extensions.'
-        );
-        return [];
-      }
-
-      const stateDbPath = path.join(storage.storagePath, 'state.vscdb');
-      if (!(await fs.pathExists(stateDbPath))) {
-        DR.logger.verbose.info('No state.vscdb found. No disabled extensions.');
-        return [];
-      }
-
-      const query =
-        "SELECT value FROM ItemTable WHERE key = 'extensionsIdentifiers/disabled'";
-      const { output, didComplete } = await CLIService.execCmd(
-        `sqlite3 "${stateDbPath}" "${query}"`
-      );
-
-      if (!didComplete || !output.trim()) {
-        return [];
-      }
-
-      // Parse the JSON array of disabled extensions
-      type DisabledExtension = { id: string; uuid?: string };
-      const disabled = JSON.parse(output.trim()) as DisabledExtension[];
-      return disabled.map((ext) => ext.id);
-    } catch (error) {
-      DR.logger.verbose.error(
-        `Error reading disabled extensions: ${ErrorUtils.getErrorString(error)}`
-      );
-      return [];
     }
   }
 
@@ -515,8 +394,7 @@ export default class VSCodeService {
     storageHash: string
   ): Promise<boolean> {
     try {
-      const baseDir = this.getWorkspaceStorageBaseDir();
-      const storagePath = path.join(baseDir, storageHash);
+      const storagePath = this.buildStoragePath(storageHash);
 
       if (!(await fs.pathExists(storagePath))) {
         return false;
@@ -552,12 +430,15 @@ export default class VSCodeService {
       const entries = await this.getWorkspaceStorageDirectories(baseDir);
 
       for (const entry of entries) {
-        const workspacePath = await this.readWorkspacePath(baseDir, entry);
+        const workspaceInfo = await this.buildWorkspaceInfoFromMetadata(
+          baseDir,
+          entry
+        );
 
-        if (workspacePath) {
+        if (workspaceInfo) {
           workspaces.push({
-            storageHash: entry,
-            workspacePath
+            storageHash: workspaceInfo.storageHash,
+            workspacePath: workspaceInfo.workspacePath
           });
         }
       }
@@ -591,8 +472,7 @@ export default class VSCodeService {
         continue;
       }
 
-      const workspaceJsonPath = path.join(entryPath, 'workspace.json');
-      if (await fs.pathExists(workspaceJsonPath)) {
+      if (await fs.pathExists(this.workspaceMetadataPath(entryPath))) {
         directories.push(entry);
       }
     }
@@ -601,33 +481,203 @@ export default class VSCodeService {
   }
 
   /**
-   * Reads the workspace path from a workspace.json file.
+   * Builds workspace storage metadata information from a storage directory.
    *
    * @param baseDir The workspace storage base directory
    * @param storageHash The storage directory hash name
-   * @returns The workspace path if found, undefined otherwise
+   * @returns WorkspaceStorageInfo if metadata exists, undefined otherwise
    */
-  private static async readWorkspacePath(
+  private static async buildWorkspaceInfoFromMetadata(
     baseDir: string,
     storageHash: string
-  ): Promise<string | undefined> {
+  ): Promise<WorkspaceStorageInfo | undefined> {
     try {
-      const workspaceJsonPath = path.join(
-        baseDir,
-        storageHash,
-        'workspace.json'
-      );
+      const storagePath = path.join(baseDir, storageHash);
+      const workspaceJsonPath = this.workspaceMetadataPath(storagePath);
+
       const workspaceData = (await fs.readJson(workspaceJsonPath)) as {
         folder?: string;
       };
 
-      if (workspaceData.folder) {
-        return this.uriToPath(workspaceData.folder);
+      if (!workspaceData.folder) {
+        return undefined;
       }
 
+      const workspacePath = this.normalizeWorkspacePath(
+        this.uriToPath(workspaceData.folder)
+      );
+
+      return {
+        storageHash,
+        storagePath,
+        workspacePath
+      };
+    } catch (error) {
+      DR.logger.verbose.error(
+        `Error reading workspace metadata for ${storageHash}: ${ErrorUtils.getErrorString(error)}`
+      );
       return undefined;
-    } catch {
+    }
+  }
+
+  /**
+   * Attempts to locate workspace storage by computing the VS Code hash or falling back to metadata scanning.
+   *
+   * @param normalizedPath The normalized workspace path
+   * @returns Workspace storage info if found, undefined otherwise
+   */
+  private static async lookupStorageByWorkspace(
+    normalizedPath: string
+  ): Promise<WorkspaceStorageInfo | undefined> {
+    const computedHash =
+      await this.computeWorkspaceHashIfPossible(normalizedPath);
+
+    if (computedHash) {
+      const storagePath = this.buildStoragePath(computedHash);
+      if (await fs.pathExists(storagePath)) {
+        return {
+          storageHash: computedHash,
+          storagePath,
+          workspacePath: normalizedPath
+        };
+      }
+    }
+
+    return this.lookupStorageByMetadata(normalizedPath);
+  }
+
+  /**
+   * Scans workspace metadata to locate storage directories for a given path.
+   *
+   * @param normalizedPath The normalized workspace path
+   * @returns Workspace storage info if found, undefined otherwise
+   */
+  private static async lookupStorageByMetadata(
+    normalizedPath: string
+  ): Promise<WorkspaceStorageInfo | undefined> {
+    const baseDir = this.getWorkspaceStorageBaseDir();
+
+    if (!(await fs.pathExists(baseDir))) {
       return undefined;
+    }
+
+    const entries = await this.getWorkspaceStorageDirectories(baseDir);
+
+    for (const entry of entries) {
+      const info = await this.buildWorkspaceInfoFromMetadata(baseDir, entry);
+      if (info && info.workspacePath === normalizedPath) {
+        return info;
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Computes the workspace storage hash when possible.
+   *
+   * @param normalizedPath The normalized workspace path
+   * @returns The computed hash if successful, undefined otherwise
+   */
+  private static async computeWorkspaceHashIfPossible(
+    normalizedPath: string
+  ): Promise<string | undefined> {
+    try {
+      return await this.computeWorkspaceId(normalizedPath);
+    } catch (error) {
+      DR.logger.verbose.info(
+        `Unable to compute workspace hash for ${normalizedPath}: ${ErrorUtils.getErrorString(error)}`
+      );
+      return undefined;
+    }
+  }
+
+  /**
+   * Normalizes a workspace path for consistent comparisons.
+   *
+   * @param workspacePath The workspace path to normalize
+   * @returns Normalized workspace path
+   */
+  private static normalizeWorkspacePath(workspacePath: string): string {
+    return path.normalize(workspacePath);
+  }
+
+  /**
+   * Builds the absolute storage path for a workspace hash.
+   *
+   * @param storageHash The workspace storage hash
+   * @returns Absolute storage directory path
+   */
+  private static buildStoragePath(storageHash: string): string {
+    return path.join(this.getWorkspaceStorageBaseDir(), storageHash);
+  }
+
+  /**
+   * Builds the path to the workspace metadata file within a storage directory.
+   *
+   * @param storagePath The storage directory path
+   * @returns Absolute path to workspace metadata file
+   */
+  private static workspaceMetadataPath(storagePath: string): string {
+    return path.join(storagePath, this.WORKSPACE_METADATA_FILE);
+  }
+
+  /**
+   * Writes workspace metadata matching VS Code's expectations.
+   *
+   * @param storagePath The storage directory path
+   * @param normalizedPath The normalized workspace path
+   */
+  private static async writeWorkspaceMetadata(
+    storagePath: string,
+    normalizedPath: string
+  ): Promise<void> {
+    const workspaceJson = {
+      folder: this.pathToUri(normalizedPath)
+    };
+
+    await fs.writeFile(
+      this.workspaceMetadataPath(storagePath),
+      JSON.stringify(workspaceJson, null, 2)
+    );
+  }
+
+  /**
+   * Copies storage contents from source to target, excluding specified items.
+   *
+   * @param data Copy configuration
+   * @param data.sourcePath Absolute path to the source storage directory
+   * @param data.targetPath Absolute path to the target storage directory
+   * @param data.exclude Item names to exclude during copy
+   */
+  private static async copyStorageContents(data: {
+    sourcePath: string;
+    targetPath: string;
+    exclude: string[];
+  }): Promise<void> {
+    const { sourcePath, targetPath, exclude } = data;
+    const items = await fs.readdir(sourcePath);
+
+    for (const item of items) {
+      if (item === this.WORKSPACE_METADATA_FILE || exclude.includes(item)) {
+        DR.logger.verbose.info(`Skipping: ${item}`);
+        continue;
+      }
+
+      const sourceItemPath = path.join(sourcePath, item);
+      const targetItemPath = path.join(targetPath, item);
+
+      try {
+        const stats = await fs.stat(sourceItemPath);
+        DR.logger.verbose.info(
+          `Copying ${stats.isDirectory() ? 'directory' : 'file'}: ${item}`
+        );
+        await fs.copy(sourceItemPath, targetItemPath, { overwrite: true });
+      } catch (error) {
+        DR.logger.verbose.error(
+          `Error copying ${item}: ${ErrorUtils.getErrorString(error)}`
+        );
+      }
     }
   }
 
