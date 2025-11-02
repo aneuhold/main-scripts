@@ -1,5 +1,6 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { readdir } from 'fs/promises';
+import os from 'os';
 import path from 'path';
 import CLIService from '../services/CLIService.js';
 
@@ -138,6 +139,15 @@ export default class CurrentEnv {
    */
   public static folderName(): string {
     return path.basename(path.resolve('.'));
+  }
+
+  /**
+   * Gets the home directory for the current user.
+   *
+   * @returns The absolute path to the user's home directory
+   */
+  public static homeDir(): string {
+    return os.homedir();
   }
 
   /**

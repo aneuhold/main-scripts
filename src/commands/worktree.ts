@@ -8,6 +8,7 @@ import { select } from '@inquirer/prompts';
 import { copy } from 'fs-extra';
 import path from 'path';
 import GitService from '../services/applications/GitService.js';
+import VSCodeService from '../services/applications/VSCodeService.js';
 import CLIService from '../services/CLIService.js';
 import { ConfigService } from '../services/ConfigService.js';
 import { ProjectConfigService } from '../services/ProjectConfigService.js';
@@ -81,6 +82,26 @@ export async function addWorktree(branchName?: string): Promise<void> {
         DR.logger.error(`Setup failed: ${ErrorUtils.getErrorString(error)}`);
         DR.logger.warn('Worktree created but setup encountered errors');
       }
+    }
+
+    // Copy VS Code workspace storage from the source workspace to the worktree
+    try {
+      const sourceWorkspacePath = await GitService.getMainWorktreePath();
+      await VSCodeService.copyWorkspaceStorage(
+        sourceWorkspacePath,
+        targetPath,
+        {
+          // Exclude chat sessions as they can be large and are typically not needed
+          // exclude: ['chatSessions', 'chatEditingSessions']
+        }
+      );
+    } catch (error) {
+      DR.logger.warn(
+        `Could not copy VS Code workspace storage: ${ErrorUtils.getErrorString(error)}`
+      );
+      DR.logger.info(
+        'This is not critical - VS Code will create fresh settings when you open the worktree.'
+      );
     }
 
     // Open the project in the appropriate editor
@@ -245,6 +266,18 @@ export async function removeWorktree(): Promise<void> {
 
     // Remove worktree (git will handle dirty check)
     await GitService.removeWorktree(targetPath);
+
+    // Also remove the VS Code workspace storage for this worktree
+    try {
+      const wasDeleted = await VSCodeService.deleteWorkspaceStorage(targetPath);
+      if (wasDeleted) {
+        DR.logger.verbose.info('Removed VS Code workspace storage');
+      }
+    } catch (storageError) {
+      DR.logger.verbose.warn(
+        `Could not remove VS Code workspace storage: ${ErrorUtils.getErrorString(storageError)}`
+      );
+    }
 
     DR.logger.success(`Worktree removed: ${targetPath}`);
   } catch (error) {
