@@ -31,11 +31,14 @@ Configuration files should contain a `projects` object where each key is the fol
 
 ```json
 {
+  "vsCodeAlternativeCommand": "cursor",
+  "worktreeBaseDir": "../",
   "projects": {
     "my-custom-project": {
       "folderName": "my-custom-project",
       "solutionFilePath": "MyProject.sln",
       "packageJsonPaths": ["client/package.json"],
+      "vsCodeAlternativeCommand": "code",
       "nodemonArgs": {
         ".": ["--ignore", "dist/", "--ext", "ts", "--exec", "npm run build"]
       }
@@ -46,12 +49,25 @@ Configuration files should contain a `projects` object where each key is the fol
 
 ### Configuration Properties
 
+#### Global Configuration
+
+- `vsCodeAlternativeCommand` (optional): Command to use instead of `code` when opening VS Code. Use this to specify alternative editors like `cursor`, `windsurf`, etc. Defaults to `code`.
+- `worktreeBaseDir` (optional): Base directory for creating git worktrees. Defaults to `../`.
+- `projects` (optional): Object containing project-specific configurations.
+
+#### Project-Specific Configuration
+
 Each project configuration supports the following properties:
 
 - `folderName` (required): The name of the project folder
 - `solutionFilePath` (optional): Relative path to a .NET solution file to open with `tb open`
 - `packageJsonPaths` (optional): Array of relative paths to package.json files for multi-package projects
+- `vsCodeAlternativeCommand` (optional): Command to use instead of `code` when opening VS Code for this specific project. Overrides the global setting.
 - `nodemonArgs` (optional): Object mapping relative paths to nodemon argument arrays for `tb dev` command
+- `worktreeConfig` (optional): Configuration for git worktree behavior
+  - `extraFilesToCopy` (optional): Array of file patterns to copy into new worktrees (e.g., `[".env", "environments/*"]`)
+  - `postCreateCommands` (optional): Array of commands to run after creating a worktree
+  - `autoSetup` (optional): Boolean to automatically run project setup after creating a worktree
 
 ## ✅ Commands
 

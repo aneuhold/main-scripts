@@ -3,6 +3,9 @@ import { createHash } from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
 import CurrentEnv, { OperatingSystemType } from '../../utils/CurrentEnv.js';
+import CLIService from '../CLIService.js';
+import { ConfigService } from '../ConfigService.js';
+import { ProjectConfigService } from '../ProjectConfigService.js';
 
 /**
  * Represents information about a VS Code workspace storage directory.
@@ -85,6 +88,28 @@ export default class VSCodeService {
       default:
         throw new Error(`Unsupported operating system: ${currentOs}`);
     }
+  }
+
+  /**
+   * Opens the specified path in VS Code or a VS Code alternative (like Cursor, Windsurf, etc.).
+   *
+   * Uses the configured `vsCodeAlternativeCommand` from either the project-specific config
+   * or the global config. Falls back to `code` if not configured.
+   *
+   * @param targetPath The path to open. Defaults to '.' (current directory)
+   */
+  public static async openVSCode(targetPath: string = '.'): Promise<void> {
+    const config = await ConfigService.loadConfig();
+    const project = await ProjectConfigService.getCurrentProject();
+
+    // Priority: project-specific config > global config > default 'code'
+    const command =
+      project?.vsCodeAlternativeCommand ??
+      config.vsCodeAlternativeCommand ??
+      'code';
+
+    DR.logger.success(`Opening ${targetPath} in VS Code...`);
+    await CLIService.execCmdWithTimeout(`${command} ${targetPath}`, 4000);
   }
 
   /**

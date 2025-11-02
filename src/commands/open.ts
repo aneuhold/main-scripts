@@ -4,6 +4,7 @@ import BrowserService from '../services/applications/BrowserService.js';
 import ChromeService from '../services/applications/ChromeService.js';
 import GitService from '../services/applications/GitService.js';
 import OSFileSystemService from '../services/applications/OSFileSystemService.js';
+import VSCodeService from '../services/applications/VSCodeService.js';
 import CLIService from '../services/CLIService.js';
 import FileSearchService from '../services/FileSearchService.js';
 import { ProjectConfigService } from '../services/ProjectConfigService.js';
@@ -104,14 +105,6 @@ async function openRepositoryPage(): Promise<void> {
 }
 
 /**
- * Opens the current directory in VS Code.
- */
-async function openVSCode() {
-  DR.logger.success(`Opening current directory in VS Code...`);
-  await CLIService.execCmdWithTimeout(`code .`, 4000);
-}
-
-/**
  *
  */
 async function findAndOpenProject(): Promise<void> {
@@ -131,7 +124,7 @@ async function findAndOpenProject(): Promise<void> {
 
   // If only package.json exists, open VS Code
   if (hasPackageJson && solutionFiles.length === 0) {
-    await openVSCode();
+    await VSCodeService.openVSCode();
     return;
   }
 
@@ -143,7 +136,7 @@ async function findAndOpenProject(): Promise<void> {
     }
 
     if (solutionFiles.length === 0) {
-      await openVSCode();
+      await VSCodeService.openVSCode();
       return;
     }
 
@@ -163,7 +156,7 @@ async function findAndOpenProject(): Promise<void> {
   // Add VS Code option at the top
   const vsCodeOption = 'Root with VS Code';
   options.push(vsCodeOption);
-  optionMap.set(vsCodeOption, () => openVSCode());
+  optionMap.set(vsCodeOption, () => VSCodeService.openVSCode());
 
   // Add solution files from current directory
   solutionFiles.forEach((file) => {

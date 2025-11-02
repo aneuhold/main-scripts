@@ -12,6 +12,7 @@ import path from 'path';
 export type MainScriptsConfig = {
   projects?: Record<string, MainScriptsConfigProject>;
   worktreeBaseDir?: string;
+  vsCodeAlternativeCommand?: string;
 };
 
 /**
@@ -23,6 +24,7 @@ export type MainScriptsConfigProject = {
   folderName: string;
   solutionFilePath?: string;
   packageJsonPaths?: string[];
+  vsCodeAlternativeCommand?: string;
   /**
    * Can be set to provide nodemon arguments for when using
    */
@@ -53,7 +55,8 @@ export type MainScriptsConfigProject = {
  */
 const DEFAULT_CONFIG: MainScriptsConfig = {
   projects: {},
-  worktreeBaseDir: '../'
+  worktreeBaseDir: '../',
+  vsCodeAlternativeCommand: 'code'
 };
 
 /**
