@@ -448,7 +448,7 @@ describe('VSCodeService', () => {
 
       // Delete it
       const deleted =
-        await VSCodeService.deleteWorkspaceStorage(testInstanceDir);
+        await VSCodeService.deleteWorkspaceByPath(testInstanceDir);
 
       expect(deleted).toBe(true);
       expect(await VSCodeService.hasWorkspaceStorage(testInstanceDir)).toBe(
@@ -460,7 +460,7 @@ describe('VSCodeService', () => {
       const nonExistentPath = '/nonexistent/workspace';
 
       const deleted =
-        await VSCodeService.deleteWorkspaceStorage(nonExistentPath);
+        await VSCodeService.deleteWorkspaceByPath(nonExistentPath);
 
       expect(deleted).toBe(false);
     });

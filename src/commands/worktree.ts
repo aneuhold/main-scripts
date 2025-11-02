@@ -269,7 +269,7 @@ export async function removeWorktree(): Promise<void> {
 
     // Also remove the VS Code workspace storage for this worktree
     try {
-      const wasDeleted = await VSCodeService.deleteWorkspaceStorage(targetPath);
+      const wasDeleted = await VSCodeService.deleteWorkspaceByPath(targetPath);
       if (wasDeleted) {
         DR.logger.verbose.info('Removed VS Code workspace storage');
       }

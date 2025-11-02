@@ -401,7 +401,7 @@ export default class VSCodeService {
    * @param workspacePath The absolute path to the workspace folder
    * @returns true if deleted, false if not found or error
    */
-  public static async deleteWorkspaceStorage(
+  public static async deleteWorkspaceByPath(
     workspacePath: string
   ): Promise<boolean> {
     try {
@@ -416,6 +416,36 @@ export default class VSCodeService {
       DR.logger.verbose.info(
         `Deleted workspace storage: ${storage.storageHash}`
       );
+      return true;
+    } catch (error) {
+      DR.logger.error(
+        `Error deleting workspace storage: ${ErrorUtils.getErrorString(error)}`
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Deletes a workspace storage directory by its storage hash.
+   *
+   * WARNING: This permanently deletes all workspace-specific VS Code state.
+   * Use with caution.
+   *
+   * @param storageHash The storage directory hash name
+   * @returns true if deleted, false if not found or error
+   */
+  public static async deleteWorkspaceByHash(
+    storageHash: string
+  ): Promise<boolean> {
+    try {
+      const baseDir = this.getWorkspaceStorageBaseDir();
+      const storagePath = path.join(baseDir, storageHash);
+
+      if (!(await fs.pathExists(storagePath))) {
+        return false;
+      }
+
+      await fs.remove(storagePath);
       return true;
     } catch (error) {
       DR.logger.error(

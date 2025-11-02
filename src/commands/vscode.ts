@@ -1,3 +1,5 @@
+import { DR } from '@aneuhold/core-ts-lib';
+import { checkbox } from '@inquirer/prompts';
 import VSCodeService from '../services/applications/VSCodeService.js';
 
 /**
@@ -7,7 +9,7 @@ export async function listWorkspaces(): Promise<void> {
   const workspaces = await VSCodeService.listWorkspaces();
 
   if (workspaces.length === 0) {
-    console.log('No VS Code workspaces found.');
+    DR.logger.info('No VS Code workspaces found.');
     return;
   }
 
@@ -20,10 +22,54 @@ export async function listWorkspaces(): Promise<void> {
 }
 
 /**
+ * Removes selected VS Code workspace storage directories.
+ */
+export async function removeWorkspaces(): Promise<void> {
+  const workspaces = await VSCodeService.listWorkspaces();
+  const workspacesToHashMap = workspaces.reduce((map, ws) => {
+    map.set(ws.storageHash, ws);
+    return map;
+  }, new Map<string, (typeof workspaces)[0]>());
+
+  if (workspaces.length === 0) {
+    DR.logger.info('No VS Code workspaces found.');
+    return;
+  }
+
+  const selectedHashes = await checkbox({
+    message: 'Select workspaces to remove (use space to select):',
+    choices: workspaces.map((ws) => ({
+      name: `${ws.workspacePath} (${ws.storageHash})`,
+      value: ws.storageHash
+    }))
+  });
+
+  if (selectedHashes.length === 0) {
+    DR.logger.info('No workspaces selected.');
+    return;
+  }
+
+  DR.logger.info(`\nRemoving ${selectedHashes.length} workspace(s)...`);
+
+  for (const hash of selectedHashes) {
+    const success = await VSCodeService.deleteWorkspaceByHash(hash);
+    if (success) {
+      DR.logger.info(
+        `Removed workspace: ${workspacesToHashMap.get(hash)?.workspacePath}`
+      );
+    } else {
+      DR.logger.error(`Failed to remove workspace: ${hash}`);
+    }
+  }
+
+  DR.logger.success('Workspace removal complete.');
+}
+
+/**
  * Main vscode command handler.
  *
  * @param command The subcommand to execute (e.g., 'workspace', 'ws')
- * @param action The action to perform (e.g., 'list', 'ls')
+ * @param action The action to perform (e.g., 'list', 'ls', 'remove', 'rm')
  */
 export default async function vscode(
   command?: string,
@@ -34,7 +80,8 @@ export default async function vscode(
     console.log('Commands:');
     console.log('  workspace, ws - Manage VS Code workspaces');
     console.log('Actions:');
-    console.log('  list, ls - List all workspaces');
+    console.log('  list, ls     - List all workspaces');
+    console.log('  remove, rm   - Remove selected workspaces');
     return;
   }
 
@@ -44,8 +91,10 @@ export default async function vscode(
   if (normalizedCommand === 'workspace' || normalizedCommand === 'ws') {
     if (normalizedAction === 'list' || normalizedAction === 'ls') {
       await listWorkspaces();
+    } else if (normalizedAction === 'remove' || normalizedAction === 'rm') {
+      await removeWorkspaces();
     } else {
-      console.log('Unknown action. Use "list" or "ls".');
+      console.log('Unknown action. Use "list", "ls", "remove", or "rm".');
     }
   } else {
     console.log('Unknown command. Use "workspace" or "ws".');
