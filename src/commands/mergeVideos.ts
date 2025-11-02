@@ -9,7 +9,7 @@ import path from 'path';
  *
  * This uses the ffmpeg library to merge the videos together.
  *
- * @param pathToFolder
+ * @param pathToFolder The path to the folder containing the videos to merge.
  */
 export default async function mergeVideos(pathToFolder: string) {
   DR.logger.info(`Merging videos in ${pathToFolder}...`);

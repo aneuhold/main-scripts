@@ -2,6 +2,7 @@ import { DR } from '@aneuhold/core-ts-lib';
 import path from 'path';
 import ITermService from '../services/applications/ITermService.js';
 import CLIService from '../services/CLIService.js';
+import { MainScriptsConfigProject } from '../services/ConfigService.js';
 import CurrentEnv, { TerminalType } from '../utils/CurrentEnv.js';
 
 /**
@@ -9,13 +10,9 @@ import CurrentEnv, { TerminalType } from '../utils/CurrentEnv.js';
  * by the name of the folder in which it is contained.
  */
 export type Project = {
-  folderName: string;
-  solutionFilePath?: string;
-  packageJsonPaths?: string[];
   setup?: () => Promise<void>;
   refresh?: () => Promise<void>;
-  nodemonArgs?: { [relativeFolderPath: string]: string[] };
-};
+} & MainScriptsConfigProject;
 
 export enum FolderName {
   piSpa = 'pi-spa',
@@ -29,12 +26,12 @@ export enum FolderName {
 }
 
 /**
- * Contains the different projects that have settings based on the folder name.
+ * Contains the different built-in projects that have settings based on the folder name.
  *
  * The folder name is repeated in the key and the data structure for easier
  * access.
  */
-const projects: { [folderName in FolderName]: Project } = {
+const builtInProjects: Record<string, Project> = {
   'pi-spa': {
     folderName: FolderName.piSpa,
     setup: setupPiSubTerminalsFunc(FolderName.piSpa, [
@@ -122,7 +119,7 @@ function setupPiSubTerminalsFunc(
   installCommand = 'yarn yarn:all'
 ) {
   return async () => {
-    const project = projects[folderName];
+    const project = builtInProjects[folderName];
     DR.logger.info(`Setting up ${project.folderName}...`);
     const currentPath = path.resolve('.', subPath);
 
@@ -137,7 +134,7 @@ function setupPiSubTerminalsFunc(
         return;
       }
 
-    // Install pacakges
+    // Install packages
     DR.logger.info('Installing yarn packages...');
     const { output: yarnInstallOutput } = await CLIService.execCmd(
       installCommand,
@@ -198,4 +195,4 @@ async function runITerm2Commands(
   );
 }
 
-export default projects;
+export default builtInProjects;

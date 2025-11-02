@@ -17,6 +17,42 @@ npm install -g @aneuhold/main-scripts
 
 This can also be used as a dev dependency
 
+## 🔧 Configuration
+
+You can extend the built-in project configurations with your own custom projects by creating a configuration file. The configuration system uses [cosmiconfig](https://github.com/cosmiconfig/cosmiconfig), which searches for configuration in the following locations (in order):
+
+1. `~/.config/tb-main-scripts.json` (global configuration)
+2. `.tb-main-scripts.json` (project-specific)
+3. `package.json` with a `"tb-main-scripts"` property
+
+### Configuration Format
+
+Configuration files should contain a `projects` object where each key is the folder name of your project:
+
+```json
+{
+  "projects": {
+    "my-custom-project": {
+      "folderName": "my-custom-project",
+      "solutionFilePath": "MyProject.sln",
+      "packageJsonPaths": ["client/package.json"],
+      "nodemonArgs": {
+        ".": ["--ignore", "dist/", "--ext", "ts", "--exec", "npm run build"]
+      }
+    }
+  }
+}
+```
+
+### Configuration Properties
+
+Each project configuration supports the following properties:
+
+- `folderName` (required): The name of the project folder
+- `solutionFilePath` (optional): Relative path to a .NET solution file to open with `tb open`
+- `packageJsonPaths` (optional): Array of relative paths to package.json files for multi-package projects
+- `nodemonArgs` (optional): Object mapping relative paths to nodemon argument arrays for `tb dev` command
+
 ## ✅ Commands
 
 Each command starts with `tb`. That stands for Tiny Box but that isn't really important 😛.
@@ -24,12 +60,24 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
 - `tb help` Will emit all the commands and their options
 - `tb open` Will open the current directory in either VS Code, or Rider depending on the project as it is configured in [`projects.ts`](src/config/projects.ts).
   - `tb open r` Will open the associated repo for the current directory
+- `tb clean [target]` Cleans up the provided target (e.g., branches). Run without arguments to see available options.
+- `tb worktree` or `tb wt` Manage git worktrees with project-aware configuration.
+  - `tb worktree add [branchName]` - Create a new worktree
+  - `tb worktree list` or `tb wt ls` - List all worktrees
+  - `tb worktree remove` or `tb wt rm` - Remove a worktree (interactive)
+- `tb config [action]` Shows the current configuration, initializes a new config file, or edits the existing config.
+  - `tb config` or `tb config show` - Display current configuration
+  - `tb config init` - Create a new config file with defaults
+  - `tb config init <folder-name>` - Create a project configuration template for the specified folder
+  - `tb config edit` - Open the config file in VS Code
+- `tb dev` Starts development mode with nodemon to watch for changes. Auto-detects the current project and runs in the first packageJsonPath directory.
+- `tb sub [packagePrefix]` Subscribes to a package using local-npm-registry for automatic updates during development.
+- `tb unsub [packagePrefix]` Unsubscribes from a package using local-npm-registry and resets to original version.
 - `tb test` Just emits a test echo to see if the package is working.
 - `tb update` Will force update this package.
 - `tb fpull` Will run `git fetch -a` then `git pull` in the current working directory.
 - `tb setup` Will setup the development environment according to the current working directory name. If settings have not been determined yet for the directory name, shell, or terminal, then it will inform you and won't do anything else.
 - `tb startup` Will run the startup script for the current system with no arguments
-- `tb scaffold [projectType] [projectName]` Will build the given project type with the given project name as a new folder in the current working directory named with the given `projectName`.
 - `tb pkg [packageAction]` Performs actions related to package publishing. Supported actions are: `validateJsr`, `publishJsr`, `validateNpm`, `publishNpm`, `testStringReplacement`. This is typically used inside a package.json file as one of the scripts.
 
 ### Commands specifically for `package.json` scripts
@@ -46,7 +94,7 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
 
 #### Package Command Options
 
-All package commands support the following options:
+All `pkg` commands support the following options:
 
 - `-a, --alternative-names <names...>` Specify alternative package names to use for publishing/validation. This allows you to test or publish the same package under multiple names.
 - `-o, --original-string <string>` For `testStringReplacement` action: the original string to replace.
@@ -73,27 +121,39 @@ tb pkg testStringReplacement -o "@old/package-name" -n "@new/package-name"
 
 Sometimes it seems that permissions get messed up. The only solution seems to go to the Program Files for `nodejs` and change the permissions for that folder to allow all local users to have full control. Otherwise installing anything with nodejs doesn't seem to work anymore.
 
-### Error About Promises.Any when Running Commands
-
-Node likely needs to be updated. Anything 14.x and earlier doesn't support ES2016 syntax pretty sure.
-
 ## 🛠️ Development
 
 ### 🏞 Flow for Writing New Commands
 
 1. Write the new command in the TypeScript files
-1. Test the command by running `yarn refresh`. Keep running this whenever you want to test the command again.
+1. Test the command by running `pnpm refresh`. Keep running this whenever you want to test the command again.
 1. When ready to deploy an update to the package
-   1. Run `yarn version patch`
-   1. Run `yarn lint`
+   1. Run `pnpm version patch`
+   1. Run `pnpm lint`
    1. Run `git push` to push to the main branch. Otherwise, feel free to make a PR + run checks + merge it.
-1. When done making changes to the package, use `yarn reset:global` to set the package to the npm registry version instead of having it linked locally.
+1. When done making changes to the package, use `pnpm reset:global` to set the package to the npm registry version instead of having it linked locally.
 
 ### `package.json` Commands
 
-- `yarn refresh` can be used for testing new commands. It will uninstall any previous global version of this package and then install the local version.
-- `yarn reset:global` will uninstall the global package and reinstall it from the npm registry instead of locally.
-- `yarn add <package-name>` Use yarn to add packages preferably.
+- `pnpm refresh` can be used for testing new commands. It will uninstall any previous global version of this package and then install the local version.
+- `pnpm reset:global` will uninstall the global package and reinstall it from the npm registry instead of locally.
+- `pnpm watch` uses nodemon to watch `src/`, auto-rebuilds and reinstalls globally on TS changes. Ignores `lib/` and `localData/`.
+
+## 🏢 Architecture
+
+### Dual Source Structure
+
+### Command Pattern
+
+- Entry point: `src/index.ts` using Commander.js for CLI parsing
+- Each command is a function in `src/commands/` (e.g., `fpull.ts`, `setup.ts`, `pkg.ts`)
+- Commands export a default async function that performs the action
+
+### Service Layer
+
+- **`CLIService`**: Executes shell commands via `exec()` (returns all output after completion) or `spawn()` (streams output). Handles cross-platform shell differences (PowerShell on Windows, Zsh/Bash on macOS/Linux)
+- **Application Services** (`src/services/applications/`): Abstractions for Chrome, Git, Docker, file system operations
+- **`CurrentEnv`**: Detects OS, shell, terminal type, and folder name. Critical for cross-platform behavior
 
 ### Build Process Description
 
@@ -101,10 +161,9 @@ This consists of the following steps:
 
 - Delete the `./lib` folder
 - Generate the files with TypeScript into the `./lib` folder, including `package.json` because it uses that in some parts of the code.
-- Copy over the templates from the templates folder and overwrite because TypeScript does not copy over anything that isn't `.ts`.
 
 ### Publish Process Description
 
-- Run `yarn build`
+- Run `pnpm build`
 - Packs the files only including the the `./lib` folder and the [default things included](https://docs.npmjs.com/cli/v7/using-npm/developers). This does mean that the `package.json` is going to be in the package twice. But that is okay because the `package.json` that is in the `lib` folder will only be used to reference values. It isn't used for commands or locations of any anything.
 - Pushing to main will automatically publish it to NPM

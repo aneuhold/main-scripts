@@ -3,8 +3,8 @@ import path from 'path';
 import localNpmPackages, {
   logAvailablePackages
 } from '../config/localNpmPackages.js';
-import projects from '../config/projects.js';
 import CLIService from '../services/CLIService.js';
+import { ProjectConfigService } from '../services/ProjectConfigService.js';
 
 /**
  * Unsubscribes from a package using local-npm-registry.
@@ -16,7 +16,7 @@ export default async function unsub(packagePrefix?: string): Promise<void> {
 
   if (!packagePrefix) {
     DR.logger.info('Unsubscribing from all packages...');
-    const workingDirectories = getWorkingDirectories(workingDirectory);
+    const workingDirectories = await getWorkingDirectories(workingDirectory);
     await runUnsubscribeCommand(workingDirectories, 'local-npm unsubscribe');
     return;
   }
@@ -34,7 +34,7 @@ export default async function unsub(packagePrefix?: string): Promise<void> {
   }
 
   DR.logger.info(`Unsubscribing from package "${packageName}"...`);
-  const workingDirectories = getWorkingDirectories(workingDirectory);
+  const workingDirectories = await getWorkingDirectories(workingDirectory);
   await runUnsubscribeCommand(
     workingDirectories,
     `local-npm unsubscribe ${packageName}`
@@ -46,11 +46,10 @@ export default async function unsub(packagePrefix?: string): Promise<void> {
  *
  * @param workingDirectory The current working directory
  */
-function getWorkingDirectories(workingDirectory: string): string[] {
-  const currentDir = path.basename(workingDirectory);
-  const matchingProject = Object.values(projects).find(
-    (project) => project.folderName === currentDir
-  );
+async function getWorkingDirectories(
+  workingDirectory: string
+): Promise<string[]> {
+  const matchingProject = await ProjectConfigService.getCurrentProject();
 
   if (
     matchingProject &&
@@ -70,7 +69,6 @@ function getWorkingDirectories(workingDirectory: string): string[] {
  *
  * @param workingDirectories Array of directories to run the command in
  * @param command The command to execute
- * @param packageName Optional package name for success/failure messages
  */
 async function runUnsubscribeCommand(
   workingDirectories: string[],

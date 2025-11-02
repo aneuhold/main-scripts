@@ -1,7 +1,7 @@
-import { DR } from '@aneuhold/core-ts-lib';
+import { DR, ErrorUtils } from '@aneuhold/core-ts-lib';
 import path from 'path';
-import projects from '../config/projects.js';
 import CLIService from '../services/CLIService.js';
+import { ProjectConfigService } from '../services/ProjectConfigService.js';
 
 /**
  * Starts a development watch mode using nodemon.
@@ -13,7 +13,8 @@ export default async function dev(): Promise<void> {
   const currentDir = path.basename(process.cwd());
 
   // Find a project that matches the current directory name
-  const targetProject = Object.values(projects).find(
+  const allProjects = await ProjectConfigService.getProjects();
+  const targetProject = Object.values(allProjects).find(
     (project) => project.folderName === currentDir
   );
 
@@ -23,7 +24,7 @@ export default async function dev(): Promise<void> {
         'Please ensure you are in a configured project directory. ' +
         'Available projects:'
     );
-    logAvailableProjects();
+    await logAvailableProjects();
     return;
   }
 
@@ -82,7 +83,7 @@ export default async function dev(): Promise<void> {
         }
       } catch (error) {
         DR.logger.error(
-          `[${index + 1}] Error starting development mode: ${String(error)}`
+          `[${index + 1}] Error starting development mode: ${ErrorUtils.getErrorString(error)}`
         );
       }
     }
@@ -97,8 +98,9 @@ export default async function dev(): Promise<void> {
 /**
  * Logs the available projects that can be used for development.
  */
-function logAvailableProjects() {
-  const availableProjects = Object.values(projects)
+async function logAvailableProjects() {
+  const allProjects = await ProjectConfigService.getProjects();
+  const availableProjects = Object.values(allProjects)
     .filter(
       (project) =>
         project.nodemonArgs && Object.keys(project.nodemonArgs).length > 0

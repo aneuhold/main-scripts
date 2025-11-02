@@ -1,7 +1,6 @@
-import { DR, sleep } from '@aneuhold/core-ts-lib';
+import { DR, ErrorUtils, sleep } from '@aneuhold/core-ts-lib';
 import { select } from '@inquirer/prompts';
 import { ExecOptions, exec as normalExec, spawn } from 'child_process';
-import * as rl from 'readline';
 import util from 'util';
 import CurrentEnv, { OperatingSystemType } from '../utils/CurrentEnv.js';
 
@@ -26,6 +25,9 @@ export default class CLIService {
    *
    * The shell environment chosen is determined by the `CurrentEnv` class.
    *
+   * Success/failure is determined by exit code: 0 = success, non-zero = failure.
+   * Commands that write to stderr but exit with code 0 are still considered successful.
+   *
    * @param cmd the command to run. This is ran as a normal execution where the
    * output is all returned at once after completion. For example this could be
    * `ls -a`.
@@ -42,7 +44,7 @@ export default class CLIService {
    * the shell environment. By default this is false.
    *
    * @returns an object that holds the output and true if the command completed
-   * successfully or false if it did not.
+   * successfully (exit code 0) or false if it did not (non-zero exit code).
    */
   static async execCmd(
     cmd: string,
@@ -69,46 +71,42 @@ export default class CLIService {
     try {
       const { stdout, stderr } = await execute(commandToExecute, execOptions);
 
-      const hasStdoutContent = stdout && stdout.trim() !== '';
-      const hasStderrContent = stderr && stderr.trim() !== '';
+      // Convert stdout and stderr to strings to handle Buffer types
+      const stdoutStr = stdout.toString().trim() || '';
+      const stderrStr = stderr.toString().trim() || '';
 
-      if (hasStdoutContent) {
+      let combinedOutput = '';
+      if (stdoutStr) {
         DR.logger.verbose.info(
-          `Standard output from command "${cmd}":\\n${stdout}`
+          `Standard output from command "${cmd}":\\n${stdoutStr}`
         );
+        combinedOutput += stdoutStr;
       }
 
-      if (hasStderrContent) {
-        if (logError) {
-          DR.logger.error(
-            `Error output (stderr) from command "${cmd}":\\n${stderr}`
-          );
+      if (stderrStr && logError) {
+        DR.logger.error(
+          `Error output (stderr) from command "${cmd}":\\n${stderrStr}`
+        );
+        if (stdoutStr) {
+          combinedOutput += '\\n--- stderr ---\\n';
         }
-
-        let combinedOutput = '';
-        if (hasStdoutContent) {
-          combinedOutput += `--- stdout ---\\n${stdout.trim()}\\n`;
-        }
-        combinedOutput += `--- stderr ---\\n${stderr.trim()}`;
-
-        return {
-          didComplete: false, // Treat as not fully successful if there's stderr
-          output: combinedOutput.trim()
-        };
+        combinedOutput += stderrStr;
       }
 
-      // If stderr is empty or only whitespace
       return {
         didComplete: true,
-        output: stdout || ''
+        output: combinedOutput || ''
       };
     } catch (err) {
+      // Command failed with non-zero exit code
+      const errorMessage = ErrorUtils.getErrorString(err);
       DR.logger.verbose
         .error(`There was an error executing the "exec" function. Details are printed below:
-        ${err as string}`);
+        ${errorMessage}`);
+
       return {
         didComplete: false,
-        output: err as string
+        output: errorMessage
       };
     }
   }
@@ -162,12 +160,13 @@ export default class CLIService {
       const spawnedCmd = spawn(cmd, args, execOptions);
 
       spawnedCmd.on('error', (err) => {
+        const errorMessage = ErrorUtils.getErrorString(err);
         DR.logger
           .error(`There was an error executing the "spawn" function. Details are printed below:
-      ${err.message}`);
+      ${errorMessage}`);
         resolve({
           didComplete: false,
-          output: err.toString()
+          output: errorMessage
         });
       });
       spawnedCmd.stdout.on('data', (data) => {
@@ -184,25 +183,6 @@ export default class CLIService {
           didComplete: true,
           output
         });
-      });
-    });
-  }
-
-  /**
-   * Gets input from the user on command line.
-   *
-   * @param promptToUser the prompt that should be provided to the user. Include
-   * a newline at the end if you want there to be one.
-   */
-  static async getUserInput(promptToUser: string): Promise<string> {
-    const readline = rl.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-    return new Promise((resolve) => {
-      readline.question(promptToUser, (input: string) => {
-        readline.close();
-        resolve(input);
       });
     });
   }

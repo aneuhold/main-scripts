@@ -1,5 +1,6 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { readdir } from 'fs/promises';
+import os from 'os';
 import path from 'path';
 import CLIService from '../services/CLIService.js';
 
@@ -23,7 +24,7 @@ export enum OperatingSystemType {
 }
 
 /**
- * The type of terminal that the current enviornment is running.
+ * The type of terminal that the current environment is running.
  */
 export enum TerminalType {
   WindowsTerminal,
@@ -130,6 +131,9 @@ export default class CurrentEnv {
     if (process.platform === 'darwin') {
       return OperatingSystemType.MacOSX;
     }
+    if (process.platform === 'linux') {
+      return OperatingSystemType.Linux;
+    }
     return OperatingSystemType.Unknown;
   }
 
@@ -138,6 +142,15 @@ export default class CurrentEnv {
    */
   public static folderName(): string {
     return path.basename(path.resolve('.'));
+  }
+
+  /**
+   * Gets the home directory for the current user.
+   *
+   * @returns The absolute path to the user's home directory
+   */
+  public static homeDir(): string {
+    return os.homedir();
   }
 
   /**
@@ -178,7 +191,7 @@ export default class CurrentEnv {
   /**
    * Checks if a command exists in the current environment.
    *
-   * @param command
+   * @param command The command to check for.
    */
   private static async commandExists(command: string): Promise<boolean> {
     try {

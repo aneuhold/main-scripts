@@ -3,6 +3,7 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { program } from 'commander';
 import clean from './commands/clean.js';
+import config from './commands/config.js';
 import dev from './commands/dev.js';
 import downloadAndMergeVideos from './commands/downloadAndMergeVideos.js';
 import downloadVideos from './commands/downloadVideos.js';
@@ -11,11 +12,16 @@ import mergeAllVideos from './commands/mergeAllVideos.js';
 import mergeVideos from './commands/mergeVideos.js';
 import open from './commands/open.js';
 import pkg, { PackageOptions } from './commands/pkg.js';
-import scaffold from './commands/scaffold.js';
 import setup from './commands/setup.js';
 import startup from './commands/startup.js';
 import sub from './commands/sub.js';
 import unsub from './commands/unsub.js';
+import vscode from './commands/vscode.js';
+import {
+  addWorktree,
+  listWorktrees,
+  removeWorktree
+} from './commands/worktree.js';
 import calculateProbabilities from './utils/calculator.js';
 import { triggerUpdate } from './utils/updateIfNeeded.js';
 
@@ -25,6 +31,7 @@ program
   .option('-v, --verbose', 'run with verbose logging')
   .hook('preAction', (thisCommand) => {
     if (thisCommand.opts().verbose) {
+      DR.logger.setVerboseLogging(true);
       DR.logger.verbose.info('Verbose logging enabled...');
     }
   });
@@ -81,29 +88,6 @@ program
   .action(async () => {
     await startup();
   });
-
-program
-  .command('scaffold')
-  .description('Scaffolds a project')
-  .argument(
-    '[projectType]',
-    'The type of project to scaffold. To see options, run this' +
-      ' command without arguments.'
-  )
-  .argument(
-    '[projectName]',
-    'The name of the project to start. This will be the root folder name.'
-  )
-  .option('-l, --list', 'List all available project types')
-  .action(
-    async (
-      projectType: string,
-      projectName: string,
-      options: { list: boolean }
-    ) => {
-      await scaffold(projectType, projectName, options.list);
-    }
-  );
 
 program
   .command('clean')
@@ -233,6 +217,59 @@ program
   )
   .action(async () => {
     await dev();
+  });
+
+program
+  .command('config')
+  .description(
+    'Shows the current configuration, initializes a new config file, or edits the existing config'
+  )
+  .argument(
+    '[action]',
+    'The action to perform: "show" (default), "init" to create a new config file, or "edit" to open in VS Code'
+  )
+  .argument(
+    '[folderName]',
+    'For init action: optional folder name to create a project configuration'
+  )
+  .action(async (action: string, folderName: string) => {
+    await config(action, folderName);
+  });
+
+const worktreeCmd = program
+  .command('worktree')
+  .alias('wt')
+  .description('Manage git worktrees with project-aware configuration');
+worktreeCmd
+  .command('add [branchName]', { isDefault: true })
+  .description(
+    'Create a new worktree (default action). Uses smart defaults if no branch name provided.'
+  )
+  .action(async (branchName: string | undefined) => {
+    await addWorktree(branchName);
+  });
+worktreeCmd
+  .command('list')
+  .alias('ls')
+  .description('List all worktrees')
+  .action(async () => {
+    await listWorktrees();
+  });
+worktreeCmd
+  .command('remove')
+  .alias('rm')
+  .description('Remove a worktree (interactive selection)')
+  .action(async () => {
+    await removeWorktree();
+  });
+
+program
+  .command('vscode')
+  .description('Manage VS Code workspaces')
+  .argument('[command]', 'The command to execute (workspace/ws)')
+  .argument('[action]', 'The action to perform (list/ls)')
+  .action(async (command: string, action: string) => {
+    await vscode(command, action);
   });
 
 // Run the thang

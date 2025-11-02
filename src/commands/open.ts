@@ -1,12 +1,12 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import path from 'path';
-import projects, { FolderName, Project } from '../config/projects.js';
 import BrowserService from '../services/applications/BrowserService.js';
 import ChromeService from '../services/applications/ChromeService.js';
 import GitService from '../services/applications/GitService.js';
 import OSFileSystemService from '../services/applications/OSFileSystemService.js';
 import CLIService from '../services/CLIService.js';
 import FileSearchService from '../services/FileSearchService.js';
+import { ProjectConfigService } from '../services/ProjectConfigService.js';
 import CurrentEnv from '../utils/CurrentEnv.js';
 
 /**
@@ -104,7 +104,7 @@ async function openRepositoryPage(): Promise<void> {
 }
 
 /**
- *
+ * Opens the current directory in VS Code.
  */
 async function openVSCode() {
   DR.logger.success(`Opening current directory in VS Code...`);
@@ -194,12 +194,7 @@ export default async function open(
     return;
   }
 
-  const currentFolderName = CurrentEnv.folderName();
-
-  let project: Project | undefined;
-  if (currentFolderName in projects) {
-    project = projects[currentFolderName as FolderName];
-  }
+  const project = await ProjectConfigService.getCurrentProject();
 
   // If there is already a solution file that should be chosen
   if (project?.solutionFilePath) {

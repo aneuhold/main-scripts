@@ -2,18 +2,19 @@
   "name": "@aneuhold/main-scripts",
   "author": "Anton G. Neuhold Jr.",
   "license": "MIT",
-  "version": "2.6.1",
+  "version": "2.7.0",
   "description": "Main scripts for use personally on any platform",
-  "packageManager": "yarn@4.5.1",
+  "packageManager": "pnpm@10.20.0",
   "type": "module",
   "scripts": {
-    "refresh": "yarn build && npm uninstall -g @aneuhold/main-scripts && npm i -g",
-    "watch": "nodemon --ignore lib/ --ignore localData/ -e ts --exec \"yarn build:without-rimraf && npm uninstall -g @aneuhold/main-scripts && npm i -g\"",
-    "build": "rimraf lib && yarn build:without-rimraf",
-    "build:without-rimraf": "tsc --project tsconfig.build.json && shx cp -r src/templates/template-folders lib/templates && shx cp package.json lib/package.json",
+    "refresh": "pnpm build && npm uninstall -g @aneuhold/main-scripts && npm i -g",
+    "watch": "nodemon --ignore lib/ --ignore localData/ -e ts --exec \"pnpm build:without-rimraf && npm uninstall -g @aneuhold/main-scripts && npm i -g\"",
+    "build": "rimraf lib && pnpm build:without-rimraf",
+    "build:without-rimraf": "tsc --project tsconfig.build.json && shx cp package.json lib/package.json",
     "lint": "eslint",
-    "upgrade:core": "yarn up '@aneuhold/*'",
-    "upgrade:all": "yarn up",
+    "test": "vitest run",
+    "upgrade:core": "pnpm update '@aneuhold/*' --latest",
+    "upgrade:all": "pnpm update --latest",
     "reset:global": "npm uninstall -g @aneuhold/main-scripts && npm i -g @aneuhold/main-scripts"
   },
   "main": "lib/index.js",
@@ -37,23 +38,27 @@
     "Node.js"
   ],
   "dependencies": {
-    "@aneuhold/core-ts-lib": "^2.3.2",
-    "@inquirer/prompts": "^7.5.3",
-    "commander": "^12.1.0",
+    "@aneuhold/core-ts-lib": "^2.3.5",
+    "@inquirer/prompts": "^7.9.0",
+    "commander": "^14.0.2",
+    "cosmiconfig": "^9.0.0",
     "fluent-ffmpeg": "^2.1.3",
-    "node-fetch": "^2.7.0"
+    "fs-extra": "^11.3.2",
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "@aneuhold/eslint-config": "^1.0.112",
-    "@types/fluent-ffmpeg": "^2.1.24",
-    "@types/node": "^20.19.1",
-    "@types/node-fetch": "^2.6.12",
-    "eslint": "^9.29.0",
+    "@aneuhold/eslint-config": "^1.3.14",
+    "@types/fluent-ffmpeg": "^2.1.28",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^24.9.2",
+    "@types/node-fetch": "^2.6.13",
+    "eslint": "^9.39.0",
     "nodemon": "^3.1.10",
-    "prettier": "^3.5.3",
-    "rimraf": "^5.0.10",
+    "prettier": "^3.6.2",
+    "rimraf": "^6.1.0",
     "shx": "^0.4.0",
-    "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.6"
   }
 }
