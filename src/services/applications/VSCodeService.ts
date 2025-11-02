@@ -129,10 +129,10 @@ export default class VSCodeService {
   }
 
   /**
-   * Creates a new workspace storage directory for a given workspace path.
+   * Creates a workspace storage directory for a given workspace folder path.
    *
    * This method computes the workspace ID using VS Code's exact algorithm:
-   * MD5(lowercase(workspacePath) + folderCreationTime)
+   * MD5(workspacePath + folderCreationTime)
    *
    * IMPORTANT: The workspace folder MUST already exist on the filesystem before
    * calling this method, as it needs to read the folder's creation time to
@@ -195,8 +195,7 @@ export default class VSCodeService {
    *
    * The algorithm:
    * 1. Get the folder's creation time (birthtime on macOS/Windows, inode on Linux)
-   * 2. Lowercase the path on non-Linux systems
-   * 3. Compute MD5(path + creationTime)
+   * 2. Compute MD5(path + creationTime)
    *
    * The storage directory is created by:
    * https://github.com/microsoft/vscode/blob/main/src/vs/platform/storage/electron-main/storageMain.ts#L383-L404
@@ -224,15 +223,9 @@ export default class VSCodeService {
       ctime = Math.floor(stats.birthtimeMs);
     }
 
-    // Prepare path string (lowercase on non-Linux)
-    let pathStr = workspacePath;
-    if (currentOs !== OperatingSystemType.Linux) {
-      pathStr = pathStr.toLowerCase();
-    }
-
     // Compute MD5 hash: MD5(path + ctime)
     const hash = createHash('md5')
-      .update(pathStr)
+      .update(workspacePath)
       .update(String(ctime))
       .digest('hex');
 

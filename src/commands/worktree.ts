@@ -63,6 +63,26 @@ export async function addWorktree(branchName?: string): Promise<void> {
       await copyExtraFiles(project.worktreeConfig.extraFilesToCopy);
     }
 
+    // Copy VS Code workspace storage from the source workspace to the worktree
+    try {
+      const sourceWorkspacePath = await GitService.getMainWorktreePath();
+      await VSCodeService.copyWorkspaceStorage(
+        sourceWorkspacePath,
+        targetPath,
+        {
+          // Exclude chat sessions as they can be large and are typically not needed
+          // exclude: ['chatSessions', 'chatEditingSessions']
+        }
+      );
+    } catch (error) {
+      DR.logger.warn(
+        `Could not copy VS Code workspace storage: ${ErrorUtils.getErrorString(error)}`
+      );
+      DR.logger.info(
+        'This is not critical - VS Code will create fresh settings when you open the worktree.'
+      );
+    }
+
     // Run postCreate commands if configured
     if (project?.worktreeConfig?.postCreateCommands) {
       DR.logger.info('Running post-create commands...');
@@ -82,26 +102,6 @@ export async function addWorktree(branchName?: string): Promise<void> {
         DR.logger.error(`Setup failed: ${ErrorUtils.getErrorString(error)}`);
         DR.logger.warn('Worktree created but setup encountered errors');
       }
-    }
-
-    // Copy VS Code workspace storage from the source workspace to the worktree
-    try {
-      const sourceWorkspacePath = await GitService.getMainWorktreePath();
-      await VSCodeService.copyWorkspaceStorage(
-        sourceWorkspacePath,
-        targetPath,
-        {
-          // Exclude chat sessions as they can be large and are typically not needed
-          // exclude: ['chatSessions', 'chatEditingSessions']
-        }
-      );
-    } catch (error) {
-      DR.logger.warn(
-        `Could not copy VS Code workspace storage: ${ErrorUtils.getErrorString(error)}`
-      );
-      DR.logger.info(
-        'This is not critical - VS Code will create fresh settings when you open the worktree.'
-      );
     }
 
     // Open the project in the appropriate editor

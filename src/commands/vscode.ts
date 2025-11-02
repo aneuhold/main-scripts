@@ -26,6 +26,7 @@ export async function listWorkspaces(): Promise<void> {
  */
 export async function removeWorkspaces(): Promise<void> {
   const workspaces = await VSCodeService.listWorkspaces();
+  workspaces.sort((a, b) => a.workspacePath.localeCompare(b.workspacePath));
   const workspacesToHashMap = workspaces.reduce((map, ws) => {
     map.set(ws.storageHash, ws);
     return map;
