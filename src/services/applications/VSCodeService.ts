@@ -1,5 +1,5 @@
 import { DR, ErrorUtils } from '@aneuhold/core-ts-lib';
-import { randomBytes } from 'crypto';
+import { createHash } from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
 import CurrentEnv, { OperatingSystemType } from '../../utils/CurrentEnv.js';
@@ -107,7 +107,7 @@ export default class VSCodeService {
         `Searching for workspace storage for: ${normalizedPath}`
       );
 
-      // Check if base directory exists
+      // Check if base directory exists for the workspace
       if (!(await fs.pathExists(baseDir))) {
         DR.logger.verbose.info(
           `Workspace storage base directory does not exist: ${baseDir}`
@@ -160,15 +160,20 @@ export default class VSCodeService {
   /**
    * Creates a new workspace storage directory for a given workspace path.
    *
-   * This creates the directory structure and workspace.json file that VS Code
-   * expects. The actual state.vscdb and other files will be created by VS Code
-   * when the workspace is first opened, or can be copied from another workspace.
+   * This method computes the workspace ID using VS Code's exact algorithm:
+   * MD5(lowercase(workspacePath) + folderCreationTime)
    *
-   * Note: This uses a simple random hash for the directory name. VS Code will
-   * recreate its own hash-based directory when it opens the workspace, but this
-   * temporary storage allows us to copy data before that happens.
+   * IMPORTANT: The workspace folder MUST already exist on the filesystem before
+   * calling this method, as it needs to read the folder's creation time to
+   * compute the correct workspace ID that VS Code will use.
    *
-   * @param workspacePath The absolute path to the workspace folder
+   * This is particularly useful when creating git worktrees:
+   * 1. Git creates the worktree folder
+   * 2. Call this method to pre-create storage with the correct ID
+   * 3. Copy storage from source workspace
+   * 4. When VS Code opens the worktree, it will find the pre-created storage
+   *
+   * @param workspacePath The absolute path to the workspace folder (must exist)
    * @returns WorkspaceStorageInfo for the newly created storage directory
    */
   public static async createWorkspaceStorage(
@@ -178,15 +183,35 @@ export default class VSCodeService {
       const baseDir = this.getWorkspaceStorageBaseDir();
       const normalizedPath = path.normalize(workspacePath);
 
-      // Generate a unique hash for the new workspace storage directory
-      // We use a timestamp + random value to ensure uniqueness
-      const storageHash = randomBytes(16).toString('hex');
+      // Verify the workspace folder exists
+      if (!(await fs.pathExists(normalizedPath))) {
+        throw new Error(
+          `Workspace folder does not exist: ${normalizedPath}. ` +
+            `The folder must be created before calling createWorkspaceStorage.`
+        );
+      }
+
+      // Compute the workspace ID using VS Code's algorithm
+      // This matches: src/vs/platform/workspaces/node/workspaces.ts
+      const storageHash = await this.computeWorkspaceId(normalizedPath);
       const storagePath = path.join(baseDir, storageHash);
+
+      // Check if storage already exists
+      if (await fs.pathExists(storagePath)) {
+        DR.logger.verbose.info(
+          `Workspace storage already exists: ${storageHash} for ${normalizedPath}`
+        );
+        return {
+          storageHash,
+          storagePath,
+          workspacePath: normalizedPath
+        };
+      }
 
       // Create the storage directory
       await fs.ensureDir(storagePath);
 
-      // Create workspace.json
+      // Create workspace.json metadata file
       const workspaceJson = {
         folder: this.pathToUri(normalizedPath)
       };
@@ -211,6 +236,58 @@ export default class VSCodeService {
         `Failed to create workspace storage: ${ErrorUtils.getErrorString(error)}`
       );
     }
+  }
+
+  /**
+   * Computes the workspace ID that VS Code will use for a given folder path.
+   *
+   * This replicates VS Code's algorithm from:
+   * https://github.com/microsoft/vscode/blob/main/src/vs/platform/workspaces/node/workspaces.ts#L50-L80
+   *
+   * The algorithm:
+   * 1. Get the folder's creation time (birthtime on macOS/Windows, inode on Linux)
+   * 2. Lowercase the path on non-Linux systems
+   * 3. Compute MD5(path + creationTime)
+   *
+   * The storage directory is created by:
+   * https://github.com/microsoft/vscode/blob/main/src/vs/platform/storage/electron-main/storageMain.ts#L383-L404
+   *
+   * @param workspacePath The absolute path to the workspace folder
+   * @returns The workspace ID (32-character hex string)
+   */
+  private static async computeWorkspaceId(
+    workspacePath: string
+  ): Promise<string> {
+    const stats = await fs.stat(workspacePath);
+    const currentOs = CurrentEnv.os;
+
+    // Get creation time based on platform
+    // This matches VS Code's platform-specific logic
+    let ctime: number;
+    if (currentOs === OperatingSystemType.Linux) {
+      // Linux: use inode number
+      ctime = stats.ino;
+    } else if (currentOs === OperatingSystemType.MacOSX) {
+      // macOS: use birthtime (file creation time)
+      ctime = stats.birthtime.getTime();
+    } else {
+      // Windows: use birthtimeMs with precision fix
+      ctime = Math.floor(stats.birthtimeMs);
+    }
+
+    // Prepare path string (lowercase on non-Linux)
+    let pathStr = workspacePath;
+    if (currentOs !== OperatingSystemType.Linux) {
+      pathStr = pathStr.toLowerCase();
+    }
+
+    // Compute MD5 hash: MD5(path + ctime)
+    const hash = createHash('md5')
+      .update(pathStr)
+      .update(String(ctime))
+      .digest('hex');
+
+    return hash;
   }
 
   /**
