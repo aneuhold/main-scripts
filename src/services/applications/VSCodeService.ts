@@ -1,4 +1,5 @@
 import { DR, ErrorUtils } from '@aneuhold/core-ts-lib';
+import Database from 'better-sqlite3';
 import { createHash } from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
@@ -400,6 +401,20 @@ export default class VSCodeService {
         exclude
       });
 
+      // Update file paths in the copied workspace state to point to the new workspace
+      try {
+        await this.updateWorkspacePaths(
+          targetStorage.storagePath,
+          sourceStorage.workspacePath,
+          targetStorage.workspacePath
+        );
+      } catch (error) {
+        // Path update is non-fatal - log warning and continue
+        DR.logger.warn(
+          `Failed to update workspace paths (workspace will still function): ${ErrorUtils.getErrorString(error)}`
+        );
+      }
+
       DR.logger.success(
         'Successfully copied VS Code workspace storage to worktree'
       );
@@ -777,5 +792,118 @@ export default class VSCodeService {
    */
   private static pathToUri(filePath: string): string {
     return `file://${filePath}`;
+  }
+
+  /**
+   * Updates file paths in the VS Code workspace state database (state.vscdb).
+   *
+   * This method reads the SQLite database, finds all editor-related entries containing
+   * file paths, and replaces the old workspace path with the new one. This ensures
+   * that open tabs in the new workspace point to files in the new location rather
+   * than the original workspace.
+   *
+   * The primary key updated is 'memento/workbench.parts.editor' which contains:
+   * - fsPath: Absolute file system paths
+   * - external: File URIs (file://)
+   * - path: Duplicate of fsPath
+   * - query strings: Encoded paths in git URIs
+   *
+   * @param targetStoragePath The absolute path to the target workspace storage directory
+   * @param sourceWorkspacePath The absolute path to the source workspace folder
+   * @param targetWorkspacePath The absolute path to the target workspace folder
+   */
+  private static async updateWorkspacePaths(
+    targetStoragePath: string,
+    sourceWorkspacePath: string,
+    targetWorkspacePath: string
+  ): Promise<void> {
+    const dbPath = path.join(targetStoragePath, 'state.vscdb');
+
+    if (!(await fs.pathExists(dbPath))) {
+      DR.logger.verbose.info('No state.vscdb file found to update');
+      return;
+    }
+
+    try {
+      const db = new Database(dbPath);
+
+      try {
+        // Get the editor memento which contains all open tabs
+        const row = db
+          .prepare('SELECT value FROM ItemTable WHERE key = ?')
+          .get('memento/workbench.parts.editor') as
+          | { value: Buffer }
+          | undefined;
+
+        if (!row) {
+          DR.logger.verbose.info('No editor memento found in database');
+          return;
+        }
+
+        // Parse the JSON data - type is intentionally unknown as the structure
+        // is complex and we only need to perform string replacement
+        const editorState: unknown = JSON.parse(row.value.toString('utf8'));
+
+        // Convert to string to do bulk replacement
+        let stateString = JSON.stringify(editorState);
+
+        // Count replacements for logging
+        const occurrences = (
+          stateString.match(
+            new RegExp(this.escapeRegExp(sourceWorkspacePath), 'g')
+          ) || []
+        ).length;
+
+        if (occurrences === 0) {
+          DR.logger.info('No paths needed updating in workspace state');
+          return;
+        }
+
+        DR.logger.verbose.info(
+          `Updating ${occurrences} path occurrence(s) in workspace state`
+        );
+
+        // Replace all occurrences of the source path with target path
+        // This handles: fsPath, external (file:// URIs), path, and encoded paths in git URIs
+        stateString = stateString.replaceAll(
+          sourceWorkspacePath,
+          targetWorkspacePath
+        );
+
+        // Parse back and update the database
+        const updatedState: unknown = JSON.parse(stateString);
+        const updatedValue = Buffer.from(JSON.stringify(updatedState), 'utf8');
+
+        db.prepare('UPDATE ItemTable SET value = ? WHERE key = ?').run(
+          updatedValue,
+          'memento/workbench.parts.editor'
+        );
+
+        // Force write to disk before closing
+        db.pragma('synchronous = FULL');
+        db.pragma('wal_checkpoint(TRUNCATE)');
+
+        DR.logger.info(
+          'Successfully updated workspace paths in state database'
+        );
+      } finally {
+        // Always close the database, even if an error occurs
+        db.close();
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to update workspace paths in state database: ${ErrorUtils.getErrorString(error)}`
+      );
+    }
+  }
+
+  /**
+   * Escapes special regex characters in a string for use in RegExp constructor.
+   *
+   * @param str The string to escape
+   * @returns The escaped string safe for use in a regex pattern
+   */
+  private static escapeRegExp(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 }
