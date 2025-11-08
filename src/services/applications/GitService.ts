@@ -83,7 +83,7 @@ export default class GitService {
       ? `git worktree add "${targetPath}" ${branchName}`
       : `git worktree add -b ${branchName} "${targetPath}"`;
 
-    const { didComplete, output } = await CLIService.execCmd(command, true);
+    const { didComplete, output } = await CLIService.execCmd(command);
 
     if (!didComplete) {
       throw new Error(`Failed to create worktree: ${output}`);

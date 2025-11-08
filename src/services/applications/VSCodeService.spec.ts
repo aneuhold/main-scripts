@@ -325,7 +325,7 @@ describe('VSCodeService', () => {
       expect(success).toBe(false);
     });
 
-    it('should update workspace paths in state.vscdb when copying', async () => {
+    it('should remove problematic keys in state.vscdb when copying', async () => {
       const testInstanceDir = TestUtils.getTestInstanceDir();
       const sourceDir = path.join(testInstanceDir, 'source-workspace');
       const targetDir = path.join(testInstanceDir, 'target-workspace');
@@ -351,7 +351,7 @@ describe('VSCodeService', () => {
         sourceDir
       );
 
-      // Copy workspace storage - this should trigger path updates
+      // Copy workspace storage - this should clean up problematic keys
       const success = await VSCodeService.copyWorkspaceStorage(
         sourceDir,
         targetDir
@@ -367,42 +367,39 @@ describe('VSCodeService', () => {
         throw new Error('Target storage should be defined');
       }
 
-      // Read the copied database and verify paths were updated
+      // Read the copied database and verify problematic keys were removed
       const copiedDbPath = path.join(targetStorage.storagePath, 'state.vscdb');
       expect(await pathExists(copiedDbPath)).toBe(true);
 
       const db = new Database(copiedDbPath, { readonly: true });
 
       try {
-        const row = db
+        // Verify that problematic keys were removed
+        const editorRow = db
           .prepare('SELECT value FROM ItemTable WHERE key = ?')
           .get('memento/workbench.parts.editor') as
           | { value: Buffer }
           | undefined;
 
-        expect(row).toBeDefined();
+        expect(editorRow).toBeUndefined();
 
-        if (!row) {
-          throw new Error('Editor memento should exist');
-        }
+        const historyRow = db
+          .prepare('SELECT value FROM ItemTable WHERE key = ?')
+          .get('history.entries') as { value: Buffer } | undefined;
 
-        const editorState = row.value.toString('utf8');
+        expect(historyRow).toBeUndefined();
 
-        // The paths should NOT contain the source directory path
-        expect(editorState).not.toContain(sourceDir);
+        const searchHistoryRow = db
+          .prepare('SELECT value FROM ItemTable WHERE key = ?')
+          .get('workbench.search.history') as { value: Buffer } | undefined;
 
-        // The paths SHOULD contain the target directory path
-        expect(editorState).toContain(targetDir);
+        expect(searchHistoryRow).toBeUndefined();
 
-        // Count occurrences to verify multiple paths were updated
-        const targetOccurrences = (
-          editorState.match(
-            new RegExp(targetDir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')
-          ) || []
-        ).length;
+        const findHistoryRow = db
+          .prepare('SELECT value FROM ItemTable WHERE key = ?')
+          .get('workbench.find.history') as { value: Buffer } | undefined;
 
-        // Should have multiple occurrences (fsPath, external, path fields)
-        expect(targetOccurrences).toBeGreaterThan(3);
+        expect(findHistoryRow).toBeUndefined();
       } finally {
         db.close();
       }
