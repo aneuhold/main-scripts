@@ -1,3 +1,4 @@
+import Database from 'better-sqlite3';
 import {
   ensureDir,
   pathExists,
@@ -322,6 +323,89 @@ describe('VSCodeService', () => {
       );
 
       expect(success).toBe(false);
+    });
+
+    it('should update workspace paths in state.vscdb when copying', async () => {
+      const testInstanceDir = TestUtils.getTestInstanceDir();
+      const sourceDir = path.join(testInstanceDir, 'source-workspace');
+      const targetDir = path.join(testInstanceDir, 'target-workspace');
+
+      await ensureDir(sourceDir);
+      await ensureDir(targetDir);
+
+      // Create source workspace storage
+      const sourceStorageHash = 'source-path-update';
+      const sourceStoragePath = path.join(
+        mockStorageBaseDir,
+        sourceStorageHash
+      );
+      await ensureDir(sourceStoragePath);
+      await writeJson(path.join(sourceStoragePath, 'workspace.json'), {
+        folder: `file://${sourceDir}`
+      });
+
+      // Create a modified copy of the golden DB with paths pointing to sourceDir
+      const testDbPath = path.join(sourceStoragePath, 'state.vscdb');
+      await TestUtils.createVSCodeStateDbWithReplacedPaths(
+        testDbPath,
+        sourceDir
+      );
+
+      // Copy workspace storage - this should trigger path updates
+      const success = await VSCodeService.copyWorkspaceStorage(
+        sourceDir,
+        targetDir
+      );
+
+      expect(success).toBe(true);
+
+      // Verify target workspace storage was created
+      const targetStorage = await VSCodeService.findWorkspaceStorage(targetDir);
+      expect(targetStorage).toBeDefined();
+
+      if (!targetStorage) {
+        throw new Error('Target storage should be defined');
+      }
+
+      // Read the copied database and verify paths were updated
+      const copiedDbPath = path.join(targetStorage.storagePath, 'state.vscdb');
+      expect(await pathExists(copiedDbPath)).toBe(true);
+
+      const db = new Database(copiedDbPath, { readonly: true });
+
+      try {
+        const row = db
+          .prepare('SELECT value FROM ItemTable WHERE key = ?')
+          .get('memento/workbench.parts.editor') as
+          | { value: Buffer }
+          | undefined;
+
+        expect(row).toBeDefined();
+
+        if (!row) {
+          throw new Error('Editor memento should exist');
+        }
+
+        const editorState = row.value.toString('utf8');
+
+        // The paths should NOT contain the source directory path
+        expect(editorState).not.toContain(sourceDir);
+
+        // The paths SHOULD contain the target directory path
+        expect(editorState).toContain(targetDir);
+
+        // Count occurrences to verify multiple paths were updated
+        const targetOccurrences = (
+          editorState.match(
+            new RegExp(targetDir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')
+          ) || []
+        ).length;
+
+        // Should have multiple occurrences (fsPath, external, path fields)
+        expect(targetOccurrences).toBeGreaterThan(3);
+      } finally {
+        db.close();
+      }
     });
   });
 
