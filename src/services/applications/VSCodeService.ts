@@ -1,4 +1,5 @@
 import { DR, ErrorUtils } from '@aneuhold/core-ts-lib';
+import Database from 'better-sqlite3';
 import { createHash } from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
@@ -78,6 +79,29 @@ export default class VSCodeService {
     [EditorType.Cursor]: 'Cursor',
     [EditorType.Windsurf]: 'Windsurf'
   };
+
+  /**
+   * Keys to remove from state.vscdb when copying workspace storage.
+   * These are removed to prevent issues with stale state when creating worktrees.
+   */
+  private static readonly STATE_KEYS_TO_REMOVE = [
+    {
+      key: 'memento/workbench.parts.editor',
+      reason: 'Open tabs and editor layout - will be empty on fresh workspace'
+    },
+    {
+      key: 'history.entries',
+      reason: 'File history - will be regenerated as files are opened'
+    },
+    {
+      key: 'workbench.search.history',
+      reason: 'Search history - not needed in new worktree'
+    },
+    {
+      key: 'workbench.find.history',
+      reason: 'Find history - not needed in new worktree'
+    }
+  ] as const;
 
   private static async getEditorCommand(): Promise<string> {
     const config = await ConfigService.loadConfig();
@@ -324,6 +348,9 @@ export default class VSCodeService {
    * - Extension-specific subdirectories: Per-extension workspace storage
    * - Other workspace-specific files
    *
+   * Note: Certain keys are automatically removed from state.vscdb to prevent
+   * issues with stale state (tabs, file history, search history). See STATE_KEYS_TO_REMOVE.
+   *
    * This is particularly useful when creating git worktrees, as it allows
    * the new worktree to inherit the same VS Code configuration as the original.
    *
@@ -399,6 +426,9 @@ export default class VSCodeService {
         targetPath: targetStorage.storagePath,
         exclude
       });
+
+      // Clean up problematic state keys that can cause issues in worktrees
+      await this.cleanupStateDatabase(targetStorage.storagePath);
 
       DR.logger.success(
         'Successfully copied VS Code workspace storage to worktree'
@@ -777,5 +807,62 @@ export default class VSCodeService {
    */
   private static pathToUri(filePath: string): string {
     return `file://${filePath}`;
+  }
+
+  /**
+   * Cleans up problematic keys from the state.vscdb database when copying workspace storage.
+   *
+   * This removes keys that can cause issues or confusion in a new worktree:
+   * - Open tabs and editor layout (will start fresh)
+   * - File history (will be regenerated)
+   * - Search and find history (not needed in new worktree)
+   *
+   * See STATE_KEYS_TO_REMOVE for the complete list.
+   *
+   * @param targetStoragePath The absolute path to the target workspace storage directory
+   */
+  private static async cleanupStateDatabase(
+    targetStoragePath: string
+  ): Promise<void> {
+    const dbPath = path.join(targetStoragePath, 'state.vscdb');
+
+    if (!(await fs.pathExists(dbPath))) {
+      return;
+    }
+
+    try {
+      const db = new Database(dbPath);
+
+      try {
+        let removedCount = 0;
+
+        // Remove keys defined in STATE_KEYS_TO_REMOVE
+        for (const { key, reason } of this.STATE_KEYS_TO_REMOVE) {
+          const result = db
+            .prepare('DELETE FROM ItemTable WHERE key = ?')
+            .run(key);
+          if (result.changes > 0) {
+            removedCount++;
+            DR.logger.info(`Removed '${key}': ${reason}`);
+          }
+        }
+
+        if (removedCount > 0) {
+          DR.logger.info(
+            `Cleaned up ${removedCount} state key(s) from workspace storage`
+          );
+        }
+
+        // Force write to disk
+        db.pragma('synchronous = FULL');
+        db.pragma('wal_checkpoint(TRUNCATE)');
+      } finally {
+        db.close();
+      }
+    } catch (error) {
+      DR.logger.warn(
+        `Failed to clean up state database: ${ErrorUtils.getErrorString(error)}`
+      );
+    }
   }
 }

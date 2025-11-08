@@ -2,7 +2,7 @@
   "name": "@aneuhold/main-scripts",
   "author": "Anton G. Neuhold Jr.",
   "license": "MIT",
-  "version": "2.7.1",
+  "version": "2.7.2",
   "description": "Main scripts for use personally on any platform",
   "packageManager": "pnpm@10.20.0",
   "type": "module",
@@ -40,6 +40,7 @@
   "dependencies": {
     "@aneuhold/core-ts-lib": "^2.3.5",
     "@inquirer/prompts": "^7.9.0",
+    "better-sqlite3": "^12.4.1",
     "commander": "^14.0.2",
     "cosmiconfig": "^9.0.0",
     "fluent-ffmpeg": "^2.1.3",
@@ -48,6 +49,7 @@
   },
   "devDependencies": {
     "@aneuhold/eslint-config": "^1.3.14",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/fluent-ffmpeg": "^2.1.28",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^24.9.2",
@@ -60,5 +62,10 @@
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vitest": "^4.0.6"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3"
+    ]
   }
 }

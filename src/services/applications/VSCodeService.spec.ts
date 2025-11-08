@@ -1,3 +1,4 @@
+import Database from 'better-sqlite3';
 import {
   ensureDir,
   pathExists,
@@ -322,6 +323,86 @@ describe('VSCodeService', () => {
       );
 
       expect(success).toBe(false);
+    });
+
+    it('should remove problematic keys in state.vscdb when copying', async () => {
+      const testInstanceDir = TestUtils.getTestInstanceDir();
+      const sourceDir = path.join(testInstanceDir, 'source-workspace');
+      const targetDir = path.join(testInstanceDir, 'target-workspace');
+
+      await ensureDir(sourceDir);
+      await ensureDir(targetDir);
+
+      // Create source workspace storage
+      const sourceStorageHash = 'source-path-update';
+      const sourceStoragePath = path.join(
+        mockStorageBaseDir,
+        sourceStorageHash
+      );
+      await ensureDir(sourceStoragePath);
+      await writeJson(path.join(sourceStoragePath, 'workspace.json'), {
+        folder: `file://${sourceDir}`
+      });
+
+      // Create a modified copy of the golden DB with paths pointing to sourceDir
+      const testDbPath = path.join(sourceStoragePath, 'state.vscdb');
+      await TestUtils.createVSCodeStateDbWithReplacedPaths(
+        testDbPath,
+        sourceDir
+      );
+
+      // Copy workspace storage - this should clean up problematic keys
+      const success = await VSCodeService.copyWorkspaceStorage(
+        sourceDir,
+        targetDir
+      );
+
+      expect(success).toBe(true);
+
+      // Verify target workspace storage was created
+      const targetStorage = await VSCodeService.findWorkspaceStorage(targetDir);
+      expect(targetStorage).toBeDefined();
+
+      if (!targetStorage) {
+        throw new Error('Target storage should be defined');
+      }
+
+      // Read the copied database and verify problematic keys were removed
+      const copiedDbPath = path.join(targetStorage.storagePath, 'state.vscdb');
+      expect(await pathExists(copiedDbPath)).toBe(true);
+
+      const db = new Database(copiedDbPath, { readonly: true });
+
+      try {
+        // Verify that problematic keys were removed
+        const editorRow = db
+          .prepare('SELECT value FROM ItemTable WHERE key = ?')
+          .get('memento/workbench.parts.editor') as
+          | { value: Buffer }
+          | undefined;
+
+        expect(editorRow).toBeUndefined();
+
+        const historyRow = db
+          .prepare('SELECT value FROM ItemTable WHERE key = ?')
+          .get('history.entries') as { value: Buffer } | undefined;
+
+        expect(historyRow).toBeUndefined();
+
+        const searchHistoryRow = db
+          .prepare('SELECT value FROM ItemTable WHERE key = ?')
+          .get('workbench.search.history') as { value: Buffer } | undefined;
+
+        expect(searchHistoryRow).toBeUndefined();
+
+        const findHistoryRow = db
+          .prepare('SELECT value FROM ItemTable WHERE key = ?')
+          .get('workbench.find.history') as { value: Buffer } | undefined;
+
+        expect(findHistoryRow).toBeUndefined();
+      } finally {
+        db.close();
+      }
     });
   });
 

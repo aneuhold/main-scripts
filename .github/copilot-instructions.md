@@ -26,6 +26,9 @@
 - Inline types only for single properties; otherwise declare separate `type` with PascalCase
 - File names match primary exported type (e.g., `VideoSeriesInfo.ts` exports `VideoSeriesInfo`)
 - Use TypeScript `enum` (not `const enum` or union types) with PascalCase for names and values
+- NEVER use `any` type; prefer `unknown` but only if absolutely necessary.
+- Avoid using `as` type assertions; refactor code to ensure correct typing instead. Use generics where applicable.
+- Try to default to letting TypeScript infer types instead of explicit annotations on return types. Variables should have explicit types.
 
 ### Code Style
 

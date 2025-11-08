@@ -1,3 +1,4 @@
+import Database from 'better-sqlite3';
 import { randomUUID } from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
@@ -146,5 +147,59 @@ export class TestUtils {
     };
     await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
     return packageJsonPath;
+  }
+
+  /**
+   * Creates a copy of the golden VS Code state.vscdb fixture with paths replaced.
+   *
+   * This is useful for testing VS Code workspace storage functionality. It copies
+   * the golden database from test-utils/fixtures/main-scripts-state.vscdb and
+   * replaces all occurrences of the original workspace path with a new path.
+   *
+   * @param targetPath - Where to save the modified database copy
+   * @param newPath - The new workspace path to use as replacement
+   */
+  static async createVSCodeStateDbWithReplacedPaths(
+    targetPath: string,
+    newPath: string
+  ): Promise<void> {
+    const originalPath = '/Users/aneuhold/Development/GithubRepos/main-scripts';
+    const fixtureDbPath = path.join(
+      __dirname,
+      'fixtures',
+      'main-scripts-state.vscdb'
+    );
+
+    // Copy the golden database to target
+    await fs.copy(fixtureDbPath, targetPath);
+
+    // Open the database and replace paths
+    const db = new Database(targetPath);
+
+    try {
+      const row = db
+        .prepare('SELECT value FROM ItemTable WHERE key = ?')
+        .get('memento/workbench.parts.editor') as { value: Buffer } | undefined;
+
+      if (row) {
+        const editorState: unknown = JSON.parse(row.value.toString('utf8'));
+        let stateString = JSON.stringify(editorState);
+
+        // Replace all occurrences of original path with new path
+        stateString = stateString.replaceAll(originalPath, newPath);
+
+        const updatedState: unknown = JSON.parse(stateString);
+        const updatedValue = Buffer.from(JSON.stringify(updatedState), 'utf8');
+
+        db.prepare('UPDATE ItemTable SET value = ? WHERE key = ?').run(
+          updatedValue,
+          'memento/workbench.parts.editor'
+        );
+
+        db.pragma('synchronous = FULL');
+      }
+    } finally {
+      db.close();
+    }
   }
 }
