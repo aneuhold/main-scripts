@@ -4,6 +4,7 @@ export type PackageOptions = {
   alternativeNames?: string[];
   originalString?: string;
   newString?: string;
+  allowSlowTypes?: boolean;
 };
 
 export enum PackageAction {
@@ -23,13 +24,15 @@ export enum PackageAction {
  * @param alternativePackageNames Optional alternative package names to use.
  * @param originalString For testStringReplacement: the original string to replace.
  * @param newString For testStringReplacement: the new string to replace it with.
+ * @param allowSlowTypes For validateJsr: whether to allow slow types. Defaults to false.
  */
 export default async function pkg(
   packageAction: string,
   versionType?: string,
   alternativePackageNames?: string[],
   originalString?: string,
-  newString?: string
+  newString?: string,
+  allowSlowTypes?: boolean
 ): Promise<void> {
   if (!(packageAction in PackageAction)) {
     DR.logger.error(`The package action ${packageAction} is not supported.`);
@@ -42,7 +45,7 @@ export default async function pkg(
 
   switch (packageAction as PackageAction) {
     case PackageAction.validateJsr:
-      await validateJsr(alternativePackageNames);
+      await validateJsr(alternativePackageNames, allowSlowTypes);
       break;
     case PackageAction.publishJsr:
       await publishJsr(alternativePackageNames);
@@ -68,9 +71,16 @@ export default async function pkg(
  * Validates the JSR package for publishing.
  *
  * @param alternativePackageNames Optional alternative package names to validate.
+ * @param allowSlowTypes Whether to allow slow types. Defaults to false.
  */
-async function validateJsr(alternativePackageNames?: string[]) {
-  await PackageService.validateJsrPublish(alternativePackageNames);
+async function validateJsr(
+  alternativePackageNames?: string[],
+  allowSlowTypes: boolean = false
+) {
+  await PackageService.validateJsrPublish(
+    alternativePackageNames,
+    allowSlowTypes
+  );
 }
 
 /**

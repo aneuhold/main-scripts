@@ -168,6 +168,10 @@ program
     '-n, --new-string <string>',
     'New string for testStringReplacement action'
   )
+  .option(
+    '--allow-slow-types',
+    'For validateJsr: allow slow types (defaults to false)'
+  )
   .action(
     async (
       packageAction: string,
@@ -179,7 +183,8 @@ program
         versionType,
         options.alternativeNames,
         options.originalString,
-        options.newString
+        options.newString,
+        options.allowSlowTypes
       );
     }
   );
