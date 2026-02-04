@@ -283,6 +283,6 @@ async function createInitialCommit(repoPath: string): Promise<void> {
  * @param repoPath Path where the git repository should be initialized
  */
 async function initializeGitRepo(repoPath: string): Promise<void> {
-  await CLIService.execCmd('git init', false, repoPath);
+  await CLIService.execCmd('git init -b main', false, repoPath);
   await createInitialCommit(repoPath);
 }
