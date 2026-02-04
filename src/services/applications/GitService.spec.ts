@@ -173,7 +173,7 @@ describe('GitService', () => {
       const testInstanceDir = TestUtils.getTestInstanceDir();
       const parentRepoPath = `${testInstanceDir}/parent-repo`;
       const childRepoPath = `${testInstanceDir}/child-repo`;
-      const relativeSubmodulePath = `${parentRepoPath}/submodule`;
+      const relativeSubmodulePath = `${parentRepoPath}/submodule2`;
 
       const originalCwd = process.cwd();
 
@@ -195,7 +195,7 @@ describe('GitService', () => {
         // Add child repository as a submodule to parent
         const { didComplete: submoduleAdded, output: submoduleOutput } =
           await CLIService.execCmd(
-            `git submodule add "${childRepoPath}" submodule`
+            `git submodule add "${childRepoPath}" submodule2`
           );
 
         if (!submoduleAdded) {
