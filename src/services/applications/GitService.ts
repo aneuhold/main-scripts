@@ -127,7 +127,7 @@ export default class GitService {
           // First worktree is always the main one. See docs for more info.
           // https://git-scm.com/docs/git-worktree
           if (worktrees.length === 0) {
-            currentWorktree.isMain = true;
+            applyMainWorktreeUpdates(currentWorktree as WorktreeInfo);
           }
           worktrees.push(currentWorktree as WorktreeInfo);
           currentWorktree = {};
@@ -138,12 +138,35 @@ export default class GitService {
     // Don't forget the last worktree
     if (currentWorktree.path) {
       if (worktrees.length === 0) {
-        currentWorktree.isMain = true;
+        applyMainWorktreeUpdates(currentWorktree as WorktreeInfo);
       }
       worktrees.push(currentWorktree as WorktreeInfo);
     }
 
     return worktrees;
+
+    /**
+     * Applies updates to mark the current worktree as main and adjust its path if needed.
+     *
+     * @param worktree The current worktree being processed
+     */
+    function applyMainWorktreeUpdates(worktree: WorktreeInfo) {
+      currentWorktree.isMain = true;
+
+      // The main work tree could be part of a submodule, but as part of testing, it
+      // seems to only ever be the main worktree that has this path structure. So it is the
+      // exception.
+      const gitModulesPathSegment = '/.git/modules/';
+      if (worktree.path.includes(gitModulesPathSegment)) {
+        // Get the last index of the segment to handle nested cases
+        const pathIndexStart = worktree.path.lastIndexOf(gitModulesPathSegment);
+        const before = worktree.path.substring(0, pathIndexStart);
+        const after = worktree.path.substring(
+          pathIndexStart + gitModulesPathSegment.length
+        );
+        worktree.path = path.join(before, after);
+      }
+    }
   }
 
   /**

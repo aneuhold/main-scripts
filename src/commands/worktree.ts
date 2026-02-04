@@ -54,17 +54,13 @@ export async function addWorktree(branchName?: string): Promise<void> {
     // Create worktree with new branch
     await GitService.addWorktree(targetBranch, targetPath);
 
-    // Save original directory before changing - this is needed for copying files
-    // because getMainWorktreePath() returns the wrong path for git submodules
-    const originalDir = process.cwd();
-
     // Change to the new worktree directory
     process.chdir(targetPath);
     DR.logger.info(`Changed directory to: ${targetPath}`);
 
     // Copy extra files if configured
     if (project?.worktreeConfig?.extraFilesToCopy) {
-      await copyExtraFiles(project.worktreeConfig.extraFilesToCopy, originalDir);
+      await copyExtraFiles(project.worktreeConfig.extraFilesToCopy);
     }
 
     // Copy VS Code workspace storage from the source workspace to the worktree
@@ -161,27 +157,24 @@ async function getSmartDefaultBranch(): Promise<string> {
 }
 
 /**
- * Copies extra files from the source directory to the current worktree.
+ * Copies extra files from the main project directory to the worktree.
  *
  * @param patterns File names or glob patterns to copy
- * @param sourceDir The source directory to copy files from
  */
-async function copyExtraFiles(
-  patterns: string[],
-  sourceDir: string
-): Promise<void> {
+async function copyExtraFiles(patterns: string[]): Promise<void> {
   try {
+    const mainWorktreePath = await GitService.getMainWorktreePath();
     const currentPath = process.cwd();
 
     DR.logger.info('Copying extra files...');
 
-    // Get all files from source directory
-    const allFiles = await FileSystemService.getAllFilePaths(sourceDir);
+    // Get all files from main worktree
+    const allFiles = await FileSystemService.getAllFilePaths(mainWorktreePath);
 
     // Get matching files using GlobMatchingService
     const matchingFiles = GlobMatchingService.getMatchingFiles(
       allFiles,
-      sourceDir,
+      mainWorktreePath,
       patterns,
       []
     );
@@ -193,7 +186,7 @@ async function copyExtraFiles(
 
     for (const sourcePath of matchingFiles) {
       try {
-        const relativePath = path.relative(sourceDir, sourcePath);
+        const relativePath = path.relative(mainWorktreePath, sourcePath);
         const destPath = path.join(currentPath, relativePath);
 
         DR.logger.verbose.info(`Copying ${relativePath}...`);
