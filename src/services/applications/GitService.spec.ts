@@ -284,6 +284,8 @@ async function createInitialCommit(repoPath: string): Promise<void> {
  */
 async function initializeGitRepo(repoPath: string): Promise<void> {
   await CLIService.execCmd('git init', false, repoPath);
+  // For some reason the submodule doesn't get created in CI without user config. Really not sure
+  // why as of 2/4/2026.
   await CLIService.execCmd('git config user.name "Test User"', false, repoPath);
   await createInitialCommit(repoPath);
 }
