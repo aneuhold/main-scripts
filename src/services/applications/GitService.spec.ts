@@ -186,15 +186,6 @@ describe('GitService', () => {
         await CLIService.execCmd(`mkdir -p "${childRepoPath}"`);
         await initializeGitRepo(childRepoPath);
 
-        // Verify the child repo has commits before using it as a submodule
-        process.chdir(childRepoPath);
-        const { output: commitCount } = await CLIService.execCmd(
-          'git rev-list --count HEAD'
-        );
-        if (parseInt(commitCount.trim()) === 0) {
-          throw new Error('Child repository has no commits');
-        }
-
         // Enable file protocol for git (needed for local submodules in tests)
         process.chdir(parentRepoPath);
         await CLIService.execCmd(
@@ -292,13 +283,6 @@ async function createInitialCommit(repoPath: string): Promise<void> {
  * @param repoPath Path where the git repository should be initialized
  */
 async function initializeGitRepo(repoPath: string): Promise<void> {
-  await CLIService.execCmd('git init -b main', false, repoPath);
-  // Configure git user (required for commits in CI environments)
-  await CLIService.execCmd(
-    'git config user.email "test@example.com"',
-    false,
-    repoPath
-  );
-  await CLIService.execCmd('git config user.name "Test User"', false, repoPath);
+  await CLIService.execCmd('git init', false, repoPath);
   await createInitialCommit(repoPath);
 }
