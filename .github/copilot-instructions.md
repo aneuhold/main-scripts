@@ -37,3 +37,7 @@
 - Class method order: public, protected, private
 - No underscore prefixes for private methods
 - `async`/`await` over `.then()`
+
+### Tests
+
+- Use `src/tests/utils/TestUtils.ts` for common test helpers
