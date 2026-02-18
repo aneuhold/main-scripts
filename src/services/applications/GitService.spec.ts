@@ -201,7 +201,7 @@ describe('GitService', () => {
         await CLIService.execCmd(`mkdir -p "${parentRepoPath}/repos"`);
         const { didComplete: submoduleAdded, output: submoduleOutput } =
           await CLIService.execCmd(
-            `git -c protocol.file.allow=always submodule add --name rxp "${childRepoPath}" repos/rxp`
+            `git submodule add --name rxp "${childRepoPath}" repos/rxp`
           );
 
         if (!submoduleAdded) {
