@@ -12,7 +12,7 @@ export default class BrowserService {
    * @param url The URL to open.
    */
   static async openUrl(url: string): Promise<void> {
-    let command = '';
+    let command: string;
     const os = CurrentEnv.os;
 
     if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
