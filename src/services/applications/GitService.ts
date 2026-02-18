@@ -127,7 +127,7 @@ export default class GitService {
           // First worktree is always the main one. See docs for more info.
           // https://git-scm.com/docs/git-worktree
           if (worktrees.length === 0) {
-            applyMainWorktreeUpdates(currentWorktree as WorktreeInfo);
+            currentWorktree.isMain = true;
           }
           worktrees.push(currentWorktree as WorktreeInfo);
           currentWorktree = {};
@@ -138,35 +138,26 @@ export default class GitService {
     // Don't forget the last worktree
     if (currentWorktree.path) {
       if (worktrees.length === 0) {
-        applyMainWorktreeUpdates(currentWorktree as WorktreeInfo);
+        currentWorktree.isMain = true;
       }
       worktrees.push(currentWorktree as WorktreeInfo);
     }
 
-    return worktrees;
-
-    /**
-     * Applies updates to mark the current worktree as main and adjust its path if needed.
-     *
-     * @param worktree The current worktree being processed
-     */
-    function applyMainWorktreeUpdates(worktree: WorktreeInfo) {
-      currentWorktree.isMain = true;
-
-      // The main work tree could be part of a submodule, but as part of testing, it
-      // seems to only ever be the main worktree that has this path structure. So it is the
-      // exception.
-      const gitModulesPathSegment = '/.git/modules/';
-      if (worktree.path.includes(gitModulesPathSegment)) {
-        // Get the last index of the segment to handle nested cases
-        const pathIndexStart = worktree.path.lastIndexOf(gitModulesPathSegment);
-        const before = worktree.path.substring(0, pathIndexStart);
-        const after = worktree.path.substring(
-          pathIndexStart + gitModulesPathSegment.length
-        );
-        worktree.path = path.join(before, after);
+    // Fix up the main worktree path if it's inside a submodule's .git/modules
+    // directory. The submodule name used in .git/modules/<name> doesn't
+    // necessarily match the submodule's actual working directory path, so we
+    // use git's core.worktree config to resolve it reliably.
+    const mainWorktree = worktrees.find((wt) => wt.isMain);
+    if (mainWorktree && mainWorktree.path.includes('/.git/modules/')) {
+      const { didComplete, output } = await CLIService.execCmd(
+        `git --git-dir="${mainWorktree.path}" config core.worktree`
+      );
+      if (didComplete && output.trim()) {
+        mainWorktree.path = path.resolve(mainWorktree.path, output.trim());
       }
     }
+
+    return worktrees;
   }
 
   /**

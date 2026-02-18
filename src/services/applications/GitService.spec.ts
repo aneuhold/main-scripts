@@ -169,11 +169,14 @@ describe('GitService', () => {
       }
     });
 
-    it('should return the correct main worktree path within a git submodule', async () => {
+    it('should return the correct main worktree path within a git submodule whose name differs from its path', async () => {
       const testInstanceDir = TestUtils.getTestInstanceDir();
       const parentRepoPath = `${testInstanceDir}/parent-repo`;
       const childRepoPath = `${testInstanceDir}/child-repo`;
-      const relativeSubmodulePath = `${parentRepoPath}/submodule`;
+      // The submodule lives at repos/rxp but git stores its data under
+      // .git/modules/rxp (using the submodule name, not the path). This
+      // mismatch is what caused the original bug.
+      const submodulePath = `${parentRepoPath}/repos/rxp`;
 
       const originalCwd = process.cwd();
 
@@ -192,10 +195,13 @@ describe('GitService', () => {
           'git config --global protocol.file.allow always'
         );
 
-        // Add child repository as a submodule to parent
+        // Add child repository as a submodule with a name ("rxp") that differs
+        // from its path ("repos/rxp"). This reproduces the real-world scenario
+        // where .git/modules/rxp != repos/rxp.
+        await CLIService.execCmd(`mkdir -p "${parentRepoPath}/repos"`);
         const { didComplete: submoduleAdded, output: submoduleOutput } =
           await CLIService.execCmd(
-            `git submodule add "${childRepoPath}" submodule`
+            `git -c protocol.file.allow=always submodule add --name rxp "${childRepoPath}" repos/rxp`
           );
 
         if (!submoduleAdded) {
@@ -203,13 +209,13 @@ describe('GitService', () => {
         }
 
         // Verify submodule directory exists before committing
-        const submoduleExists = await exists(relativeSubmodulePath);
+        const submoduleExists = await exists(submodulePath);
         expect(submoduleExists).toBe(true);
 
         await CLIService.execCmd('git commit -m "Add submodule"');
 
         // Navigate into the submodule
-        process.chdir(relativeSubmodulePath);
+        process.chdir(submodulePath);
 
         // Verify we're in a git repository
         const { didComplete: isGitRepo } = await CLIService.execCmd(
@@ -220,11 +226,10 @@ describe('GitService', () => {
         // Get main worktree path from within the submodule
         // Should return the actual working directory path, not the .git/modules path
         const mainPath = await GitService.getMainWorktreePath();
-        expect(mainPath).toBe(relativeSubmodulePath);
+        expect(mainPath).toBe(submodulePath);
 
-        // Create a worktree inside parent-repo as a sibling to the submodule
-        // (this matches how the CLI actually works when in a submodule)
-        const worktreePath = `${parentRepoPath}/submodule-wt-test`;
+        // Create a worktree as a sibling to the submodule
+        const worktreePath = `${parentRepoPath}/repos/rxp-wt-test`;
         await GitService.addWorktree('test', worktreePath);
 
         // Verify worktrees were created correctly
@@ -234,18 +239,18 @@ describe('GitService', () => {
         // Verify the main worktree is identified correctly with the converted path
         const mainWorktree = worktrees.find((wt) => wt.isMain);
         expect(mainWorktree).toBeDefined();
-        expect(mainWorktree?.path).toBe(relativeSubmodulePath);
+        expect(mainWorktree?.path).toBe(submodulePath);
 
         // Verify git's actual working directory matches what we expect
         const { output: actualWorkingDir } = await CLIService.execCmd(
           'git rev-parse --show-toplevel'
         );
-        expect(actualWorkingDir.trim()).toBe(relativeSubmodulePath);
+        expect(actualWorkingDir.trim()).toBe(submodulePath);
 
         // Navigate to the worktree and verify getMainWorktreePath still works
         process.chdir(worktreePath);
         const mainPathFromWorktree = await GitService.getMainWorktreePath();
-        expect(mainPathFromWorktree).toBe(relativeSubmodulePath);
+        expect(mainPathFromWorktree).toBe(submodulePath);
 
         // Verify the worktree is not marked as main
         const testWorktree = worktrees.find((wt) => wt.branch === 'test');
