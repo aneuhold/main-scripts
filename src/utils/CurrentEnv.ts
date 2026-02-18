@@ -98,7 +98,7 @@ export default class CurrentEnv {
    * [dotfiles repo](https://github.com/aneuhold/dotfiles).
    */
   public static async runStartupScript(): Promise<void> {
-    let cmd = '';
+    let cmd: string;
     if (CurrentEnv.os === OperatingSystemType.Windows) {
       // & says to powershell that you actually want to run the script in the
       // quotes afterwards

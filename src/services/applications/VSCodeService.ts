@@ -290,7 +290,8 @@ export default class VSCodeService {
       };
     } catch (error) {
       throw new Error(
-        `Failed to create workspace storage: ${ErrorUtils.getErrorString(error)}`
+        `Failed to create workspace storage: ${ErrorUtils.getErrorString(error)}`,
+        { cause: error }
       );
     }
   }
