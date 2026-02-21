@@ -2,7 +2,7 @@
   "name": "@aneuhold/main-scripts",
   "author": "Anton G. Neuhold Jr.",
   "license": "MIT",
-  "version": "2.8.2",
+  "version": "2.8.3",
   "description": "Main scripts for use personally on any platform",
   "packageManager": "pnpm@10.20.0",
   "type": "module",
@@ -38,7 +38,7 @@
     "Node.js"
   ],
   "dependencies": {
-    "@aneuhold/core-ts-lib": "^2.3.17",
+    "@aneuhold/core-ts-lib": "^2.3.18",
     "@inquirer/prompts": "^8.2.1",
     "better-sqlite3": "^12.6.2",
     "commander": "^14.0.3",
