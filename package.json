@@ -12,6 +12,7 @@
     "build": "rimraf lib && pnpm build:without-rimraf",
     "build:without-rimraf": "tsc --project tsconfig.build.json && shx cp package.json lib/package.json",
     "lint": "eslint",
+    "check": "tsc --noEmit",
     "test": "vitest run",
     "upgrade:core": "pnpm update '@aneuhold/*' --latest",
     "upgrade:all": "pnpm update --latest",

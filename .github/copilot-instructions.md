@@ -41,3 +41,7 @@
 ### Tests
 
 - Use `src/tests/utils/TestUtils.ts` for common test helpers
+
+## Before Considering a Task Complete
+
+1. Run + fix any issues that come up: `pnpm lint --fix`, `pnpm check`, and `pnpm test`

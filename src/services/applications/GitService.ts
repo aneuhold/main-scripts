@@ -63,7 +63,8 @@ export default class GitService {
 
   /**
    * Creates a new git worktree. If the branch exists, checks it out.
-   * If it doesn't exist, creates a new branch.
+   * If it doesn't exist, creates a new branch. If the branch exists on
+   * the remote, fetches the latest before creating the worktree.
    *
    * @param branchName The name of the branch to checkout or create
    * @param targetPath The path where the worktree should be created
@@ -72,12 +73,33 @@ export default class GitService {
     branchName: string,
     targetPath: string
   ): Promise<void> {
-    // Check if branch exists
+    // Check if branch exists on the remote and fetch if so
+    const checkRemoteCmd = `git ls-remote --heads origin ${branchName}`;
+    const { didComplete: remoteCheckOk, output: remoteOutput } =
+      await CLIService.execCmd(checkRemoteCmd);
+    const branchExistsOnRemote =
+      remoteCheckOk && remoteOutput.trim().length > 0;
+
+    if (branchExistsOnRemote) {
+      DR.logger.info(
+        `Branch '${branchName}' exists on remote, fetching latest...`
+      );
+      const { didComplete: fetchOk } = await CLIService.execCmd(
+        `git fetch origin ${branchName}`
+      );
+      if (!fetchOk) {
+        DR.logger.warn(
+          `Failed to fetch branch '${branchName}' from remote, continuing anyway...`
+        );
+      }
+    }
+
+    // Check if branch exists locally
     const checkBranchCmd = `git show-ref --verify refs/heads/${branchName}`;
     const { didComplete: branchExists } =
       await CLIService.execCmd(checkBranchCmd);
 
-    // Use -b flag only if branch doesn't exist (creates new branch)
+    // Use -b flag only if branch doesn't exist locally (creates new branch)
     // Otherwise, just checkout the existing branch
     const command = branchExists
       ? `git worktree add "${targetPath}" ${branchName}`
