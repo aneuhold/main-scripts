@@ -237,8 +237,10 @@ export async function listWorktrees(): Promise<void> {
 
 /**
  * Removes a worktree using an interactive selection menu.
+ *
+ * @param force Whether to force removal even with uncommitted changes
  */
-export async function removeWorktree(): Promise<void> {
+export async function removeWorktree(force = false): Promise<void> {
   try {
     const worktrees = await GitService.getWorktreesInfo();
 
@@ -264,8 +266,8 @@ export async function removeWorktree(): Promise<void> {
 
     DR.logger.info(`Removing worktree at: ${targetPath}`);
 
-    // Remove worktree (git will handle dirty check)
-    await GitService.removeWorktree(targetPath);
+    // Remove worktree (git will handle dirty check unless --force is used)
+    await GitService.removeWorktree(targetPath, force);
 
     // Also remove the VS Code workspace storage for this worktree
     try {

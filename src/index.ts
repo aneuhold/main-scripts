@@ -264,8 +264,9 @@ worktreeCmd
   .command('remove')
   .alias('rm')
   .description('Remove a worktree (interactive selection)')
-  .action(async () => {
-    await removeWorktree();
+  .option('-f, --force', 'Force removal even with uncommitted changes')
+  .action(async (options: { force?: boolean }) => {
+    await removeWorktree(options.force ?? false);
   });
 
 program
