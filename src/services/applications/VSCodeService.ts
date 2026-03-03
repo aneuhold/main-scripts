@@ -4,6 +4,7 @@ import { createHash } from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
 import CurrentEnv, { OperatingSystemType } from '../../utils/CurrentEnv.js';
+import OsaScriptBuilder from '../../utils/OsaScriptBuilder.js';
 import CLIService from '../CLIService.js';
 import { ConfigService } from '../ConfigService.js';
 import { ProjectConfigService } from '../ProjectConfigService.js';
@@ -71,7 +72,8 @@ export default class VSCodeService {
   };
 
   /**
-   * Directory names for each editor type
+   * Directory names for each editor type.
+   * Also used as macOS process names for System Events AppleScript.
    */
   private static readonly EDITOR_DIR_NAMES: Record<EditorType, string> = {
     [EditorType.VSCode]: 'Code',
@@ -193,6 +195,49 @@ export default class VSCodeService {
 
     DR.logger.success(`Opening ${targetPath} with ${command}...`);
     await CLIService.execCmdWithTimeout(`${command} ${targetPath}`, 4000);
+  }
+
+  /**
+   * Closes the editor window associated with the given workspace folder path.
+   * As of 3/3/2025, this only works with MacOSX.
+   *
+   * @param workspacePath The absolute path to the workspace folder
+   */
+  public static async closeEditorWindow(workspacePath: string): Promise<void> {
+    if (CurrentEnv.os !== OperatingSystemType.MacOSX) {
+      DR.logger.verbose.info(
+        'Closing editor windows is only supported on macOS'
+      );
+      return;
+    }
+
+    const editorType = await this.getEditorType();
+    const processName = this.EDITOR_DIR_NAMES[editorType];
+    const folderName = path.basename(workspacePath);
+
+    const osaScriptBuilder = new OsaScriptBuilder();
+    osaScriptBuilder.addTellBlock({
+      tellCommand: 'application "System Events"',
+      sections: [
+        {
+          tellCommand: `process "${processName}"`,
+          sections: [
+            `repeat with w in (every window whose name contains "${folderName}")`,
+            'click button 1 of w',
+            'end repeat'
+          ]
+        }
+      ]
+    });
+
+    try {
+      await CLIService.execCmd(osaScriptBuilder.getFullCommand());
+      DR.logger.verbose.info(`Closed ${processName} window for: ${folderName}`);
+    } catch {
+      DR.logger.verbose.info(
+        `Could not close ${processName} window (editor may not be running)`
+      );
+    }
   }
 
   /**

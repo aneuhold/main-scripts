@@ -266,6 +266,9 @@ export async function removeWorktree(force = false): Promise<void> {
 
     DR.logger.info(`Removing worktree at: ${targetPath}`);
 
+    // Close the editor window for this worktree
+    await VSCodeService.closeEditorWindow(targetPath);
+
     // Remove worktree (git will handle dirty check unless --force is used)
     await GitService.removeWorktree(targetPath, force);
 
