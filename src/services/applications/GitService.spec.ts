@@ -120,6 +120,127 @@ describe('GitService', () => {
         process.chdir(originalCwd);
       }
     });
+
+    it('should fetch from remote before creating worktree when branch exists on remote', async () => {
+      const testInstanceDir = TestUtils.getTestInstanceDir();
+      const localRepoPath = `${testInstanceDir}/local-repo`;
+      const remoteRepoPath = await initializeGitRepoWithRemote(localRepoPath);
+
+      // Create a branch with a unique file and push it to the remote
+      await CLIService.execCmd(
+        'git checkout -b remote-feature',
+        false,
+        localRepoPath
+      );
+      await CLIService.execCmd(
+        'echo "feature work" > feature.txt',
+        false,
+        localRepoPath
+      );
+      await CLIService.execCmd('git add .', false, localRepoPath);
+      await CLIService.execCmd(
+        'git commit -m "Feature commit"',
+        false,
+        localRepoPath
+      );
+      await CLIService.execCmd(
+        'git push origin remote-feature',
+        false,
+        localRepoPath
+      );
+
+      // Clone the remote (simulating a fresh clone without the local branch)
+      const cloneRepoPath = `${testInstanceDir}/clone-repo`;
+      await CLIService.execCmd(
+        `git clone "${remoteRepoPath}" "${cloneRepoPath}"`
+      );
+
+      const originalCwd = process.cwd();
+      process.chdir(cloneRepoPath);
+
+      try {
+        // Create worktree - this should fetch from remote first
+        const worktreePath = `${cloneRepoPath}-wt-remote-feature`;
+        await GitService.addWorktree('remote-feature', worktreePath);
+
+        // Verify the worktree was created with the remote branch's content
+        const worktrees = await GitService.getWorktreesInfo();
+        const featureWorktree = worktrees.find(
+          (wt) => wt.branch === 'remote-feature'
+        );
+        expect(featureWorktree).toBeDefined();
+        expect(featureWorktree?.path).toBe(worktreePath);
+
+        // Verify the file from the remote branch is present
+        const { didComplete: fileExists } = await CLIService.execCmd(
+          `test -f "${worktreePath}/feature.txt"`
+        );
+        expect(fileExists).toBe(true);
+      } finally {
+        process.chdir(originalCwd);
+      }
+    });
+  });
+
+  describe('removeWorktree', () => {
+    it('should remove a worktree', async () => {
+      const testInstanceDir = TestUtils.getTestInstanceDir();
+      await initializeGitRepo(testInstanceDir);
+
+      const originalCwd = process.cwd();
+      process.chdir(testInstanceDir);
+
+      try {
+        const worktreePath = `${testInstanceDir}-wt-to-remove`;
+        await GitService.addWorktree('to-remove', worktreePath);
+
+        // Verify it exists
+        let worktrees = await GitService.getWorktreesInfo();
+        expect(worktrees.length).toBe(2);
+
+        // Remove it
+        await GitService.removeWorktree(worktreePath);
+
+        worktrees = await GitService.getWorktreesInfo();
+        expect(worktrees.length).toBe(1);
+        expect(worktrees[0].isMain).toBe(true);
+      } finally {
+        process.chdir(originalCwd);
+      }
+    });
+
+    it('should force remove a worktree with uncommitted changes', async () => {
+      const testInstanceDir = TestUtils.getTestInstanceDir();
+      await initializeGitRepo(testInstanceDir);
+
+      const originalCwd = process.cwd();
+      process.chdir(testInstanceDir);
+
+      try {
+        const worktreePath = `${testInstanceDir}-wt-dirty`;
+        await GitService.addWorktree('dirty-branch', worktreePath);
+
+        // Create uncommitted changes in the worktree
+        await CLIService.execCmd(
+          'echo "dirty change" > dirty.txt',
+          false,
+          worktreePath
+        );
+        await CLIService.execCmd('git add .', false, worktreePath);
+
+        // Regular remove should fail due to uncommitted changes
+        await expect(GitService.removeWorktree(worktreePath)).rejects.toThrow();
+
+        // Force remove should succeed
+        await GitService.removeWorktree(worktreePath, true);
+
+        const worktrees = await GitService.getWorktreesInfo();
+        expect(worktrees.length).toBe(1);
+        expect(worktrees[0].isMain).toBe(true);
+      } finally {
+        process.chdir(originalCwd);
+      }
+    });
   });
 
   describe('getWorktreesInfo', () => {
@@ -182,11 +303,9 @@ describe('GitService', () => {
 
       try {
         // Create and initialize parent repository
-        await CLIService.execCmd(`mkdir -p "${parentRepoPath}"`);
         await initializeGitRepo(parentRepoPath);
 
         // Create and initialize child repository (to be used as submodule)
-        await CLIService.execCmd(`mkdir -p "${childRepoPath}"`);
         await initializeGitRepo(childRepoPath);
 
         // Enable file protocol for git (needed for local submodules in tests)
@@ -283,14 +402,39 @@ async function createInitialCommit(repoPath: string): Promise<void> {
 }
 
 /**
- * Helper function to initialize a git repository with user config and initial commit.
+ * Helper function to initialize a git repository with user config and initial
+ * commit. Creates the directory if it doesn't exist.
  *
  * @param repoPath Path where the git repository should be initialized
  */
 async function initializeGitRepo(repoPath: string): Promise<void> {
+  await CLIService.execCmd(`mkdir -p "${repoPath}"`);
   await CLIService.execCmd('git init', false, repoPath);
   // For some reason the submodule doesn't get created in CI without user config. Really not sure
   // why as of 2/4/2026.
   await CLIService.execCmd('git config user.name "Test User"', false, repoPath);
   await createInitialCommit(repoPath);
+}
+
+/**
+ * Helper function to initialize a git repository with a bare remote. Creates
+ * both the local repo and a bare remote, connects them, and pushes the initial
+ * commit.
+ *
+ * @param repoPath Path where the local git repository should be initialized
+ * @returns The path to the bare remote repository
+ */
+async function initializeGitRepoWithRemote(repoPath: string): Promise<string> {
+  const remoteRepoPath = `${repoPath}-remote.git`;
+  await CLIService.execCmd(`git init --bare "${remoteRepoPath}"`);
+
+  await initializeGitRepo(repoPath);
+  await CLIService.execCmd(
+    `git remote add origin "${remoteRepoPath}"`,
+    false,
+    repoPath
+  );
+  await CLIService.execCmd('git push -u origin main', false, repoPath);
+
+  return remoteRepoPath;
 }

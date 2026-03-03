@@ -99,11 +99,14 @@ export default class GitService {
     const { didComplete: branchExists } =
       await CLIService.execCmd(checkBranchCmd);
 
-    // Use -b flag only if branch doesn't exist locally (creates new branch)
-    // Otherwise, just checkout the existing branch
-    const command = branchExists
-      ? `git worktree add "${targetPath}" ${branchName}`
-      : `git worktree add -b ${branchName} "${targetPath}"`;
+    // Determine the correct git worktree add command:
+    // - If branch exists locally or on remote: checkout without -b (git will
+    //   auto-create a local tracking branch from the remote if needed)
+    // - If branch doesn't exist anywhere: create a new branch with -b
+    const command =
+      branchExists || branchExistsOnRemote
+        ? `git worktree add "${targetPath}" ${branchName}`
+        : `git worktree add -b ${branchName} "${targetPath}"`;
 
     const { didComplete, output } = await CLIService.execCmd(command);
 
