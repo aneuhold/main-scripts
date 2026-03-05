@@ -2,6 +2,7 @@ import { DR } from '@aneuhold/core-ts-lib';
 import path from 'path';
 import BrowserService from '../services/applications/BrowserService.js';
 import ChromeService from '../services/applications/ChromeService.js';
+import GitHubService from '../services/applications/GitHubService.js';
 import GitService from '../services/applications/GitService.js';
 import OSFileSystemService from '../services/applications/OSFileSystemService.js';
 import VSCodeService from '../services/applications/VSCodeService.js';
@@ -24,7 +25,8 @@ export enum AppName {
   nugetCache = 'nugetCache',
   rubyGems = 'rubyGems',
   repo = 'repo', // Added
-  r = 'r' // Added alias for repo
+  r = 'r', // Added alias for repo
+  pr = 'pr'
 }
 
 /**
@@ -73,6 +75,9 @@ async function runApplication(appName: AppName) {
     case AppName.repo:
       await openRepositoryPage();
       break;
+    case AppName.pr:
+      await openPullRequestPage();
+      break;
     default:
       break;
   }
@@ -100,6 +105,26 @@ async function openRepositoryPage(): Promise<void> {
   } else {
     DR.logger.error(
       'Repository URL could not be determined. Cannot open in browser.'
+    );
+  }
+}
+
+/**
+ * Opens the pull request page for the current branch in the default browser.
+ */
+async function openPullRequestPage(): Promise<void> {
+  const branchName = await GitService.getCurrentBranchName();
+
+  if (!branchName) {
+    return;
+  }
+  const prUrl = await GitHubService.getPullRequestUrl(branchName);
+
+  if (prUrl) {
+    await BrowserService.openUrl(prUrl);
+  } else {
+    DR.logger.info(
+      `No open pull request found for the "${branchName}" branch.`
     );
   }
 }
