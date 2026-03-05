@@ -11,6 +11,26 @@ export type WorktreeInfo = {
 
 export default class GitService {
   /**
+   * Gets the current git branch name.
+   *
+   * @returns The branch name, or `undefined` if it could not be determined.
+   */
+  public static async getCurrentBranchName(): Promise<string | undefined> {
+    const { output, didComplete } = await CLIService.execCmd(
+      'git rev-parse --abbrev-ref HEAD'
+    );
+
+    if (!didComplete || !output.trim()) {
+      DR.logger.error(
+        'Could not determine the current branch. Are you in a git repository?'
+      );
+      return undefined;
+    }
+
+    return output.trim();
+  }
+
+  /**
    * Gets the current repository's remote origin URL.
    *
    * @returns The repository URL string, or undefined if an error occurs.
