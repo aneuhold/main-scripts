@@ -17,6 +17,8 @@ document also describes the expected `img` block shape in
 - Override the configured folder for a single invocation with `--dir`
 - Optionally delete the local file after a successful upload with
   `-d`/`--delete`
+- Bulk-upload every image in a directory via `tb img all` for the notes
+  migration use case
 - Upload to a private-to-write, public-to-read R2 bucket
 - Rename the file on upload to `YYYYMMDD-HHMMSS-<4charhash>.<ext>`
 - Print the public URL and copy it to the clipboard
@@ -24,17 +26,75 @@ document also describes the expected `img` block shape in
 
 ---
 
-## Command flags
+## Subcommand: `tb img`
 
-| Flag | Short | Description |
-| --- | --- | --- |
-| `--latest` | `-l` | Skip the picker and upload the most-recently-modified image in the directory. Errors if the directory is empty of images. |
-| `--delete` | `-d` | Delete the local file after a successful upload. Runs only on upload success; a failed upload leaves the file in place. |
+Interactive single-file upload. Same invocation as before.
+
+### Flags
+
+| Flag           | Short    | Description                                                                                                                      |
+| -------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `--latest`     | `-l`     | Skip the picker and upload the most-recently-modified image in the directory. Errors if the directory is empty of images.        |
+| `--delete`     | `-d`     | Delete the local file after a successful upload. Runs only on upload success; a failed upload leaves the file in place.          |
 | `--dir <path>` | _(none)_ | Override `config.img.pickerDir` for this invocation. Supports `~` expansion. Useful for one-off uploads from a different folder. |
 
 Flags compose. For example `tb img -l -d` grabs the newest file and removes
 it after upload, and `tb img -l -d --dir ~/Desktop` does the same against
 `~/Desktop` instead of the configured directory.
+
+---
+
+## Subcommand: `tb img all`
+
+Bulk upload every image in a directory. Built for the one-time
+notes-migration use case.
+
+Separate subcommand (not a flag on `tb img`) because the interactive
+picker and `--latest` do not apply, and the output is a stream of
+`originalName → url` lines rather than a single clipboard copy.
+
+### Flags
+
+| Flag           | Short    | Description                                                                                   |
+| -------------- | -------- | --------------------------------------------------------------------------------------------- |
+| `--dir <path>` | _(none)_ | Directory to scan. Defaults to `config.img.pickerDir`. Supports `~`.                          |
+| `--delete`     | `-d`     | Delete each local file after its upload succeeds. Files whose uploads fail are left in place. |
+| `--dry-run`    | _(none)_ | List files that would be uploaded and exit without uploading.                                 |
+
+### Flow
+
+1. Load config; same missing-config error path as the single-file command.
+2. Resolve the source directory (`--dir` or `config.img.pickerDir`).
+3. List image files in that directory (non-recursive, flat listing) by
+   extension: png, jpg, jpeg, gif, webp, heic, svg, avif.
+4. If `--dry-run`, print the file list and exit.
+5. Upload in parallel with a concurrency pool of 5. A simple `async` loop
+   over an index counter is enough; no need for `p-limit`.
+6. As each upload finishes, print one line: `<originalName> → <url>`. On
+   failure, print `<originalName> → FAILED: <error>` to stderr and keep
+   going.
+7. If `--delete`, unlink each file whose upload succeeded.
+8. Print a final summary line: `Uploaded X, failed Y`.
+
+Output is plain stdout so you can redirect it:
+
+```
+tb img all --dir ~/notes-images > urls.txt
+```
+
+### Signature
+
+```ts
+export type ImgAllOptions = {
+  dir?: string;
+  delete?: boolean;
+  dryRun?: boolean;
+};
+
+export async function imgAll(options: ImgAllOptions): Promise<void>;
+```
+
+Both `img` and `imgAll` are exported from `src/commands/img.ts`.
 
 ---
 
@@ -83,7 +143,7 @@ helpful setup error pointing at this plan.
 Responsibilities:
 
 - Build an `S3Client` configured for R2 (`endpoint:
-  https://<accountId>.r2.cloudflarestorage.com`, `region: "auto"`, forcePath
+https://<accountId>.r2.cloudflarestorage.com`, `region: "auto"`, forcePath
   style).
 - `uploadFile(localPath: string, remoteKey: string): Promise<string>`
   - Reads the file, infers `Content-Type` from extension (png, jpg, jpeg,
@@ -157,22 +217,44 @@ Flow:
 
 ### Wire up in `src/index.ts`
 
-Add:
+Add (following the same pattern as `worktree` with subcommands):
 
 ```ts
-import img, { ImgOptions } from './commands/img.js';
+import img, { ImgOptions, imgAll, ImgAllOptions } from './commands/img.js';
 
-program
+const imgCmd = program
   .command('img')
   .description(
     'Picks an image from the configured folder, uploads it to Cloudflare R2, ' +
       'and copies the public URL to the clipboard'
   )
-  .option('-l, --latest', 'Upload the most recently modified image without prompting')
+  .option(
+    '-l, --latest',
+    'Upload the most recently modified image without prompting'
+  )
   .option('-d, --delete', 'Delete the local file after a successful upload')
-  .option('--dir <path>', 'Override the configured picker directory for this invocation')
+  .option(
+    '--dir <path>',
+    'Override the configured picker directory for this invocation'
+  )
   .action(async (options: ImgOptions) => {
     await img(options);
+  });
+
+imgCmd
+  .command('all')
+  .description(
+    'Uploads every image in the directory to Cloudflare R2 and prints ' +
+      'one "originalName -> url" line per file'
+  )
+  .option(
+    '--dir <path>',
+    'Directory to scan (defaults to config.img.pickerDir)'
+  )
+  .option('-d, --delete', 'Delete each local file after its upload succeeds')
+  .option('--dry-run', 'List files that would be uploaded without uploading')
+  .action(async (options: ImgAllOptions) => {
+    await imgAll(options);
   });
 ```
 
