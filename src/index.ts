@@ -8,6 +8,7 @@ import dev from './commands/dev.js';
 import downloadAndMergeVideos from './commands/downloadAndMergeVideos.js';
 import downloadVideos from './commands/downloadVideos.js';
 import fpull from './commands/fpull.js';
+import img, { ImgOptions } from './commands/img.js';
 import mergeAllVideos from './commands/mergeAllVideos.js';
 import mergeVideos from './commands/mergeVideos.js';
 import open from './commands/open.js';
@@ -267,6 +268,34 @@ worktreeCmd
   .option('-f, --force', 'Force removal even with uncommitted changes')
   .action(async (options: { force?: boolean }) => {
     await removeWorktree(options.force ?? false);
+  });
+
+program
+  .command('img')
+  .description(
+    'Picks an image from the configured folder, uploads it to Cloudflare R2, ' +
+      'and copies the public URL to the clipboard. With --all, bulk-uploads ' +
+      'every image in the directory.'
+  )
+  .option(
+    '-a, --all',
+    'Upload every image in the directory instead of picking one'
+  )
+  .option(
+    '-l, --latest',
+    'Upload the most recently modified image without prompting'
+  )
+  .option('-d, --delete', 'Delete the local file(s) after a successful upload')
+  .option(
+    '--dir <path>',
+    'Override the configured picker directory for this invocation'
+  )
+  .option(
+    '--dry-run',
+    'With --all, list files that would be uploaded without uploading'
+  )
+  .action(async (options: ImgOptions) => {
+    await img(options);
   });
 
 program
