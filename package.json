@@ -16,7 +16,11 @@
     "test": "vitest run",
     "upgrade:core": "pnpm update '@aneuhold/*' --latest",
     "upgrade:all": "pnpm update --latest",
-    "reset:global": "npm uninstall -g @aneuhold/main-scripts && npm i -g @aneuhold/main-scripts"
+    "reset:global": "npm uninstall -g @aneuhold/main-scripts && npm i -g @aneuhold/main-scripts",
+    "imgur:extract": "tsx scripts/imgur/extractImgurLinks.ts",
+    "imgur:download": "tsx scripts/imgur/downloadImgurImages.ts",
+    "imgur:upload": "tb img --all --dir scripts/imgur/downloads",
+    "imgur:replace": "tsx scripts/imgur/replaceImgurInHtml.ts"
   },
   "main": "lib/index.js",
   "module": "lib/index.js",
