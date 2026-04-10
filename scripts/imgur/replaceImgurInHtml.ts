@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const HTML_FILE_PATH = '/Users/aneuhold/Downloads/Main (1).html';
+const HTML_FILE_PATH = '/Users/aneuhold/Downloads/SecondNature1.html';
 
 type UploadResult = {
   originalName: string;
