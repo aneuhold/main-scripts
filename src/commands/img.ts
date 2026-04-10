@@ -3,12 +3,14 @@ import { select } from '@inquirer/prompts';
 import clipboard from 'clipboardy';
 import { randomBytes } from 'crypto';
 import { Stats } from 'fs';
-import { stat, unlink } from 'fs/promises';
+import { stat, unlink, writeFile } from 'fs/promises';
 import os from 'os';
 import path from 'path';
 import R2Service from '../services/applications/R2Service.js';
 import { ConfigService } from '../services/ConfigService.js';
 import FileSearchService from '../services/FileSearchService.js';
+
+const UPLOAD_RESULTS_FILENAME = 'upload-results.json';
 
 export type ImgOptions = {
   latest?: boolean;
@@ -47,8 +49,9 @@ type ImageEntry = {
  * @param options Command options.
  */
 export default async function img(options: ImgOptions): Promise<void> {
-  const entries = await getImageEntries(options.dir);
-  if (!entries) return;
+  const resolved = await getImageEntries(options.dir);
+  if (!resolved) return;
+  const { entries } = resolved;
 
   const selected = options.latest
     ? entries[0]
@@ -86,13 +89,15 @@ export default async function img(options: ImgOptions): Promise<void> {
 
 /**
  * Bulk-uploads every image in a directory to Cloudflare R2, printing one
- * `originalName -> url` line per file.
+ * `originalName -> url` line per file. After all uploads complete, writes
+ * a machine-readable `upload-results.json` into the uploaded directory.
  *
  * @param options Command options.
  */
 export async function imgAll(options: ImgAllOptions): Promise<void> {
-  const entries = await getImageEntries(options.dir);
-  if (!entries) return;
+  const resolved = await getImageEntries(options.dir);
+  if (!resolved) return;
+  const { sourceDir, entries } = resolved;
 
   if (options.dryRun) {
     DR.logger.info(`Would upload ${entries.length} file(s):`);
@@ -108,21 +113,34 @@ export async function imgAll(options: ImgAllOptions): Promise<void> {
       try {
         const url = await R2Service.uploadFile(entry.absolutePath, remoteKey);
         console.log(`${entry.basename} -> ${url}`);
+        if (options.delete) await tryDelete(entry.absolutePath);
+        return { originalName: entry.basename, status: 'success', url };
       } catch (error) {
-        DR.logger.error(
-          `${entry.basename} upload failed: ${ErrorUtils.getErrorString(error)}`
-        );
-        return false;
+        const errorMessage = ErrorUtils.getErrorString(error);
+        DR.logger.error(`${entry.basename} upload failed: ${errorMessage}`);
+        return {
+          originalName: entry.basename,
+          status: 'failed',
+          error: errorMessage
+        };
       }
-      if (options.delete) await tryDelete(entry.absolutePath);
-      return true;
     })
   );
 
-  const successCount = results.filter(Boolean).length;
+  const successCount = results.filter((r) => r.status === 'success').length;
   DR.logger.info(
     `Uploaded ${successCount}, failed ${results.length - successCount}`
   );
+
+  const resultsPath = path.join(sourceDir, UPLOAD_RESULTS_FILENAME);
+  try {
+    await writeFile(resultsPath, JSON.stringify(results, null, 2), 'utf8');
+    DR.logger.info(`Wrote upload results: ${resultsPath}`);
+  } catch (error) {
+    DR.logger.warn(
+      `Could not write upload results file: ${ErrorUtils.getErrorString(error)}`
+    );
+  }
 }
 
 /**
@@ -134,7 +152,7 @@ export async function imgAll(options: ImgAllOptions): Promise<void> {
  */
 const getImageEntries = async (
   dirFlag: string | undefined
-): Promise<ImageEntry[] | null> => {
+): Promise<{ sourceDir: string; entries: ImageEntry[] } | null> => {
   const config = await ConfigService.loadConfig();
   if (!config.img) {
     DR.logger.error(
@@ -181,7 +199,7 @@ const getImageEntries = async (
     }))
   );
   entries.sort((a, b) => b.stats.mtimeMs - a.stats.mtimeMs);
-  return entries;
+  return { sourceDir, entries };
 };
 
 /**
