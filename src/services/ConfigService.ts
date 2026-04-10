@@ -13,6 +13,25 @@ export type MainScriptsConfig = {
   projects?: Record<string, MainScriptsConfigProject>;
   worktreeBaseDir?: string;
   vsCodeAlternativeCommand?: string;
+  img?: MainScriptsConfigImg;
+};
+
+/**
+ * Configuration for the `tb img` command that uploads images to Cloudflare R2.
+ *
+ * If updating, make sure to also update the main readme documentation.
+ */
+export type MainScriptsConfigImg = {
+  /** Folder that `tb img` scans for files to upload. Supports `~`. */
+  pickerDir: string;
+  r2: {
+    accountId: string;
+    bucketName: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+    /** Public URL base, e.g. https://pub-xxxx.r2.dev (no trailing slash). */
+    publicUrlBase: string;
+  };
 };
 
 /**

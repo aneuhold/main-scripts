@@ -3,16 +3,18 @@ import path from 'path';
 
 export default class FileSearchService {
   /**
-   * Searches for files with specific extensions recursively up to a maximum depth
+   * Searches for files with one or more extensions recursively up to a
+   * maximum depth. Extension matching is case-insensitive.
    *
    * @param startPath The path to start searching from.
-   * @param extension The file extension to search for.
+   * @param extension The file extension (or extensions) to search for,
+   * without the leading dot. E.g. `'sln'` or `['png', 'jpg']`.
    * @param maxDepth The maximum depth to search.
    * @param currentDepth The current depth in the search.
    */
   static async findFilesWithExtension(
     startPath: string,
-    extension: string,
+    extension: string | string[],
     maxDepth = 4,
     currentDepth = 0
   ): Promise<string[]> {
@@ -20,6 +22,11 @@ export default class FileSearchService {
 
     const files = await fs.promises.readdir(startPath);
     const results: string[] = [];
+    const allowedExtnames = new Set(
+      (typeof extension === 'string' ? [extension] : extension).map(
+        (ext) => `.${ext.toLowerCase()}`
+      )
+    );
 
     for (const file of files) {
       const filePath = path.join(startPath, file);
@@ -33,7 +40,7 @@ export default class FileSearchService {
           currentDepth + 1
         );
         results.push(...nestedFiles);
-      } else if (path.extname(file) === `.${extension}`) {
+      } else if (allowedExtnames.has(path.extname(file).toLowerCase())) {
         results.push(filePath);
       }
     }

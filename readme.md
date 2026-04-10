@@ -59,6 +59,13 @@ Configuration files should contain a `projects` object where each key is the fol
   - This ensures that when creating git worktrees, the correct editor's workspace storage is copied.
 - `worktreeBaseDir` (optional): Base directory for creating git worktrees. Defaults to `../`.
 - `projects` (optional): Object containing project-specific configurations.
+- `img` (optional): Configuration for the `tb img` command. If omitted, `tb img` will print a setup error. See [`docs/img-upload-initial-setup.md`](docs/img-upload-initial-setup.md) for the one-time Cloudflare R2 setup steps.
+  - `pickerDir` (required): Folder that `tb img` scans for files to upload. Supports `~` expansion (e.g. `~/Screenshots`).
+  - `r2.accountId` (required): Cloudflare account ID for the R2 bucket.
+  - `r2.bucketName` (required): Name of the R2 bucket to upload to.
+  - `r2.accessKeyId` (required): Access key ID for the R2 API token.
+  - `r2.secretAccessKey` (required): Secret access key for the R2 API token.
+  - `r2.publicUrlBase` (required): Public URL base for the bucket, without a trailing slash (e.g. `https://pub-xxxx.r2.dev`).
 
 #### Project-Specific Configuration
 
@@ -92,6 +99,14 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
   - `tb config init <folder-name>` - Create a project configuration template for the specified folder
   - `tb config edit` - Open the config file in VS Code
 - `tb dev` Starts development mode with nodemon to watch for changes. Auto-detects the current project and runs in the first packageJsonPath directory.
+- `tb img` Picks an image from the configured folder, uploads it to Cloudflare R2, prints the public URL, and copies it to the clipboard. Requires an `img` block in your config — see [`docs/img-upload-initial-setup.md`](docs/img-upload-initial-setup.md) for the one-time setup.
+  - `-l, --latest` Skip the picker and upload the most-recently-modified image in the directory.
+  - `-d, --delete` Delete the local file after a successful upload.
+  - `--dir <path>` Override the configured picker directory for this invocation. Supports `~`.
+  - `tb img all` Bulk-upload every image in the directory. Prints one `originalName -> url` line per file so the output can be redirected to a file.
+    - `--dir <path>` Directory to scan (defaults to `img.pickerDir`).
+    - `-d, --delete` Delete each local file after its upload succeeds.
+    - `--dry-run` List files that would be uploaded without uploading.
 - `tb sub [packagePrefix]` Subscribes to a package using local-npm-registry for automatic updates during development.
 - `tb unsub [packagePrefix]` Unsubscribes from a package using local-npm-registry and resets to original version.
 - `tb test` Just emits a test echo to see if the package is working.

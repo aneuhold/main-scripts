@@ -8,6 +8,7 @@ import dev from './commands/dev.js';
 import downloadAndMergeVideos from './commands/downloadAndMergeVideos.js';
 import downloadVideos from './commands/downloadVideos.js';
 import fpull from './commands/fpull.js';
+import img, { ImgAllOptions, imgAll, ImgOptions } from './commands/img.js';
 import mergeAllVideos from './commands/mergeAllVideos.js';
 import mergeVideos from './commands/mergeVideos.js';
 import open from './commands/open.js';
@@ -267,6 +268,40 @@ worktreeCmd
   .option('-f, --force', 'Force removal even with uncommitted changes')
   .action(async (options: { force?: boolean }) => {
     await removeWorktree(options.force ?? false);
+  });
+
+const imgCmd = program
+  .command('img')
+  .description(
+    'Picks an image from the configured folder, uploads it to Cloudflare R2, ' +
+      'and copies the public URL to the clipboard'
+  )
+  .option(
+    '-l, --latest',
+    'Upload the most recently modified image without prompting'
+  )
+  .option('-d, --delete', 'Delete the local file after a successful upload')
+  .option(
+    '--dir <path>',
+    'Override the configured picker directory for this invocation'
+  )
+  .action(async (options: ImgOptions) => {
+    await img(options);
+  });
+imgCmd
+  .command('all')
+  .description(
+    'Uploads every image in the directory to Cloudflare R2 and prints ' +
+      'one "originalName -> url" line per file'
+  )
+  .option(
+    '--dir <path>',
+    'Directory to scan (defaults to config.img.pickerDir)'
+  )
+  .option('-d, --delete', 'Delete each local file after its upload succeeds')
+  .option('--dry-run', 'List files that would be uploaded without uploading')
+  .action(async (options: ImgAllOptions) => {
+    await imgAll(options);
   });
 
 program
