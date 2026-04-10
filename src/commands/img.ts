@@ -13,14 +13,10 @@ import FileSearchService from '../services/FileSearchService.js';
 const UPLOAD_RESULTS_FILENAME = 'upload-results.json';
 
 export type ImgOptions = {
+  all?: boolean;
   latest?: boolean;
   delete?: boolean;
   dir?: string;
-};
-
-export type ImgAllOptions = {
-  dir?: string;
-  delete?: boolean;
   dryRun?: boolean;
 };
 
@@ -44,14 +40,21 @@ type ImageEntry = {
 
 /**
  * Picks an image from the configured folder, uploads it to Cloudflare R2,
- * prints the resulting URL, and copies it to the clipboard.
+ * prints the resulting URL, and copies it to the clipboard. When `--all` is
+ * passed, bulk-uploads every image in the directory instead.
  *
  * @param options Command options.
  */
 export default async function img(options: ImgOptions): Promise<void> {
   const resolved = await getImageEntries(options.dir);
   if (!resolved) return;
-  const { entries } = resolved;
+
+  const { sourceDir, entries } = resolved;
+
+  if (options.all) {
+    await uploadAll(sourceDir, entries, options);
+    return;
+  }
 
   const selected = options.latest
     ? entries[0]
@@ -92,13 +95,15 @@ export default async function img(options: ImgOptions): Promise<void> {
  * `originalName -> url` line per file. After all uploads complete, writes
  * a machine-readable `upload-results.json` into the uploaded directory.
  *
+ * @param sourceDir The absolute source directory the entries came from.
+ * @param entries The image entries to upload.
  * @param options Command options.
  */
-export async function imgAll(options: ImgAllOptions): Promise<void> {
-  const resolved = await getImageEntries(options.dir);
-  if (!resolved) return;
-  const { sourceDir, entries } = resolved;
-
+const uploadAll = async (
+  sourceDir: string,
+  entries: ImageEntry[],
+  options: ImgOptions
+): Promise<void> => {
   if (options.dryRun) {
     DR.logger.info(`Would upload ${entries.length} file(s):`);
     for (const entry of entries) {
@@ -141,7 +146,7 @@ export async function imgAll(options: ImgAllOptions): Promise<void> {
       `Could not write upload results file: ${ErrorUtils.getErrorString(error)}`
     );
   }
-}
+};
 
 /**
  * Resolves the source directory, lists image files sorted newest-first,
