@@ -25,6 +25,7 @@ export default class ITermService {
           tellCommand: `T's current session`,
           sections: ['split vertically with default profile']
         },
+        `write T's session 1 text "cd ${cwd}"`,
         `write T's session 2 text "cd ${cwd} && ${command}"`
       ]
     };
