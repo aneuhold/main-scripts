@@ -94,6 +94,7 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
 - `tb clean [target]` Cleans up the provided target (e.g., branches). Run without arguments to see available options.
 - `tb worktree` or `tb wt` Manage git worktrees with project-aware configuration.
   - `tb worktree add [branchName]` - Create a new worktree
+    - `-s, --setup` - Run `tb setup` after creating the worktree, even when `worktreeConfig.autoSetup` is not set
   - `tb worktree list` or `tb wt ls` - List all worktrees
   - `tb worktree remove` or `tb wt rm` - Remove a worktree (interactive)
 - `tb config [action]` Shows the current configuration, initializes a new config file, or edits the existing config.
