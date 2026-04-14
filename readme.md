@@ -80,13 +80,16 @@ Each project configuration supports the following properties:
   - `extraFilesToCopy` (optional): Array of file patterns to copy into new worktrees (e.g., `[".env", "environments/*"]`)
   - `postCreateCommands` (optional): Array of commands to run after creating a worktree
   - `autoSetup` (optional): Boolean to automatically run project setup after creating a worktree
+- `setupConfig` (optional): Configuration for the `tb setup` command.
+  - `installCommand` (optional): Command to run first in the current terminal (e.g. `yarn`, `pnpm i`).
+  - `newTabVerticalSplitCommands` (optional): Array of commands to run after the install command. Opens a single new iTerm2 tab, splits it vertically, and runs each command sequentially (chained with `&&`) in the right-hand pane. macOS + iTerm2 only.
 
 ## ✅ Commands
 
 Each command starts with `tb`. That stands for Tiny Box but that isn't really important 😛.
 
 - `tb help` Will emit all the commands and their options
-- `tb open` Will open the current directory in either VS Code, or Rider depending on the project as it is configured in [`projects.ts`](src/config/projects.ts).
+- `tb open` Will open the current directory in either VS Code, or Rider depending on how the project is configured in your user config.
   - `tb open r` Will open the associated repo for the current directory
 - `tb clean [target]` Cleans up the provided target (e.g., branches). Run without arguments to see available options.
 - `tb worktree` or `tb wt` Manage git worktrees with project-aware configuration.

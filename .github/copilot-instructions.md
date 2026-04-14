@@ -4,9 +4,9 @@
 
 ### Configuration-Driven Projects
 
-- **`src/config/projects.ts`**: Defines `Project` type with properties like `folderName`, `solutionFilePath`, `packageJsonPaths`, `setup()`, `nodemonArgs`
+- **`src/services/ConfigService.ts`**: Defines `MainScriptsConfigProject` with properties like `folderName`, `solutionFilePath`, `packageJsonPaths`, `nodemonArgs`, `setupConfig`. Projects are loaded entirely from the user's config file (see readme).
+- **`src/services/ProjectConfigService.ts`**: Resolves projects from user config and synthesizes a `setup` function from each project's `setupConfig` block.
 - Commands like `tb setup`, `tb dev`, `tb open` use `CurrentEnv.folderName()` to look up project config
-- Example: `client-core` project has `nodemonArgs` for `tb dev` to run nodemon with build + local-npm publish
 
 ### Key Patterns
 

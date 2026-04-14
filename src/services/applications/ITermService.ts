@@ -6,23 +6,28 @@ import CLIService from '../CLIService.js';
 
 export default class ITermService {
   /**
-   * Splits the iTerm terminal horizontally and runs each command in a separate
-   * pane.
+   * Opens a new iTerm tab in the current window, splits it vertically, and
+   * runs the given command in the right-hand pane. The left-hand pane is
+   * left alone so the user can keep using it.
    *
-   * @param commands The commands to run in each pane.
-   * @param cwd The current working directory for the commands.
+   * @param command The command to run in the right pane of the new tab.
+   * @param cwd The current working directory for the command.
    */
-  static async splitHorizontallyAndRunCommands(commands: string[], cwd = '') {
-    const terminalWindowTellBlock: OsaScriptTellBlock = {
-      tellCommand: `W's current session`,
-      sections: []
+  static async openNewTabSplitVerticallyAndRunCommand(
+    command: string,
+    cwd = ''
+  ) {
+    const newTabTellBlock: OsaScriptTellBlock = {
+      tellCommand: 'W',
+      sections: [
+        'set T to (create tab with default profile)',
+        {
+          tellCommand: `T's current session`,
+          sections: ['split vertically with default profile']
+        },
+        `write T's session 2 text "cd ${cwd} && ${command}"`
+      ]
     };
-    // Do the number of splits needed
-    commands.forEach(() => {
-      terminalWindowTellBlock.sections.push(
-        `split horizontally with default profile`
-      );
-    });
 
     const iTermApplicationTellBlock: OsaScriptTellBlock = {
       tellCommand: 'application "iTerm"',
@@ -30,17 +35,10 @@ export default class ITermService {
         'activate',
         'set W to current window',
         'if W = missing value then set W to create window with default profile',
-        terminalWindowTellBlock,
-        `set T to W's current tab`
+        newTabTellBlock
       ]
     };
-    // Add in the commands, adding 2 to the session number because the first
-    // session is 1, and the second is 2.
-    commands.forEach((command, i) => {
-      iTermApplicationTellBlock.sections.push(
-        `write T's session ${i + 2} text "cd ${cwd} && ${command}"`
-      );
-    });
+
     const osaScriptBuilder = new OsaScriptBuilder();
     osaScriptBuilder.addTellBlock(iTermApplicationTellBlock);
     const osaScript = osaScriptBuilder.getFullCommand();

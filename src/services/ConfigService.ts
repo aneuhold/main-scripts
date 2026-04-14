@@ -67,6 +67,26 @@ export type MainScriptsConfigProject = {
      */
     autoSetup?: boolean;
   };
+  /**
+   * Configuration for the `tb setup` command, for projects that don't have a
+   * built-in setup function.
+   */
+  setupConfig?: {
+    /**
+     * Optional command to run first, in the current terminal, before any new
+     * tabs are opened. Typically an install command like `yarn` or `pnpm i`.
+     */
+    installCommand?: string;
+    /**
+     * Commands to run when setting up the development environment. Opens a
+     * single new iTerm2 tab, splits it vertically, and runs each command
+     * sequentially (chained with `&&`) in the right-hand pane, leaving the
+     * left pane empty for ad-hoc use.
+     *
+     * Only supported on macOS with iTerm2.
+     */
+    newTabVerticalSplitCommands?: string[];
+  };
 };
 
 /**
@@ -236,6 +256,10 @@ export class ConfigService {
         extraFilesToCopy: [],
         postCreateCommands: [],
         autoSetup: false
+      },
+      setupConfig: {
+        installCommand: '',
+        newTabVerticalSplitCommands: []
       }
     };
   }
