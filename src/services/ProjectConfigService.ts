@@ -1,18 +1,28 @@
-import builtInProjects, { Project } from '../config/projects.js';
-import CurrentEnv from '../utils/CurrentEnv.js';
+import { DR } from '@aneuhold/core-ts-lib';
+import path from 'path';
+import CurrentEnv, { TerminalType } from '../utils/CurrentEnv.js';
 import GitService from './applications/GitService.js';
-import { ConfigService } from './ConfigService.js';
+import ITermService from './applications/ITermService.js';
+import CLIService from './CLIService.js';
+import { ConfigService, MainScriptsConfigProject } from './ConfigService.js';
 
 /**
- * Service for managing project configurations, merging built-in projects
- * with user-defined configurations.
+ * A resolved project configuration, including the dynamically generated
+ * `setup` function derived from the user's `setupConfig` block.
+ */
+export type Project = MainScriptsConfigProject & {
+  setup?: () => Promise<void>;
+};
+
+/**
+ * Service for loading project configurations from user config.
  */
 export class ProjectConfigService {
   private static mergedProjects: Record<string, Project> | null = null;
 
   /**
-   * Get all projects (built-in + user-configured).
-   * User configurations will completely override built-in configurations for matching folder names.
+   * Get all user-configured projects, keyed by folder name. Each project has
+   * a generated `setup` function if its `setupConfig` block is actionable.
    */
   static async getProjects(): Promise<Record<string, Project>> {
     if (this.mergedProjects) {
@@ -20,13 +30,18 @@ export class ProjectConfigService {
     }
 
     const userConfig = await ConfigService.loadConfig();
-    const userProjects = userConfig.projects;
-
-    // Merge in user projects (complete override for matching keys)
-    return {
-      ...builtInProjects,
-      ...userProjects
+    const projects: Record<string, Project> = {
+      ...(userConfig.projects ?? {})
     };
+
+    for (const project of Object.values(projects)) {
+      const generatedSetup = this.buildSetupFromConfig(project);
+      if (generatedSetup) {
+        project.setup = generatedSetup;
+      }
+    }
+
+    return projects;
   }
 
   /**
@@ -42,22 +57,67 @@ export class ProjectConfigService {
   /**
    * Get the project configuration for the current directory, checking both
    * direct folder name match and worktree association.
-   *
-   * @returns The project configuration, or undefined if not found
    */
   static async getCurrentProject(): Promise<Project | undefined> {
     const currentFolder = CurrentEnv.folderName();
 
-    // First try direct match
     const project = await this.getProject(currentFolder);
     if (project) return project;
 
-    // If not found, check if this is a worktree
     const mainProjectFolder = await GitService.getMainProjectFromWorktree();
     if (mainProjectFolder) {
       return await this.getProject(mainProjectFolder);
     }
 
     return undefined;
+  }
+
+  /**
+   * Builds a `setup` function from a project's `setupConfig` block. Returns
+   * `undefined` when the block has no actionable fields.
+   *
+   * @param project The project config to build the setup function for.
+   */
+  private static buildSetupFromConfig(
+    project: Project
+  ): (() => Promise<void>) | undefined {
+    const setupConfig = project.setupConfig;
+    const hasInstall = !!setupConfig?.installCommand;
+    const splitCommands = setupConfig?.newTabVerticalSplitCommands ?? [];
+    const hasSplitCommands = splitCommands.length > 0;
+    if (!setupConfig || (!hasInstall && !hasSplitCommands)) {
+      return undefined;
+    }
+
+    return async () => {
+      DR.logger.info(`Setting up ${project.folderName}...`);
+      const currentPath = path.resolve('.');
+
+      if (hasSplitCommands && CurrentEnv.terminal() !== TerminalType.ITerm2) {
+        DR.logger.error(
+          `setupConfig.newTabVerticalSplitCommands is only supported in iTerm2.`
+        );
+        return;
+      }
+
+      if (hasInstall && setupConfig.installCommand) {
+        DR.logger.info(
+          `Running install command: ${setupConfig.installCommand}`
+        );
+        const { output } = await CLIService.execCmd(
+          setupConfig.installCommand,
+          false,
+          currentPath
+        );
+        console.log(output);
+      }
+
+      if (hasSplitCommands) {
+        await ITermService.openNewTabSplitVerticallyAndRunCommand(
+          splitCommands.join(' && '),
+          currentPath
+        );
+      }
+    };
   }
 }
