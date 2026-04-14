@@ -16,12 +16,27 @@ import CurrentEnv from '../utils/CurrentEnv.js';
 import open from './open.js';
 
 /**
+ * Options for creating a new worktree.
+ */
+export type AddWorktreeOptions = {
+  /**
+   * When true, run project setup after the worktree is created regardless
+   * of the `autoSetup` value in the project's `worktreeConfig`.
+   */
+  forceSetup?: boolean;
+};
+
+/**
  * Creates a new worktree with optional branch name.
  * If no branch name provided, uses smart defaults.
  *
  * @param branchName Optional branch name. If not provided, creates worktree on main or temp branch
+ * @param options Extra behavior flags for the add flow.
  */
-export async function addWorktree(branchName?: string): Promise<void> {
+export async function addWorktree(
+  branchName?: string,
+  options: AddWorktreeOptions = {}
+): Promise<void> {
   try {
     const currentFolder = CurrentEnv.folderName();
     const project = await ProjectConfigService.getCurrentProject();
@@ -93,8 +108,10 @@ export async function addWorktree(branchName?: string): Promise<void> {
       }
     }
 
-    // Run setup if autoSetup is true
-    if (project?.worktreeConfig?.autoSetup && project.setup) {
+    // Run setup if autoSetup is true, or if the caller forced it via --setup
+    const shouldRunSetup =
+      options.forceSetup || !!project?.worktreeConfig?.autoSetup;
+    if (shouldRunSetup && project?.setup) {
       DR.logger.info('Running project setup...');
       try {
         await project.setup();
@@ -102,6 +119,10 @@ export async function addWorktree(branchName?: string): Promise<void> {
         DR.logger.error(`Setup failed: ${ErrorUtils.getErrorString(error)}`);
         DR.logger.warn('Worktree created but setup encountered errors');
       }
+    } else if (options.forceSetup && !project?.setup) {
+      DR.logger.warn(
+        'Requested setup via --setup, but no setup is configured for this project.'
+      );
     }
 
     // Open the project in the appropriate editor

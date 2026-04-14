@@ -251,9 +251,15 @@ worktreeCmd
   .description(
     'Create a new worktree (default action). Uses smart defaults if no branch name provided.'
   )
-  .action(async (branchName: string | undefined) => {
-    await addWorktree(branchName);
-  });
+  .option(
+    '-s, --setup',
+    'Run project setup after creating the worktree, even if autoSetup is not enabled in config'
+  )
+  .action(
+    async (branchName: string | undefined, options: { setup?: boolean }) => {
+      await addWorktree(branchName, { forceSetup: options.setup ?? false });
+    }
+  );
 worktreeCmd
   .command('list')
   .alias('ls')
