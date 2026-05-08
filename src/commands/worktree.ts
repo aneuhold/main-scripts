@@ -12,7 +12,6 @@ import VSCodeService from '../services/applications/VSCodeService.js';
 import CLIService from '../services/CLIService.js';
 import { ConfigService } from '../services/ConfigService.js';
 import { ProjectConfigService } from '../services/ProjectConfigService.js';
-import CurrentEnv from '../utils/CurrentEnv.js';
 import open from './open.js';
 
 /**
@@ -38,7 +37,6 @@ export async function addWorktree(
   options: AddWorktreeOptions = {}
 ): Promise<void> {
   try {
-    const currentFolder = CurrentEnv.folderName();
     const project = await ProjectConfigService.getCurrentProject();
     const config = await ConfigService.loadConfig();
 
@@ -51,6 +49,12 @@ export async function addWorktree(
       return;
     }
 
+    // Always anchor worktrees to the main worktree so that running this
+    // command from inside an existing worktree doesn't stack `-wt-` segments
+    // onto the folder name (e.g. `proj-wt-feature-wt-temp1`).
+    const mainWorktreePath = await GitService.getMainWorktreePath();
+    const mainFolderName = path.basename(mainWorktreePath);
+
     // Determine branch name if not provided
     let targetBranch = branchName;
     if (!targetBranch) {
@@ -58,9 +62,9 @@ export async function addWorktree(
     }
 
     // Calculate target path
-    const worktreeName = `${currentFolder}-wt-${targetBranch}`;
+    const worktreeName = `${mainFolderName}-wt-${targetBranch}`;
     const baseDir = config.worktreeBaseDir || '../';
-    const targetPath = path.resolve(process.cwd(), baseDir, worktreeName);
+    const targetPath = path.resolve(mainWorktreePath, baseDir, worktreeName);
 
     DR.logger.info(
       `Creating worktree for branch '${targetBranch}' at ${targetPath}...`
@@ -138,43 +142,25 @@ cd ${targetPath}`);
 }
 
 /**
- * Gets smart default branch name based on current branch.
- * If on main/master, creates temp branch. Otherwise, creates worktree on main.
+ * Gets a smart default branch name for a new worktree. Returns the next
+ * available `tempN` name so that `git worktree add -b` branches the new
+ * worktree off the current HEAD (i.e. whatever branch is checked out in the
+ * CWD), regardless of which branch that is.
  *
  * @returns The branch name to use
  */
 async function getSmartDefaultBranch(): Promise<string> {
-  // Get current branch name
-  const { output: currentBranch } = await CLIService.execCmd(
-    'git branch --show-current'
-  );
-  const branch = currentBranch.trim();
-
-  // Check if we're on main or master
-  if (branch === 'main' || branch === 'master') {
-    // Find next available temp branch
-    for (let tempNum = 1; tempNum < 1000; tempNum++) {
-      const tempBranch = `temp${tempNum}`;
-      const { didComplete } = await CLIService.execCmd(
-        `git show-ref --verify refs/heads/${tempBranch}`
-      );
-      if (!didComplete) {
-        // Branch doesn't exist, use it
-        return tempBranch;
-      }
+  for (let tempNum = 1; tempNum < 1000; tempNum++) {
+    const tempBranch = `temp${tempNum}`;
+    const { didComplete } = await CLIService.execCmd(
+      `git show-ref --verify refs/heads/${tempBranch}`
+    );
+    if (!didComplete) {
+      return tempBranch;
     }
-    // Fallback if we somehow can't find an available temp branch
-    return `temp-${Date.now()}`;
   }
-
-  // Return main or master (check which exists)
-  const { didComplete: hasMain } = await CLIService.execCmd(
-    'git show-ref --verify refs/heads/main'
-  );
-  if (hasMain) {
-    return 'main';
-  }
-  return 'master';
+  // Fallback if we somehow can't find an available temp branch
+  return `temp-${Date.now()}`;
 }
 
 /**
