@@ -12,7 +12,6 @@ import VSCodeService from '../services/applications/VSCodeService.js';
 import CLIService from '../services/CLIService.js';
 import { ConfigService } from '../services/ConfigService.js';
 import { ProjectConfigService } from '../services/ProjectConfigService.js';
-import CurrentEnv from '../utils/CurrentEnv.js';
 import open from './open.js';
 
 /**
@@ -38,7 +37,6 @@ export async function addWorktree(
   options: AddWorktreeOptions = {}
 ): Promise<void> {
   try {
-    const currentFolder = CurrentEnv.folderName();
     const project = await ProjectConfigService.getCurrentProject();
     const config = await ConfigService.loadConfig();
 
@@ -57,8 +55,14 @@ export async function addWorktree(
       targetBranch = await getSmartDefaultBranch();
     }
 
+    // Use the main worktree's folder name as the prefix so that creating a
+    // worktree from within another worktree doesn't stack names like
+    // `repo-wt-foo-wt-bar`.
+    const mainWorktreePath = await GitService.getMainWorktreePath();
+    const mainFolder = path.basename(mainWorktreePath);
+
     // Calculate target path
-    const worktreeName = `${currentFolder}-wt-${targetBranch}`;
+    const worktreeName = `${mainFolder}-wt-${targetBranch}`;
     const baseDir = config.worktreeBaseDir || '../';
     const targetPath = path.resolve(process.cwd(), baseDir, worktreeName);
 
@@ -80,15 +84,10 @@ export async function addWorktree(
 
     // Copy VS Code workspace storage from the source workspace to the worktree
     try {
-      const sourceWorkspacePath = await GitService.getMainWorktreePath();
-      await VSCodeService.copyWorkspaceStorage(
-        sourceWorkspacePath,
-        targetPath,
-        {
-          // Exclude chat sessions as they can be large and are typically not needed
-          // exclude: ['chatSessions', 'chatEditingSessions']
-        }
-      );
+      await VSCodeService.copyWorkspaceStorage(mainWorktreePath, targetPath, {
+        // Exclude chat sessions as they can be large and are typically not needed
+        // exclude: ['chatSessions', 'chatEditingSessions']
+      });
     } catch (error) {
       DR.logger.warn(
         `Could not copy VS Code workspace storage: ${ErrorUtils.getErrorString(error)}`
