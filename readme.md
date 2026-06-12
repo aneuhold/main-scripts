@@ -3,6 +3,10 @@
 [![NPM](https://img.shields.io/npm/v/%40aneuhold%2Fmain-scripts)](https://www.npmjs.com/package/@aneuhold/main-scripts)
 [![License](https://img.shields.io/github/license/aneuhold/main-scripts)](https://github.com/aneuhold/main-scripts/blob/main/LICENSE)
 
+<p align="center">
+  <img src="docs/images/logo.webp" alt="Main Scripts logo" width="300" />
+</p>
+
 This repo contains the main scripts I use on any OS (besides mobile... for now?). This should be installed and initially invoked by the startup script in the [dotfiles repo](https://github.com/aneuhold/dotfiles).
 
 If you would like to start a project with this as a basis, feel free to fork / copy and paste into another repo!
