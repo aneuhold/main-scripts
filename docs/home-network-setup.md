@@ -9,10 +9,10 @@
 
 ## Hardware Inventory
 
-| Device           | Hostname      | Role                          | Status |
-| ---------------- | ------------- | ----------------------------- | ------ |
-| Raspberry Pi 3B+ | `pi3-bplus-1` | Primary monitoring server     | Ready  |
-| Raspberry Pi 3B  | `pi3-b-1`     | Cold spare / Pi-hole failover | Ready  |
+| Device           | Hostname      | Role                          | Status | Power               |
+| ---------------- | ------------- | ----------------------------- | ------ | ------------------- |
+| Raspberry Pi 3B+ | `pi3-bplus-1` | Primary monitoring server     | Ready  | 5V/3A via micro USB |
+| Raspberry Pi 3B  | `pi3-b-1`     | Cold spare / Pi-hole failover | Ready  | 5V/3A via micro USB |
 
 ## SSH Access
 

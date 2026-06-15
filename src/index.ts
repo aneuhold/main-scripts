@@ -3,6 +3,7 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { program } from 'commander';
 import clean from './commands/clean.js';
+import connect from './commands/connect.js';
 import config from './commands/config.js';
 import dev from './commands/dev.js';
 import downloadAndMergeVideos from './commands/downloadAndMergeVideos.js';
@@ -302,6 +303,14 @@ program
   )
   .action(async (options: ImgOptions) => {
     await img(options);
+  });
+
+program
+  .command('connect')
+  .description('Opens an interactive connection to a home network target')
+  .argument('[target]', 'The target to connect to')
+  .action(async (target?: string) => {
+    await connect(target);
   });
 
 program
