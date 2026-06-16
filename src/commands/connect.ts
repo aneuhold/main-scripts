@@ -1,10 +1,15 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { spawnSync } from 'child_process';
+import {
+  HomeLabMachine,
+  MACHINE_SSH
+} from '../config/homelab/homeLabNetworkMap.js';
 import CLIService from '../services/CLIService.js';
 
 enum ConnectTarget {
   Pi1 = 'pi1',
-  Pi2 = 'pi2'
+  Pi2 = 'pi2',
+  Router = 'router'
 }
 
 type TargetConfig = {
@@ -13,8 +18,18 @@ type TargetConfig = {
 };
 
 const TARGET_CONFIGS: Record<ConnectTarget, TargetConfig> = {
-  [ConnectTarget.Pi1]: { cmd: 'ssh', args: ['neuholda@pi3-bplus-1.local'] },
-  [ConnectTarget.Pi2]: { cmd: 'ssh', args: ['neuholda@pi3-b-1.local'] }
+  [ConnectTarget.Pi1]: {
+    cmd: 'ssh',
+    args: [MACHINE_SSH[HomeLabMachine.Pi1]]
+  },
+  [ConnectTarget.Pi2]: {
+    cmd: 'ssh',
+    args: [MACHINE_SSH[HomeLabMachine.Pi2]]
+  },
+  [ConnectTarget.Router]: {
+    cmd: 'ssh',
+    args: [MACHINE_SSH[HomeLabMachine.Router]]
+  }
 };
 
 /**
@@ -47,7 +62,6 @@ export default async function connect(target?: string): Promise<void> {
   }
 
   const config = TARGET_CONFIGS[selected];
-
   const result = spawnSync(config.cmd, config.args, { stdio: 'inherit' });
   process.exit(result.status ?? 0);
 }

@@ -14,6 +14,7 @@ export type MainScriptsConfig = {
   worktreeBaseDir?: string;
   vsCodeAlternativeCommand?: string;
   img?: MainScriptsConfigImg;
+  homelab?: MainScriptsConfigHomelab;
 };
 
 /**
@@ -86,6 +87,25 @@ export type MainScriptsConfigProject = {
      * Only supported on macOS with iTerm2.
      */
     newTabVerticalSplitCommands?: string[];
+  };
+};
+
+/**
+ * Home lab configuration stored in the user's config file. Keeps secrets
+ * (passwords) out of the repository and off the Pi.
+ *
+ * If updating, make sure to also update the main readme documentation.
+ */
+export type MainScriptsConfigHomelab = {
+  /** IANA timezone used by all monitoring containers. Defaults to "America/Phoenix". */
+  timezone?: string;
+  pihole?: {
+    /** Pi-hole web UI password. Written to the Pi's .env on deploy. */
+    webPassword?: string;
+  };
+  grafana?: {
+    /** Grafana admin password. Written to the Pi's .env on deploy. */
+    adminPassword?: string;
   };
 };
 
