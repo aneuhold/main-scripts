@@ -97,8 +97,6 @@ export type MainScriptsConfigProject = {
  * If updating, make sure to also update the main readme documentation.
  */
 export type MainScriptsConfigHomelab = {
-  /** IANA timezone used by all monitoring containers. Defaults to "America/Phoenix". */
-  timezone?: string;
   pihole?: {
     /** Pi-hole web UI password. Written to the Pi's .env on deploy. */
     webPassword?: string;
