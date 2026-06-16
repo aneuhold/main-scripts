@@ -1,5 +1,5 @@
 import { DR } from '@aneuhold/core-ts-lib';
-import { spawn } from 'child_process';
+import { spawnSync } from 'child_process';
 import CLIService from '../services/CLIService.js';
 
 enum ConnectTarget {
@@ -13,8 +13,8 @@ type TargetConfig = {
 };
 
 const TARGET_CONFIGS: Record<ConnectTarget, TargetConfig> = {
-  [ConnectTarget.Pi1]: { cmd: 'ssh', args: ['neuhola@pi3-bplus-1.local'] },
-  [ConnectTarget.Pi2]: { cmd: 'ssh', args: ['neuhola@pi3-b-1.local'] }
+  [ConnectTarget.Pi1]: { cmd: 'ssh', args: ['neuholda@pi3-bplus-1.local'] },
+  [ConnectTarget.Pi2]: { cmd: 'ssh', args: ['neuholda@pi3-b-1.local'] }
 };
 
 /**
@@ -47,8 +47,7 @@ export default async function connect(target?: string): Promise<void> {
   }
 
   const config = TARGET_CONFIGS[selected];
-  const proc = spawn(config.cmd, config.args, { stdio: 'inherit' });
-  proc.on('close', (code) => {
-    process.exit(code ?? 0);
-  });
+
+  const result = spawnSync(config.cmd, config.args, { stdio: 'inherit' });
+  process.exit(result.status ?? 0);
 }
