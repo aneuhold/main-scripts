@@ -4,6 +4,7 @@ import { DR } from '@aneuhold/core-ts-lib';
 import { program } from 'commander';
 import clean from './commands/clean.js';
 import connect from './commands/connect.js';
+import homelab from './commands/homelab.js';
 import config from './commands/config.js';
 import dev from './commands/dev.js';
 import downloadAndMergeVideos from './commands/downloadAndMergeVideos.js';
@@ -312,6 +313,32 @@ program
   .action(async (target?: string) => {
     await connect(target);
   });
+
+program
+  .command('homelab')
+  .description('Manage home lab stacks and applications')
+  .argument(
+    '[subcommand]',
+    'deploy | start | stop | restart | logs | status | teardown | configure-router | audit'
+  )
+  .option(
+    '--router-host <host>',
+    'For configure-router: EdgeRouter hostname or IP',
+    'ubnt.local'
+  )
+  .option(
+    '--router-user <user>',
+    'For configure-router: SSH username on the EdgeRouter',
+    'admin'
+  )
+  .action(
+    async (
+      subcommand: string,
+      options: { routerHost: string; routerUser: string }
+    ) => {
+      await homelab(subcommand, options.routerHost, options.routerUser);
+    }
+  );
 
 program
   .command('vscode')
