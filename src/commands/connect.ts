@@ -1,10 +1,8 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { spawnSync } from 'child_process';
-import {
-  HomeLabMachine,
-  MACHINE_SSH
-} from '../config/homelab/homeLabNetworkMap.js';
+import { HomeLabMachine } from '../config/homelab/homeLabNetworkMap.js';
 import CLIService from '../services/CLIService.js';
+import HomeLabNetworkService from '../services/HomeLab/HomeLabNetworkService.js';
 
 enum ConnectTarget {
   Pi1 = 'pi1',
@@ -20,15 +18,15 @@ type TargetConfig = {
 const TARGET_CONFIGS: Record<ConnectTarget, TargetConfig> = {
   [ConnectTarget.Pi1]: {
     cmd: 'ssh',
-    args: [MACHINE_SSH[HomeLabMachine.Pi1]]
+    args: [HomeLabNetworkService.sshHost(HomeLabMachine.Pi1)]
   },
   [ConnectTarget.Pi2]: {
     cmd: 'ssh',
-    args: [MACHINE_SSH[HomeLabMachine.Pi2]]
+    args: [HomeLabNetworkService.sshHost(HomeLabMachine.Pi2)]
   },
   [ConnectTarget.Router]: {
     cmd: 'ssh',
-    args: [MACHINE_SSH[HomeLabMachine.Router]]
+    args: [HomeLabNetworkService.sshHost(HomeLabMachine.Router)]
   }
 };
 

@@ -1,16 +1,33 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { spawnSync } from 'child_process';
-import {
-  HomeLabMachine,
-  MACHINE_SSH
-} from '../../config/homelab/homeLabNetworkMap.js';
+import { HomeLabMachine } from '../../config/homelab/types.js';
 
 /**
- * Low-level SSH and utility operations for the home lab. Command-level
- * orchestration and logging live in the homelab command; this service handles
- * the self-contained mechanics.
+ * SSH connection strings for each machine. Lives with the network service
+ * since reaching a machine is a networking concern, not config data.
  */
-export default class HomeLabService {
+const MACHINE_SSH: Record<HomeLabMachine, string> = {
+  [HomeLabMachine.Pi1]: 'neuholda@pi3-bplus-1.local',
+  [HomeLabMachine.Pi2]: 'neuholda@pi3-b-1.local',
+  [HomeLabMachine.Router]: 'admin@ubnt.local'
+};
+
+/**
+ * Low-level SSH and utility mechanics for the home lab — the single layer that
+ * knows how to reach a machine (the {@link MACHINE_SSH} address book) and run
+ * commands on it. Command-level orchestration and logging live in the higher
+ * level services and the homelab command.
+ */
+export default class HomeLabNetworkService {
+  /**
+   * Returns the SSH connection string (user@host) for the given machine.
+   *
+   * @param machine the target machine
+   */
+  static sshHost(machine: HomeLabMachine): string {
+    return MACHINE_SSH[machine];
+  }
+
   /**
    * Runs a command on the given machine via SSH, streaming stdio directly to
    * the terminal. Returns the remote exit code.
