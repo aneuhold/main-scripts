@@ -68,18 +68,18 @@ export type DeployableOps = {
 export type DeployableOpKey = keyof DeployableOps;
 
 /**
- * The observed state of a deployable at a single placement. The two "present"
- * states differ by deployable kind: container-backed deployables report
- * {@link Running}/{@link Stopped} (a process is or isn't up), while one-shot
- * deployables that have no long-lived process (host setup, router config) report
- * {@link Configured} when their desired condition is satisfied.
+ * The observed state of a deployable at a single placement. The "present"
+ * states differ by deployable kind: process-backed deployables report
+ * {@link Running}/{@link Stopped} (a process is or isn't up), while deployables
+ * with no long-lived process report {@link Configured} when their desired
+ * condition is satisfied.
  */
 export enum DeployableState {
-  /** A container-backed deployable is up (its container is running). */
+  /** A process-backed deployable is up. */
   Running = 'running',
-  /** A container-backed deployable exists but its container is exited. */
+  /** A process-backed deployable exists but its process is not running. */
   Stopped = 'stopped',
-  /** A process-less deployable's desired condition is in place (e.g. the Docker daemon is up, or the router is reachable/configured). */
+  /** A process-less deployable's desired condition is in place. */
   Configured = 'configured'
 }
 
@@ -116,9 +116,8 @@ export type MachineProbe = {
 };
 
 /**
- * Collected once per reconcile and handed to every {@link Deployable.observe}.
- * Holds per-machine reachability and, for each docker host, the running/stopped
- * container name sets so a deployable can detect itself without re-SSHing.
+ * Collected once per reconcile and handed to every {@link Deployable.observe},
+ * so a deployable can detect itself from shared state instead of re-probing.
  */
 export type ProbeContext = {
   machines: Record<HomeLabMachine, MachineProbe>;
@@ -172,8 +171,8 @@ export type ConvergencePlan = {
 
 /**
  * A composable unit of the home lab with a uniform lifecycle. A stack is a
- * `Deployable` that contains child container `Deployable`s; a docker-host
- * install or router config is a leaf `Deployable`. Built by driver factories —
+ * `Deployable` that contains child `Deployable`s; a one-shot setup or
+ * configuration step is a leaf `Deployable`. Built by driver factories —
  * downstream code only ever sees this shape and never branches on the driver.
  */
 export type Deployable = {
@@ -195,23 +194,19 @@ export type Deployable = {
   children: Deployable[];
   /**
    * Names of other deployables that must be deployed/satisfied before this one
-   * can deploy. Currently only the network-monitoring stack uses this (it
-   * depends on the docker-host and router-config deployables so Docker is
-   * installed and NetFlow/syslog export is in place first). Enforced at deploy
-   * time — see HomeLabDeployableService.
+   * can deploy, so prerequisites are in place first. Enforced at deploy time —
+   * see HomeLabDeployableService.
    */
   dependsOn: string[];
   /**
    * Self-audit: probes where this deployable actually is and in what state,
-   * using the shared {@link ProbeContext}. Driver-specific (containers read the
-   * probe's docker-ps sets, host setup checks docker info, the router reports
-   * reachability).
+   * using the shared {@link ProbeContext}. The detection is driver-specific.
    */
   observe: (ctx: ProbeContext) => Promise<Observation>;
   /**
    * Re-binds this deployable to a different machine, returning an equivalent
-   * `Deployable` whose ops/observe target that machine. Used by the reconciler
-   * to tear a misplaced deployable down on the machine it is wrongly running on.
+   * `Deployable` whose ops/observe target that machine — e.g. to act on it where
+   * it currently runs rather than where it is configured to run.
    */
   onMachine: (machine: HomeLabMachine) => Deployable;
 };

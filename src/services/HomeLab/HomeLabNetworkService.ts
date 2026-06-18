@@ -1,20 +1,11 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { spawnSync } from 'child_process';
+import { MACHINES } from '../../config/homelab/machines.js';
 import { HomeLabMachine } from '../../config/homelab/types.js';
 
 /**
- * SSH connection strings for each machine. Lives with the network service
- * since reaching a machine is a networking concern, not config data.
- */
-const MACHINE_SSH: Record<HomeLabMachine, string> = {
-  [HomeLabMachine.Pi1]: 'neuholda@pi3-bplus-1.local',
-  [HomeLabMachine.Pi2]: 'neuholda@pi3-b-1.local',
-  [HomeLabMachine.Router]: 'admin@ubnt.local'
-};
-
-/**
  * Low-level SSH and utility mechanics for the home lab — the single layer that
- * knows how to reach a machine (the {@link MACHINE_SSH} address book) and run
+ * knows how to reach a machine (via the {@link MACHINES} registry) and run
  * commands on it. Command-level orchestration and logging live in the higher
  * level services and the homelab command.
  */
@@ -25,7 +16,7 @@ export default class HomeLabNetworkService {
    * @param machine the target machine
    */
   static sshHost(machine: HomeLabMachine): string {
-    return MACHINE_SSH[machine];
+    return MACHINES[machine].sshHost;
   }
 
   /**
@@ -36,7 +27,7 @@ export default class HomeLabNetworkService {
    * @param command shell command to run on the remote machine
    */
   static sshRun(machine: HomeLabMachine, command: string): number {
-    const result = spawnSync('ssh', [MACHINE_SSH[machine], command], {
+    const result = spawnSync('ssh', [MACHINES[machine].sshHost, command], {
       stdio: 'inherit'
     });
     return result.status ?? 0;
@@ -69,12 +60,28 @@ export default class HomeLabNetworkService {
         'BatchMode=yes'
       );
     }
-    args.push(MACHINE_SSH[machine], command);
+    args.push(MACHINES[machine].sshHost, command);
     const result = spawnSync('ssh', args, { encoding: 'utf8' });
     return {
       output: result.stdout.trim(),
       exitCode: result.status ?? 1
     };
+  }
+
+  /**
+   * Runs a non-interactive SSH session on the given machine, piping `input` to
+   * its stdin. Used to feed a batch of commands to a remote shell. Returns the
+   * remote exit code.
+   *
+   * @param machine the target machine
+   * @param input text piped to the remote session's stdin
+   */
+  static sshRunWithInput(machine: HomeLabMachine, input: string): number {
+    const result = spawnSync('ssh', [MACHINES[machine].sshHost, '-T'], {
+      input,
+      stdio: ['pipe', 'inherit', 'inherit']
+    });
+    return result.status ?? 0;
   }
 
   /**
@@ -93,7 +100,7 @@ export default class HomeLabNetworkService {
     const result = spawnSync(
       'ssh',
       [
-        MACHINE_SSH[machine],
+        MACHINES[machine].sshHost,
         `mkdir -p "$(dirname '${remotePath}')" && cat > '${remotePath}'`
       ],
       { input: content, stdio: ['pipe', 'inherit', 'inherit'] }
