@@ -316,29 +316,14 @@ program
 
 program
   .command('homelab')
-  .description('Manage home lab stacks and applications')
+  .description('Manage home lab deployables')
   .argument(
     '[subcommand]',
-    'deploy | start | stop | restart | logs | status | teardown | configure-router | audit'
+    'deploy | start | stop | restart | logs | status | teardown | audit'
   )
-  .option(
-    '--router-host <host>',
-    'For configure-router: EdgeRouter hostname or IP',
-    'ubnt.local'
-  )
-  .option(
-    '--router-user <user>',
-    'For configure-router: SSH username on the EdgeRouter',
-    'admin'
-  )
-  .action(
-    async (
-      subcommand: string,
-      options: { routerHost: string; routerUser: string }
-    ) => {
-      await homelab(subcommand, options.routerHost, options.routerUser);
-    }
-  );
+  .action(async (subcommand: string) => {
+    await homelab(subcommand);
+  });
 
 program
   .command('vscode')

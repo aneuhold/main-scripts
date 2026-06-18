@@ -1,6 +1,6 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { spawnSync } from 'child_process';
-import { HomeLabMachine } from '../config/homelab/homeLabNetworkMap.js';
+import { HomeLabMachine } from '../config/homelab/registry.js';
 import CLIService from '../services/CLIService.js';
 import HomeLabNetworkService from '../services/HomeLab/HomeLabNetworkService.js';
 
