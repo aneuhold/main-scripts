@@ -48,7 +48,11 @@ function isConnectTarget(value: string): value is ConnectTarget {
  */
 export default async function connect(target?: string): Promise<void> {
   const selected =
-    target ?? (await CLIService.selectFromList(Object.values(ConnectTarget)));
+    target ??
+    (await CLIService.selectFromList(
+      Object.values(ConnectTarget),
+      'Select a target to connect to'
+    ));
 
   if (!isConnectTarget(selected)) {
     const available = Object.values(ConnectTarget).join(', ');

@@ -169,7 +169,10 @@ async function findAndOpenProject(): Promise<void> {
     const relativePaths = solutionFiles.map((file) =>
       path.relative(currentDir, file)
     );
-    const selectedRelativePath = await CLIService.selectFromList(relativePaths);
+    const selectedRelativePath = await CLIService.selectFromList(
+      relativePaths,
+      'Select a solution file'
+    );
     await openSolutionFile(selectedRelativePath);
     return;
   }
@@ -190,7 +193,10 @@ async function findAndOpenProject(): Promise<void> {
     optionMap.set(relativePath, () => openSolutionFile(file));
   });
 
-  const selectedOption = await CLIService.selectFromList(options);
+  const selectedOption = await CLIService.selectFromList(
+    options,
+    'Select what to open'
+  );
   const action = optionMap.get(selectedOption);
   if (action) {
     await action();

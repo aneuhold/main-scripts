@@ -191,13 +191,17 @@ export default class CLIService {
    * Presents a list of options to the user and returns the selected option using inquirer
    *
    * @param options the list of options to present to the user
+   * @param message the prompt message to display; defaults to a generic prompt
    */
-  static async selectFromList(options: string[]): Promise<string> {
+  static async selectFromList(
+    options: string[],
+    message = 'Select an option'
+  ): Promise<string> {
     if (options.length === 0) throw new Error('No options provided');
     if (options.length === 1) return options[0];
 
     const answer = await select({
-      message: 'Select a solution file',
+      message,
       choices: options.map((option) => ({ title: option, value: option }))
     });
 

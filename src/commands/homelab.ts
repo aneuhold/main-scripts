@@ -165,7 +165,10 @@ async function runTeardown(): Promise<void> {
 export default async function homelab(subcommand?: string): Promise<void> {
   const selected =
     subcommand ??
-    (await CLIService.selectFromList(Object.values(HomelabSubcommand)));
+    (await CLIService.selectFromList(
+      Object.values(HomelabSubcommand),
+      'Select a homelab action'
+    ));
 
   if (!isHomelabSubcommand(selected)) {
     const available = Object.values(HomelabSubcommand).join(', ');
@@ -204,7 +207,10 @@ export default async function homelab(subcommand?: string): Promise<void> {
       let service: string | undefined;
       if (target.children.length > 0) {
         const services = ['all', ...target.children.map((c) => c.name)];
-        const selectedService = await CLIService.selectFromList(services);
+        const selectedService = await CLIService.selectFromList(
+          services,
+          'Select a service for logs'
+        );
         service = selectedService === 'all' ? undefined : selectedService;
       }
       await HomeLabDeployableService.run('logs', target, config, service);
