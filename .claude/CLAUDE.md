@@ -12,11 +12,11 @@
 
 - **Platform Detection**: Use `CurrentEnv.os` to branch logic for Windows/macOS/Linux
 - **OSA Script Builder**: `OsaScriptBuilder` in `src/utils/` constructs AppleScript commands for iTerm2 automation on macOS
-- **Application Services** (`src/services/applications/`): General, cross-OS services for interacting with applications that run on a machine (e.g. `DockerService`, `GitService`). They are shared building blocks — other areas (e.g. `HomeLab`) should reuse and extend them rather than duplicating that logic. Keep these services focused on the application they cover as if running the service on the machine where the application is housed. Remote access services can thread the output from application services.
+- **Application Services** (`src/services/applications/`): General, cross-OS services for interacting with applications that run on a machine (e.g. `DockerService`, `GitService`). They are shared building blocks. Other areas (e.g. `HomeLab`) should reuse and extend them rather than duplicating that logic. Keep these services focused on the application they cover as if running the service on the machine where the application is housed. Remote access services can thread the output from application services.
 
 ### Language
 
-- Never use em-dash
+- Never use em-dash. Use normal english. Sentences, periods, commas, etc.
 - Never use past tense in comments, documentation, etc. For example never say "we do X now because it used to do Y". Past tense is completely useless, bloats the content, and is actually negative because it implies there's something else going on that needs to be understood to look at the current code. If we are avoiding a situation because of an existing bug, that should be linked.
 - Never directly tie a doc comment or documentation to an implementation. For example saying "Updates a date to X format (e.g. when we need to show a date to a user in the frontend form)". Not only does that extra detail not matter, it couples the comment to the other code. Making it brittle. But it also hides the true purpose of the function. It makes it sound like the function is only for that one thing and nothing else, which promotes duplication. A function is only created when it can stand on it's own. If you have to justify it's purpose by citing another piece of logic, then the function shouldn't be there. If you are trying to give an example of usage, then give an example of generic usage, DO NOT tie it to existing code.
 
