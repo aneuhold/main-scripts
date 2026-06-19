@@ -27,6 +27,7 @@ import {
 } from './commands/worktree.js';
 import calculateProbabilities from './utils/calculator.js';
 import CliLogger from './utils/CliLogger.js';
+import handleDefinedErrors from './utils/handleDefinedErrors.js';
 import { triggerUpdate } from './utils/updateIfNeeded.js';
 
 // Use our spinner-aware logger so long-running work can show a live loading
@@ -341,6 +342,10 @@ program
 
 // Run the thang
 void (async () => {
-  await program.parseAsync();
+  try {
+    await program.parseAsync();
+  } catch (error) {
+    handleDefinedErrors(error);
+  }
   process.exit();
 })();
