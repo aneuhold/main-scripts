@@ -1,3 +1,4 @@
+import { DR } from '@aneuhold/core-ts-lib';
 import DockerService from '../../../services/applications/DockerService.js';
 import HomeLabNetworkService from '../../../services/HomeLab/HomeLabNetworkService.js';
 import {
@@ -56,32 +57,44 @@ export function createContainer({
   dependsOn?: string[];
   opsOverride?: DeployableOps;
 }): Deployable {
+  /**
+   * Runs a single-container command on the machine, but only after confirming
+   * Docker is available there. If it is not, prints a hint and skips the command
+   * rather than surfacing a raw "docker: command not found" error.
+   *
+   * @param command the docker command to run
+   */
+  const runWithDocker = (command: string): void => {
+    const dockerCheck = HomeLabNetworkService.sshCapture(
+      machine,
+      DockerService.getDockerInfoCheckCommand()
+    );
+    if (dockerCheck.output !== 'ok') {
+      DR.logger.info(
+        `Docker is not available on ${machine} — ` +
+          'run "tb homelab deploy" to set up the Docker host first.'
+      );
+      return;
+    }
+    HomeLabNetworkService.sshRun(machine, command);
+  };
+
   const driverDefaults: DeployableOps = {
-    start: () =>
-      void HomeLabNetworkService.sshRun(
-        machine,
-        DockerService.getContainerStartCommand(name)
-      ),
-    stop: () =>
-      void HomeLabNetworkService.sshRun(
-        machine,
-        DockerService.getContainerStopCommand(name)
-      ),
-    restart: () =>
-      void HomeLabNetworkService.sshRun(
-        machine,
-        DockerService.getContainerRestartCommand(name)
-      ),
-    status: () =>
-      void HomeLabNetworkService.sshRun(
-        machine,
-        DockerService.getContainerStatusCommand(name)
-      ),
-    logs: () =>
-      void HomeLabNetworkService.sshRun(
-        machine,
-        DockerService.getContainerLogsCommand(name)
-      )
+    start: () => {
+      runWithDocker(DockerService.getContainerStartCommand(name));
+    },
+    stop: () => {
+      runWithDocker(DockerService.getContainerStopCommand(name));
+    },
+    restart: () => {
+      runWithDocker(DockerService.getContainerRestartCommand(name));
+    },
+    status: () => {
+      runWithDocker(DockerService.getContainerStatusCommand(name));
+    },
+    logs: () => {
+      runWithDocker(DockerService.getContainerLogsCommand(name));
+    }
   };
 
   return {

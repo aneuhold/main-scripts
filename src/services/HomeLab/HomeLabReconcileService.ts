@@ -66,8 +66,7 @@ export default class HomeLabReconcileService {
       machine,
       DockerService.getDockerInfoCheckCommand()
     );
-    const dockerOk = dockerCheck.output === 'ok';
-    if (!dockerOk) {
+    if (dockerCheck.output !== 'ok') {
       return {
         reachable: true,
         dockerOk: false,
