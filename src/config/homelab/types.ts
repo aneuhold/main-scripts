@@ -23,8 +23,13 @@ export enum MachineKind {
  * Connection and role data for a single machine.
  */
 export type MachineInfo = {
-  /** SSH connection string (user@host). */
-  sshHost: string;
+  /**
+   * Built-in default SSH login user. The `homelab.machineCreds` config can
+   * override it per machine.
+   */
+  user: string;
+  /** SSH host (IP or hostname). */
+  host: string;
   /** Role this machine plays in the home lab. */
   kind: MachineKind;
 };

@@ -10,24 +10,10 @@ enum ConnectTarget {
   Router = 'router'
 }
 
-type TargetConfig = {
-  cmd: string;
-  args: string[];
-};
-
-const TARGET_CONFIGS: Record<ConnectTarget, TargetConfig> = {
-  [ConnectTarget.Pi1]: {
-    cmd: 'ssh',
-    args: [HomeLabNetworkService.sshHost(HomeLabMachine.Pi1)]
-  },
-  [ConnectTarget.Pi2]: {
-    cmd: 'ssh',
-    args: [HomeLabNetworkService.sshHost(HomeLabMachine.Pi2)]
-  },
-  [ConnectTarget.Router]: {
-    cmd: 'ssh',
-    args: [HomeLabNetworkService.sshHost(HomeLabMachine.Router)]
-  }
+const TARGET_MACHINES: Record<ConnectTarget, HomeLabMachine> = {
+  [ConnectTarget.Pi1]: HomeLabMachine.Pi1,
+  [ConnectTarget.Pi2]: HomeLabMachine.Pi2,
+  [ConnectTarget.Router]: HomeLabMachine.Router
 };
 
 /**
@@ -63,7 +49,7 @@ export default async function connect(target?: string): Promise<void> {
     return;
   }
 
-  const config = TARGET_CONFIGS[selected];
-  const result = spawnSync(config.cmd, config.args, { stdio: 'inherit' });
+  const host = await HomeLabNetworkService.sshHost(TARGET_MACHINES[selected]);
+  const result = spawnSync('ssh', [host], { stdio: 'inherit' });
   process.exit(result.status ?? 0);
 }

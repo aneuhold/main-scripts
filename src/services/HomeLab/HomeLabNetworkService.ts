@@ -2,6 +2,7 @@ import { DR } from '@aneuhold/core-ts-lib';
 import { spawn, spawnSync } from 'child_process';
 import { MACHINES } from '../../config/homelab/machines.js';
 import { HomeLabMachine } from '../../config/homelab/types.js';
+import { ConfigService } from '../../services/ConfigService.js';
 import CliLogger from '../../utils/CliLogger.js';
 
 /**
@@ -21,12 +22,15 @@ const SSH_SPINNER_DELAY_MS = 500;
  */
 export default class HomeLabNetworkService {
   /**
-   * Returns the SSH connection string (user@host) for the given machine.
+   * Returns the SSH connection string (user@host) for the given machine. The
+   * login user is resolved from the `homelab.machineCreds` override for that
+   * machine when set, otherwise the machine's built-in default.
    *
    * @param machine the target machine
    */
-  static sshHost(machine: HomeLabMachine): string {
-    return MACHINES[machine].sshHost;
+  static async sshHost(machine: HomeLabMachine): Promise<string> {
+    const { host } = MACHINES[machine];
+    return `${await this.resolveUser(machine)}@${host}`;
   }
 
   /**
@@ -36,8 +40,12 @@ export default class HomeLabNetworkService {
    * @param machine the target machine
    * @param command shell command to run on the remote machine
    */
-  static sshRun(machine: HomeLabMachine, command: string): Promise<number> {
-    return this.runStreaming(machine, [MACHINES[machine].sshHost, command]);
+  static async sshRun(
+    machine: HomeLabMachine,
+    command: string
+  ): Promise<number> {
+    const host = await this.sshHost(machine);
+    return this.runStreaming(machine, [host, command]);
   }
 
   /**
@@ -52,7 +60,7 @@ export default class HomeLabNetworkService {
    * @param connectTimeout optional SSH ConnectTimeout in seconds; also enables
    *   BatchMode to prevent interactive prompts from blocking the process
    */
-  static sshCapture(
+  static async sshCapture(
     machine: HomeLabMachine,
     command: string,
     connectTimeout?: number
@@ -69,7 +77,7 @@ export default class HomeLabNetworkService {
         'BatchMode=yes'
       );
     }
-    args.push(MACHINES[machine].sshHost, command);
+    args.push(await this.sshHost(machine), command);
     const spinner = CliLogger.spinner(`Waiting on ${machine}...`, {
       delayMs: SSH_SPINNER_DELAY_MS
     });
@@ -100,12 +108,13 @@ export default class HomeLabNetworkService {
    * @param machine the target machine
    * @param command shell command to run on the remote machine
    */
-  static sshRunInteractive(
+  static async sshRunInteractive(
     machine: HomeLabMachine,
     command: string
   ): Promise<number> {
+    const host = await this.sshHost(machine);
     return new Promise((resolve) => {
-      const child = spawn('ssh', ['-tt', MACHINES[machine].sshHost, command], {
+      const child = spawn('ssh', ['-tt', host, command], {
         stdio: 'inherit'
       });
       child.on('error', () => {
@@ -125,11 +134,12 @@ export default class HomeLabNetworkService {
    * @param machine the target machine
    * @param input text piped to the remote session's stdin
    */
-  static sshRunWithInput(
+  static async sshRunWithInput(
     machine: HomeLabMachine,
     input: string
   ): Promise<number> {
-    return this.runStreaming(machine, [MACHINES[machine].sshHost, '-T'], input);
+    const host = await this.sshHost(machine);
+    return this.runStreaming(machine, [host, '-T'], input);
   }
 
   /**
@@ -140,15 +150,15 @@ export default class HomeLabNetworkService {
    * @param remotePath tilde-prefixed or absolute path on the remote machine
    * @param content file content to write
    */
-  static writeRemoteFile(
+  static async writeRemoteFile(
     machine: HomeLabMachine,
     remotePath: string,
     content: string
-  ): boolean {
+  ): Promise<boolean> {
     const result = spawnSync(
       'ssh',
       [
-        MACHINES[machine].sshHost,
+        await this.sshHost(machine),
         `mkdir -p "$(dirname '${remotePath}')" && cat > '${remotePath}'`
       ],
       { input: content, stdio: ['pipe', 'inherit', 'inherit'] }
@@ -216,5 +226,19 @@ export default class HomeLabNetworkService {
       if (input !== undefined) child.stdin.write(input);
       child.stdin.end();
     });
+  }
+
+  /**
+   * Resolves the SSH login user for a machine: the `homelab.machineCreds`
+   * override for that machine when set, otherwise its static default from the
+   * {@link MACHINES} registry.
+   *
+   * @param machine the target machine
+   */
+  private static async resolveUser(machine: HomeLabMachine): Promise<string> {
+    const config = await ConfigService.loadConfig();
+    return (
+      config.homelab?.machineCreds?.[machine]?.user ?? MACHINES[machine].user
+    );
   }
 }

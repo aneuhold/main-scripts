@@ -93,7 +93,9 @@ export function createDockerComposeStack({
       DR.logger.info(`Writing ${name} config files to ${machine}...`);
       for (const [path, content] of allFiles) {
         DR.logger.info(`  Writing ${path}`);
-        if (!HomeLabNetworkService.writeRemoteFile(machine, path, content)) {
+        if (
+          !(await HomeLabNetworkService.writeRemoteFile(machine, path, content))
+        ) {
           process.exit(1);
         }
       }

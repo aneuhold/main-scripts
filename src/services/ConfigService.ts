@@ -105,6 +105,12 @@ export type MainScriptsConfigHomelab = {
     /** Grafana admin password. Written to the Pi's .env on deploy. */
     adminPassword?: string;
   };
+  /**
+   * Per-machine SSH credential overrides, keyed by the machine identifier (the
+   * stable machine name). Any field set here overrides that machine's built-in
+   * default.
+   */
+  machineCreds?: Record<string, { user?: string }>;
 };
 
 /**

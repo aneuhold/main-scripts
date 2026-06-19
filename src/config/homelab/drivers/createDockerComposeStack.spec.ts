@@ -44,7 +44,7 @@ describe('createDockerComposeStack driver', () => {
   it('deploy writes files then runs compose up, in order', async () => {
     const writeSpy = vi
       .spyOn(HomeLabNetworkService, 'writeRemoteFile')
-      .mockReturnValue(true);
+      .mockResolvedValue(true);
     const runSpy = vi
       .spyOn(HomeLabNetworkService, 'sshRun')
       .mockResolvedValue(0);

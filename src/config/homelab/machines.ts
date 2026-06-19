@@ -8,15 +8,18 @@ import { HomeLabMachine, MachineInfo, MachineKind } from './types.js';
  */
 export const MACHINES: Record<HomeLabMachine, MachineInfo> = {
   [HomeLabMachine.Pi1]: {
-    sshHost: 'neuholda@pi3-bplus-1.local',
+    user: 'neuholda',
+    host: 'pi3-bplus-1.local',
     kind: MachineKind.DockerHost
   },
   [HomeLabMachine.Pi2]: {
-    sshHost: 'neuholda@pi3-b-1.local',
+    user: 'neuholda',
+    host: 'pi3-b-1.local',
     kind: MachineKind.DockerHost
   },
   [HomeLabMachine.Router]: {
-    sshHost: 'admin@ubnt.local',
+    user: 'ubnt',
+    host: '192.168.0.2',
     kind: MachineKind.Router
   }
 };

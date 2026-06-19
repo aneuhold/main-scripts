@@ -28,7 +28,7 @@ export function createDockerHostSetup({
 }: {
   machine: HomeLabMachine;
 }): Deployable {
-  const user = MACHINES[machine].sshHost.split('@')[0];
+  const user = MACHINES[machine].user;
   return createHostSetup({
     name: dockerHostSetupName(machine),
     label: `Docker host setup (${machine})`,
