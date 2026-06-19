@@ -13,15 +13,17 @@ import {
 /**
  * Builds a router-config {@link Deployable}. `deploy` awaits `buildCommands`,
  * prints them, then pipes them over a non-interactive SSH session to the router.
- * Only `deploy` is supported. Initial `observe` reports reachability only. Real
- * `show`-command verification slots in later as just another observe
- * implementation, with no reconciler change.
+ * Only `deploy` is supported. `observe` reports the deployable configured when
+ * `verify` is satisfied, falling back to plain SSH reachability when no `verify`
+ * is supplied. Pass a `show`-command-backed `verify` to confirm the config
+ * actually landed rather than just that the router answered.
  *
  * @param params the router-config parameters
  * @param params.name config identity / audit key
  * @param params.label display label for prompts (defaults to `name`)
  * @param params.machine router machine to configure
  * @param params.buildCommands produces the EdgeRouter CLI command list to apply; async because some commands embed values discovered from other machines (e.g. the Pi-hole IP)
+ * @param params.verify decides whether the config's desired condition actually holds, e.g. by reading back the live router config over SSH; defaults to plain reachability. Only called when the router is reachable
  * @param params.dependsOn names of deployables that must be satisfied before this one deploys
  * @param params.opsOverride per-unit overrides shallow-merged over the driver defaults
  */
@@ -30,6 +32,7 @@ export function createRouterConfig({
   label = name,
   machine,
   buildCommands,
+  verify,
   dependsOn = [],
   opsOverride
 }: {
@@ -37,9 +40,16 @@ export function createRouterConfig({
   label?: string;
   machine: HomeLabMachine;
   buildCommands: (config: MainScriptsConfig) => string[] | Promise<string[]>;
+  verify?: (
+    ctx: DetectionContext,
+    machine: HomeLabMachine
+  ) => boolean | Promise<boolean>;
   dependsOn?: string[];
   opsOverride?: DeployableOps;
 }): Deployable {
+  const isConfigured =
+    verify ??
+    ((ctx: DetectionContext, m: HomeLabMachine) => ctx.machines[m].reachable);
   const driverDefaults: DeployableOps = {
     deploy: async (config: MainScriptsConfig) => {
       const commands = await buildCommands(config);
@@ -73,13 +83,18 @@ export function createRouterConfig({
     ops: { ...driverDefaults, ...opsOverride },
     children: [],
     dependsOn,
-    observe: (ctx: DetectionContext) => {
-      const reachable = ctx.machines[machine].reachable;
-      return Promise.resolve({
-        placements: reachable
+    observe: async (ctx: DetectionContext) => {
+      // An unreachable router can be neither configured nor probed, so skip the
+      // verify call (which itself would need to reach the router) entirely.
+      if (!ctx.machines[machine].reachable) {
+        return { placements: [] };
+      }
+      const configured = await isConfigured(ctx, machine);
+      return {
+        placements: configured
           ? [{ machine, state: DeployableState.Configured }]
           : []
-      });
+      };
     },
     onMachine: (m) =>
       createRouterConfig({
@@ -87,6 +102,7 @@ export function createRouterConfig({
         label,
         machine: m,
         buildCommands,
+        verify,
         dependsOn,
         opsOverride
       })

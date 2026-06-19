@@ -7,6 +7,25 @@ import { HomeLabMachine } from '../../types.js';
 const LAN_SUBNET: string = '192.168.0.0/24';
 
 /**
+ * Resolves the first LAN IP of the given machine over SSH. Returns null when the
+ * machine is unreachable or reports no address.
+ *
+ * @param machine the machine whose primary LAN IP to discover
+ */
+const discoverLanIp = async (
+  machine: HomeLabMachine
+): Promise<string | null> => {
+  const ipResult = await HomeLabNetworkService.sshCapture(
+    machine,
+    "hostname -I | awk '{print $1}'"
+  );
+  if (ipResult.exitCode !== 0 || !ipResult.output) {
+    return null;
+  }
+  return ipResult.output;
+};
+
+/**
  * Builds the EdgeRouter config that hands out the Pi-hole host as the sole DHCP
  * DNS server for the LAN. The host's LAN IP is discovered over SSH at deploy
  * time.
@@ -23,21 +42,37 @@ export const createRouterDns = (
     label: 'router DHCP DNS',
     machine: HomeLabMachine.Router,
     dependsOn,
+    verify: async () => {
+      const piIp = await discoverLanIp(piholeMachine);
+      if (!piIp) {
+        return false;
+      }
+
+      // Read back the live DHCP dns-server for the LAN subnet. cli-shell-api is
+      // EdgeOS's scripting interface and returns the active config values
+      // space-separated and single-quoted (e.g. `'192.168.0.50'`). The config is
+      // in place only when the configured resolver is the current Pi-hole IP, so
+      // a Pi-hole IP change correctly surfaces as drift.
+      const dnsResult = await HomeLabNetworkService.sshCapture(
+        HomeLabMachine.Router,
+        `cli-shell-api returnActiveValues service dhcp-server shared-network-name LAN subnet ${LAN_SUBNET} dns-server`
+      );
+      if (dnsResult.exitCode !== 0) {
+        return false;
+      }
+      return dnsResult.output.includes(piIp);
+    },
     buildCommands: async () => {
       DR.logger.info(`Discovering IP of ${piholeMachine} (hosts Pi-hole)...`);
 
-      const ipResult = await HomeLabNetworkService.sshCapture(
-        piholeMachine,
-        "hostname -I | awk '{print $1}'"
-      );
-      if (ipResult.exitCode !== 0 || !ipResult.output) {
+      const piIp = await discoverLanIp(piholeMachine);
+      if (!piIp) {
         DR.logger.error(
           `Could not determine IP of ${piholeMachine}. Is it reachable?`
         );
         process.exit(1);
       }
 
-      const piIp = ipResult.output;
       DR.logger.info(`${piholeMachine} LAN IP: ${piIp}`);
 
       // EdgeOS DHCP dns-server reference:
