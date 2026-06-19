@@ -1,7 +1,7 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { HomeLabMachine } from '../../config/homelab/types.js';
-import DockerService from '../applications/DockerService.js';
-import HomeLabNetworkService from './HomeLabNetworkService.js';
+import DockerService from '../applications/Docker.service.js';
+import HomeLabNetworkService from './HomeLabNetwork.service.js';
 
 /**
  * Remote Docker access for the home lab: the single layer that threads
@@ -30,7 +30,7 @@ export default class HomeLabDockerService {
    * @param machine the machine to query
    */
   static runningContainers(machine: HomeLabMachine): Promise<Set<string>> {
-    return this.captureNames(
+    return this.#captureNames(
       machine,
       DockerService.getRunningContainersCommand()
     );
@@ -42,7 +42,7 @@ export default class HomeLabDockerService {
    * @param machine the machine to query
    */
   static exitedContainers(machine: HomeLabMachine): Promise<Set<string>> {
-    return this.captureNames(
+    return this.#captureNames(
       machine,
       DockerService.getExitedContainersCommand()
     );
@@ -101,7 +101,7 @@ export default class HomeLabDockerService {
    * @param machine the machine to query
    * @param command the ps command to run
    */
-  private static async captureNames(
+  static async #captureNames(
     machine: HomeLabMachine,
     command: string
   ): Promise<Set<string>> {

@@ -1,4 +1,4 @@
-import { MainScriptsConfig } from '../../services/ConfigService.js';
+import { MainScriptsConfig } from '../../services/Config.service.js';
 
 /**
  * Identifies a physical machine in the home lab. Use stable hardware

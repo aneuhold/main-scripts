@@ -2,7 +2,7 @@ import { DR } from '@aneuhold/core-ts-lib';
 import { readdir } from 'fs/promises';
 import os from 'os';
 import path from 'path';
-import CLIService from '../services/CLIService.js';
+import CLIService from '../services/CLI.service.js';
 
 /**
  * The type of shell that the current environment is running.
@@ -166,13 +166,13 @@ export default class CurrentEnv {
     const vsCodeCommand = 'code ';
 
     // Check for Rider first
-    if (await CurrentEnv.commandExists('rider')) {
+    if (await CurrentEnv.#commandExists('rider')) {
       return riderCommand;
     }
 
     // Check for Visual Studio
     if (CurrentEnv.os === OperatingSystemType.Windows) {
-      if (await CurrentEnv.commandExists('devenv')) {
+      if (await CurrentEnv.#commandExists('devenv')) {
         return visualStudioCommand;
       }
     } else if (CurrentEnv.os === OperatingSystemType.MacOSX) {
@@ -193,7 +193,7 @@ export default class CurrentEnv {
    *
    * @param command The command to check for.
    */
-  private static async commandExists(command: string): Promise<boolean> {
+  static async #commandExists(command: string): Promise<boolean> {
     try {
       const cmd =
         CurrentEnv.os === OperatingSystemType.Windows

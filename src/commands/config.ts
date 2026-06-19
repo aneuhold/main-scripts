@@ -1,6 +1,6 @@
 import { DR } from '@aneuhold/core-ts-lib';
-import VSCodeService from '../services/applications/VSCodeService.js';
-import { ConfigService } from '../services/ConfigService.js';
+import VSCodeService from '../services/applications/VSCode.service.js';
+import { ConfigService } from '../services/Config.service.js';
 
 /**
  * Shows the current configuration, initializes a new config file, or manages project configs.

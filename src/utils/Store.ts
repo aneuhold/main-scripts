@@ -1,4 +1,4 @@
-import { DR } from '@aneuhold/core-ts-lib';
+import { DR, JsonUtils } from '@aneuhold/core-ts-lib';
 import { access, mkdir, readFile, writeFile } from 'fs/promises';
 import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -22,33 +22,45 @@ export type StoreDb = {
 };
 
 /**
+ * Type guard that checks whether an unknown value matches the {@link StoreDb}
+ * shape.
+ *
+ * @param value the value to narrow
+ */
+const isStoreDb = (value: unknown): value is StoreDb =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
  * Represents the secondary storage data store for the scripts.
  */
 class Store {
   /**
    * Holds the database in-memory for use.
    */
-  private static db: StoreDb | undefined;
+  static #db: StoreDb | undefined;
 
-  private static async writeDb(updatedDb: StoreDb) {
+  static async #writeDb(updatedDb: StoreDb) {
     DR.logger.verbose.info('Attempting to write to the store db file...');
     await writeFile(DB_PATH, JSON.stringify(updatedDb), {
       flag: 'w+'
     });
   }
 
-  private static async checkDb() {
-    if (!Store.db) {
-      Store.db = await Store.getDb();
+  static async #checkDb() {
+    if (!Store.#db) {
+      Store.#db = await Store.#getDb();
     }
   }
 
-  private static async getDb(): Promise<StoreDb> {
+  static async #getDb(): Promise<StoreDb> {
     try {
       DR.logger.verbose.info(`Checking to see if ${DB_PATH} exists`);
       await access(DB_PATH);
       DR.logger.verbose.info(`${DB_PATH} exists...`);
-      return JSON.parse(await readFile(DB_PATH, 'utf-8')) as StoreDb;
+      return JsonUtils.parseWithGuard(
+        await readFile(DB_PATH, 'utf-8'),
+        isStoreDb
+      );
     } catch {
       // DB doesn't exist, so write the file first.
       DR.logger.verbose.info('Creating the database...');
@@ -77,22 +89,22 @@ class Store {
     key: T,
     value: StoreDb[T]
   ): Promise<void> {
-    await Store.checkDb();
-    if (!Store.db) {
+    await Store.#checkDb();
+    if (!Store.#db) {
       return;
     }
-    Store.db[key] = value;
-    await Store.writeDb(Store.db);
+    Store.#db[key] = value;
+    await Store.#writeDb(Store.#db);
   }
 
   static async get<T extends keyof StoreDb>(
     key: T
   ): Promise<StoreDb[T] | null> {
-    await Store.checkDb();
-    if (!Store.db) {
+    await Store.#checkDb();
+    if (!Store.#db) {
       return null;
     }
-    return Store.db[key];
+    return Store.#db[key];
   }
 }
 

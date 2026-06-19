@@ -1,13 +1,13 @@
-import { DR, ErrorUtils } from '@aneuhold/core-ts-lib';
+import { DR, ErrorUtils, JsonUtils } from '@aneuhold/core-ts-lib';
 import Database from 'better-sqlite3';
 import { createHash } from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
 import CurrentEnv, { OperatingSystemType } from '../../utils/CurrentEnv.js';
 import OsaScriptBuilder from '../../utils/OsaScriptBuilder.js';
-import CLIService from '../CLIService.js';
-import { ConfigService } from '../ConfigService.js';
-import { ProjectConfigService } from '../ProjectConfigService.js';
+import CLIService from '../CLI.service.js';
+import { ConfigService } from '../Config.service.js';
+import { ProjectConfigService } from '../ProjectConfig.service.js';
 
 /**
  * Represents information about a VS Code workspace storage directory.
@@ -54,12 +54,12 @@ enum EditorType {
  * which is particularly useful when creating git worktrees.
  */
 export default class VSCodeService {
-  private static readonly WORKSPACE_METADATA_FILE = 'workspace.json';
+  static readonly #WORKSPACE_METADATA_FILE = 'workspace.json';
 
   /**
    * Command patterns mapped to their editor types
    */
-  private static readonly COMMAND_TO_EDITOR_MAP: Record<string, EditorType> = {
+  static readonly #COMMAND_TO_EDITOR_MAP: Record<string, EditorType> = {
     // VS Code commands
     code: EditorType.VSCode,
     'code-insiders': EditorType.VSCodeInsiders,
@@ -75,7 +75,7 @@ export default class VSCodeService {
    * Directory names for each editor type.
    * Also used as macOS process names for System Events AppleScript.
    */
-  private static readonly EDITOR_DIR_NAMES: Record<EditorType, string> = {
+  static readonly #EDITOR_DIR_NAMES: Record<EditorType, string> = {
     [EditorType.VSCode]: 'Code',
     [EditorType.VSCodeInsiders]: 'Code - Insiders',
     [EditorType.Cursor]: 'Cursor',
@@ -86,7 +86,7 @@ export default class VSCodeService {
    * Keys to remove from state.vscdb when copying workspace storage.
    * These are removed to prevent issues with stale state when creating worktrees.
    */
-  private static readonly STATE_KEYS_TO_REMOVE = [
+  static readonly #STATE_KEYS_TO_REMOVE = [
     {
       key: 'memento/workbench.parts.editor',
       reason: 'Open tabs and editor layout - will be empty on fresh workspace'
@@ -105,7 +105,7 @@ export default class VSCodeService {
     }
   ] as const;
 
-  private static async getEditorCommand(): Promise<string> {
+  static async #getEditorCommand(): Promise<string> {
     const config = await ConfigService.loadConfig();
     const project = await ProjectConfigService.getCurrentProject();
     // Priority: project-specific config > global config > default 'code'
@@ -122,14 +122,14 @@ export default class VSCodeService {
    *
    * @returns The editor type (VSCode, Cursor, or Windsurf)
    */
-  private static async getEditorType(): Promise<EditorType> {
-    const command = await this.getEditorCommand();
+  static async #getEditorType(): Promise<EditorType> {
+    const command = await this.#getEditorCommand();
 
     // Normalize the command to lowercase for case-insensitive matching
     const normalizedCommand = command.toLowerCase();
 
     // Look up the editor type
-    return this.COMMAND_TO_EDITOR_MAP[normalizedCommand] ?? EditorType.VSCode;
+    return this.#COMMAND_TO_EDITOR_MAP[normalizedCommand] ?? EditorType.VSCode;
   }
 
   /**
@@ -149,8 +149,8 @@ export default class VSCodeService {
   public static async getWorkspaceStorageBaseDir(): Promise<string> {
     const currentOs = CurrentEnv.os;
     const homeDir = CurrentEnv.homeDir();
-    const editorType = await this.getEditorType();
-    const editorDirName = this.EDITOR_DIR_NAMES[editorType];
+    const editorType = await this.#getEditorType();
+    const editorDirName = this.#EDITOR_DIR_NAMES[editorType];
 
     switch (currentOs) {
       case OperatingSystemType.MacOSX:
@@ -191,7 +191,7 @@ export default class VSCodeService {
    * @param targetPath The path to open. Defaults to '.' (current directory)
    */
   public static async openVSCode(targetPath: string = '.'): Promise<void> {
-    const command = await this.getEditorCommand();
+    const command = await this.#getEditorCommand();
 
     DR.logger.success(`Opening ${targetPath} with ${command}...`);
     await CLIService.execCmdWithTimeout(`${command} ${targetPath}`, 4000);
@@ -211,8 +211,8 @@ export default class VSCodeService {
       return;
     }
 
-    const editorType = await this.getEditorType();
-    const processName = this.EDITOR_DIR_NAMES[editorType];
+    const editorType = await this.#getEditorType();
+    const processName = this.#EDITOR_DIR_NAMES[editorType];
     const folderName = path.basename(workspacePath);
 
     const osaScriptBuilder = new OsaScriptBuilder();
@@ -254,13 +254,13 @@ export default class VSCodeService {
     workspacePath: string
   ): Promise<WorkspaceStorageInfo | undefined> {
     try {
-      const normalizedPath = this.normalizeWorkspacePath(workspacePath);
+      const normalizedPath = this.#normalizeWorkspacePath(workspacePath);
 
       DR.logger.verbose.info(
         `Searching for workspace storage for: ${normalizedPath}`
       );
 
-      const storageInfo = await this.lookupStorageByWorkspace(normalizedPath);
+      const storageInfo = await this.#lookupStorageByWorkspace(normalizedPath);
 
       if (!storageInfo) {
         DR.logger.verbose.info(
@@ -304,7 +304,7 @@ export default class VSCodeService {
     workspacePath: string
   ): Promise<WorkspaceStorageInfo> {
     try {
-      const normalizedPath = this.normalizeWorkspacePath(workspacePath);
+      const normalizedPath = this.#normalizeWorkspacePath(workspacePath);
 
       // Verify the workspace folder exists
       if (!(await fs.pathExists(normalizedPath))) {
@@ -316,13 +316,13 @@ export default class VSCodeService {
 
       // Compute the workspace ID using VS Code's algorithm
       // This matches: src/vs/platform/workspaces/node/workspaces.ts
-      const storageHash = await this.computeWorkspaceId(normalizedPath);
-      const storagePath = await this.buildStoragePath(storageHash);
+      const storageHash = await this.#computeWorkspaceId(normalizedPath);
+      const storagePath = await this.#buildStoragePath(storageHash);
 
       const storageAlreadyExists = await fs.pathExists(storagePath);
 
       await fs.ensureDir(storagePath);
-      await this.writeWorkspaceMetadata(storagePath, normalizedPath);
+      await this.#writeWorkspaceMetadata(storagePath, normalizedPath);
 
       DR.logger.verbose.info(
         `${storageAlreadyExists ? 'Updated' : 'Created'} workspace storage: ${storageHash} for ${normalizedPath}`
@@ -357,9 +357,7 @@ export default class VSCodeService {
    * @param workspacePath The absolute path to the workspace folder
    * @returns The workspace ID (32-character hex string)
    */
-  private static async computeWorkspaceId(
-    workspacePath: string
-  ): Promise<string> {
+  static async #computeWorkspaceId(workspacePath: string): Promise<string> {
     const stats = await fs.stat(workspacePath);
     const currentOs = CurrentEnv.os;
 
@@ -459,7 +457,7 @@ export default class VSCodeService {
       if (!targetStorage) {
         targetStorage = await this.createWorkspaceStorage(targetWorkspacePath);
       } else if (overwrite) {
-        await this.writeWorkspaceMetadata(
+        await this.#writeWorkspaceMetadata(
           targetStorage.storagePath,
           targetStorage.workspacePath
         );
@@ -467,14 +465,14 @@ export default class VSCodeService {
 
       DR.logger.verbose.info(`Target storage at: ${targetStorage.storagePath}`);
 
-      await this.copyStorageContents({
+      await this.#copyStorageContents({
         sourcePath: sourceStorage.storagePath,
         targetPath: targetStorage.storagePath,
         exclude
       });
 
       // Clean up problematic state keys that can cause issues in worktrees
-      await this.cleanupStateDatabase(targetStorage.storagePath);
+      await this.#cleanupStateDatabase(targetStorage.storagePath);
 
       DR.logger.success(
         'Successfully copied VS Code workspace storage to worktree'
@@ -547,7 +545,7 @@ export default class VSCodeService {
     storageHash: string
   ): Promise<boolean> {
     try {
-      const storagePath = await this.buildStoragePath(storageHash);
+      const storagePath = await this.#buildStoragePath(storageHash);
 
       if (!(await fs.pathExists(storagePath))) {
         return false;
@@ -580,10 +578,10 @@ export default class VSCodeService {
         return workspaces;
       }
 
-      const entries = await this.getWorkspaceStorageDirectories(baseDir);
+      const entries = await this.#getWorkspaceStorageDirectories(baseDir);
 
       for (const entry of entries) {
-        const workspaceInfo = await this.buildWorkspaceInfoFromMetadata(
+        const workspaceInfo = await this.#buildWorkspaceInfoFromMetadata(
           baseDir,
           entry
         );
@@ -611,7 +609,7 @@ export default class VSCodeService {
    * @param baseDir The workspace storage base directory
    * @returns Array of directory names that contain workspace.json files
    */
-  private static async getWorkspaceStorageDirectories(
+  static async #getWorkspaceStorageDirectories(
     baseDir: string
   ): Promise<string[]> {
     const entries = await fs.readdir(baseDir);
@@ -625,7 +623,7 @@ export default class VSCodeService {
         continue;
       }
 
-      if (await fs.pathExists(this.workspaceMetadataPath(entryPath))) {
+      if (await fs.pathExists(this.#workspaceMetadataPath(entryPath))) {
         directories.push(entry);
       }
     }
@@ -640,24 +638,38 @@ export default class VSCodeService {
    * @param storageHash The storage directory hash name
    * @returns WorkspaceStorageInfo if metadata exists, undefined otherwise
    */
-  private static async buildWorkspaceInfoFromMetadata(
+  /**
+   * Type guard for the subset of VS Code's `workspace.json` metadata that is
+   * read here.
+   *
+   * @param value the value to narrow
+   */
+  static #isWorkspaceMetadata(
+    this: void,
+    value: unknown
+  ): value is { folder?: string } {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+  }
+
+  static async #buildWorkspaceInfoFromMetadata(
     baseDir: string,
     storageHash: string
   ): Promise<WorkspaceStorageInfo | undefined> {
     try {
       const storagePath = path.join(baseDir, storageHash);
-      const workspaceJsonPath = this.workspaceMetadataPath(storagePath);
+      const workspaceJsonPath = this.#workspaceMetadataPath(storagePath);
 
-      const workspaceData = (await fs.readJson(workspaceJsonPath)) as {
-        folder?: string;
-      };
+      const workspaceData = JsonUtils.parseWithGuard(
+        await fs.readFile(workspaceJsonPath, 'utf8'),
+        VSCodeService.#isWorkspaceMetadata
+      );
 
       if (!workspaceData.folder) {
         return undefined;
       }
 
-      const workspacePath = this.normalizeWorkspacePath(
-        this.uriToPath(workspaceData.folder)
+      const workspacePath = this.#normalizeWorkspacePath(
+        this.#uriToPath(workspaceData.folder)
       );
 
       return {
@@ -679,14 +691,14 @@ export default class VSCodeService {
    * @param normalizedPath The normalized workspace path
    * @returns Workspace storage info if found, undefined otherwise
    */
-  private static async lookupStorageByWorkspace(
+  static async #lookupStorageByWorkspace(
     normalizedPath: string
   ): Promise<WorkspaceStorageInfo | undefined> {
     const computedHash =
-      await this.computeWorkspaceHashIfPossible(normalizedPath);
+      await this.#computeWorkspaceHashIfPossible(normalizedPath);
 
     if (computedHash) {
-      const storagePath = await this.buildStoragePath(computedHash);
+      const storagePath = await this.#buildStoragePath(computedHash);
       if (await fs.pathExists(storagePath)) {
         return {
           storageHash: computedHash,
@@ -696,7 +708,7 @@ export default class VSCodeService {
       }
     }
 
-    return this.lookupStorageByMetadata(normalizedPath);
+    return this.#lookupStorageByMetadata(normalizedPath);
   }
 
   /**
@@ -705,7 +717,7 @@ export default class VSCodeService {
    * @param normalizedPath The normalized workspace path
    * @returns Workspace storage info if found, undefined otherwise
    */
-  private static async lookupStorageByMetadata(
+  static async #lookupStorageByMetadata(
     normalizedPath: string
   ): Promise<WorkspaceStorageInfo | undefined> {
     const baseDir = await this.getWorkspaceStorageBaseDir();
@@ -714,10 +726,10 @@ export default class VSCodeService {
       return undefined;
     }
 
-    const entries = await this.getWorkspaceStorageDirectories(baseDir);
+    const entries = await this.#getWorkspaceStorageDirectories(baseDir);
 
     for (const entry of entries) {
-      const info = await this.buildWorkspaceInfoFromMetadata(baseDir, entry);
+      const info = await this.#buildWorkspaceInfoFromMetadata(baseDir, entry);
       if (info && info.workspacePath === normalizedPath) {
         return info;
       }
@@ -732,11 +744,11 @@ export default class VSCodeService {
    * @param normalizedPath The normalized workspace path
    * @returns The computed hash if successful, undefined otherwise
    */
-  private static async computeWorkspaceHashIfPossible(
+  static async #computeWorkspaceHashIfPossible(
     normalizedPath: string
   ): Promise<string | undefined> {
     try {
-      return await this.computeWorkspaceId(normalizedPath);
+      return await this.#computeWorkspaceId(normalizedPath);
     } catch (error) {
       DR.logger.verbose.info(
         `Unable to compute workspace hash for ${normalizedPath}: ${ErrorUtils.getErrorString(error)}`
@@ -751,7 +763,7 @@ export default class VSCodeService {
    * @param workspacePath The workspace path to normalize
    * @returns Normalized workspace path
    */
-  private static normalizeWorkspacePath(workspacePath: string): string {
+  static #normalizeWorkspacePath(workspacePath: string): string {
     return path.normalize(workspacePath);
   }
 
@@ -761,7 +773,7 @@ export default class VSCodeService {
    * @param storageHash The workspace storage hash
    * @returns Absolute storage directory path
    */
-  private static async buildStoragePath(storageHash: string): Promise<string> {
+  static async #buildStoragePath(storageHash: string): Promise<string> {
     const baseDir = await this.getWorkspaceStorageBaseDir();
     return path.join(baseDir, storageHash);
   }
@@ -772,8 +784,8 @@ export default class VSCodeService {
    * @param storagePath The storage directory path
    * @returns Absolute path to workspace metadata file
    */
-  private static workspaceMetadataPath(storagePath: string): string {
-    return path.join(storagePath, this.WORKSPACE_METADATA_FILE);
+  static #workspaceMetadataPath(storagePath: string): string {
+    return path.join(storagePath, this.#WORKSPACE_METADATA_FILE);
   }
 
   /**
@@ -782,16 +794,16 @@ export default class VSCodeService {
    * @param storagePath The storage directory path
    * @param normalizedPath The normalized workspace path
    */
-  private static async writeWorkspaceMetadata(
+  static async #writeWorkspaceMetadata(
     storagePath: string,
     normalizedPath: string
   ): Promise<void> {
     const workspaceJson = {
-      folder: this.pathToUri(normalizedPath)
+      folder: this.#pathToUri(normalizedPath)
     };
 
     await fs.writeFile(
-      this.workspaceMetadataPath(storagePath),
+      this.#workspaceMetadataPath(storagePath),
       JSON.stringify(workspaceJson, null, 2)
     );
   }
@@ -804,7 +816,7 @@ export default class VSCodeService {
    * @param data.targetPath Absolute path to the target storage directory
    * @param data.exclude Item names to exclude during copy
    */
-  private static async copyStorageContents(data: {
+  static async #copyStorageContents(data: {
     sourcePath: string;
     targetPath: string;
     exclude: string[];
@@ -813,7 +825,7 @@ export default class VSCodeService {
     const items = await fs.readdir(sourcePath);
 
     for (const item of items) {
-      if (item === this.WORKSPACE_METADATA_FILE || exclude.includes(item)) {
+      if (item === this.#WORKSPACE_METADATA_FILE || exclude.includes(item)) {
         DR.logger.verbose.info(`Skipping: ${item}`);
         continue;
       }
@@ -841,7 +853,7 @@ export default class VSCodeService {
    * @param uri The file URI to convert
    * @returns The file system path
    */
-  private static uriToPath(uri: string): string {
+  static #uriToPath(uri: string): string {
     return uri.replace('file://', '');
   }
 
@@ -851,7 +863,7 @@ export default class VSCodeService {
    * @param filePath The file system path to convert
    * @returns The file URI
    */
-  private static pathToUri(filePath: string): string {
+  static #pathToUri(filePath: string): string {
     return `file://${filePath}`;
   }
 
@@ -867,9 +879,7 @@ export default class VSCodeService {
    *
    * @param targetStoragePath The absolute path to the target workspace storage directory
    */
-  private static async cleanupStateDatabase(
-    targetStoragePath: string
-  ): Promise<void> {
+  static async #cleanupStateDatabase(targetStoragePath: string): Promise<void> {
     const dbPath = path.join(targetStoragePath, 'state.vscdb');
 
     if (!(await fs.pathExists(dbPath))) {
@@ -883,7 +893,7 @@ export default class VSCodeService {
         let removedCount = 0;
 
         // Remove keys defined in STATE_KEYS_TO_REMOVE
-        for (const { key, reason } of this.STATE_KEYS_TO_REMOVE) {
+        for (const { key, reason } of this.#STATE_KEYS_TO_REMOVE) {
           const result = db
             .prepare('DELETE FROM ItemTable WHERE key = ?')
             .run(key);

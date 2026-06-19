@@ -2,7 +2,7 @@ import { DR, FileSystemService } from '@aneuhold/core-ts-lib';
 import { access, appendFile, readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import CurrentEnv, { OperatingSystemType } from '../../utils/CurrentEnv.js';
-import CLIService from '../CLIService.js';
+import CLIService from '../CLI.service.js';
 
 /**
  * A service which can be used to interact with the file system application on
@@ -14,11 +14,11 @@ export default class OSFileSystemService {
    */
   static async openNugetCache(): Promise<void> {
     if (CurrentEnv.os === OperatingSystemType.Windows) {
-      await OSFileSystemService.openWindowsNugetCache();
+      await OSFileSystemService.#openWindowsNugetCache();
       return;
     }
     if (CurrentEnv.os === OperatingSystemType.MacOSX) {
-      await OSFileSystemService.openMacNugetCache();
+      await OSFileSystemService.#openMacNugetCache();
       return;
     }
     DR.logger.error('Not implemented for this OS yet.');
@@ -63,7 +63,7 @@ export default class OSFileSystemService {
   /**
    * Opens the Windows NuGet cache folder.
    */
-  private static async openWindowsNugetCache() {
+  static async #openWindowsNugetCache() {
     await Promise.all([
       CLIService.execCmd(`ii $HOME/localNuget`),
       CLIService.execCmd(`ii $HOME/.nuget/packages`)
@@ -73,7 +73,7 @@ export default class OSFileSystemService {
   /**
    * Opens the macOS NuGet cache folder.
    */
-  private static async openMacNugetCache() {
+  static async #openMacNugetCache() {
     await Promise.all([
       CLIService.execCmd(`open $HOME/localNuget`),
       CLIService.execCmd(`open $HOME/.nuget/packages`)

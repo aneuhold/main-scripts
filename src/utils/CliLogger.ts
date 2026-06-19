@@ -43,20 +43,20 @@ type Spinner = {
  * lines, so nothing is lost and captured output stays clean.
  */
 export default class CliLogger implements ILogger {
-  private static verboseEnabled = false;
-  private static spinnerText: string | undefined;
-  private static spinnerFrame = 0;
-  private static spinnerTimer: NodeJS.Timeout | undefined;
-  private static owner: symbol | undefined;
+  static #verboseEnabled = false;
+  static #spinnerText: string | undefined;
+  static #spinnerFrame = 0;
+  static #spinnerTimer: NodeJS.Timeout | undefined;
+  static #owner: symbol | undefined;
 
-  private readonly logOnlyIfVerbose: boolean;
+  readonly #logOnlyIfVerbose: boolean;
 
   /**
    * @param logOnlyIfVerbose if true, this instance only logs when verbose
    * logging is globally enabled (used for the `verbose` child logger)
    */
   constructor(logOnlyIfVerbose = false) {
-    this.logOnlyIfVerbose = logOnlyIfVerbose;
+    this.#logOnlyIfVerbose = logOnlyIfVerbose;
   }
 
   /**
@@ -89,13 +89,13 @@ export default class CliLogger implements ILogger {
     };
     const start = (): void => {
       if (delayMs <= 0) {
-        CliLogger.claim(id, label);
+        CliLogger.#claim(id, label);
         return;
       }
       delayTimer = setTimeout(() => {
         // Claim the line only when nothing else owns it.
-        if (CliLogger.owner === undefined && CliLogger.isInteractive()) {
-          CliLogger.claim(id, label);
+        if (CliLogger.#owner === undefined && CliLogger.#isInteractive()) {
+          CliLogger.#claim(id, label);
         }
       }, delayMs);
       delayTimer.unref();
@@ -106,24 +106,24 @@ export default class CliLogger implements ILogger {
     return {
       update: (next: string): void => {
         label = next;
-        CliLogger.redraw(id, label);
+        CliLogger.#redraw(id, label);
       },
       poke: (): void => {
         clearDelay();
-        CliLogger.release(id);
+        CliLogger.#release(id);
         start();
       },
       succeed: (next?: string): void => {
         clearDelay();
-        CliLogger.finalize(id, '✓', next ?? label);
+        CliLogger.#finalize(id, '✓', next ?? label);
       },
       fail: (next?: string): void => {
         clearDelay();
-        CliLogger.finalize(id, '✗', next ?? label);
+        CliLogger.#finalize(id, '✗', next ?? label);
       },
       stop: (): void => {
         clearDelay();
-        CliLogger.release(id);
+        CliLogger.#release(id);
       }
     };
   }
@@ -165,13 +165,13 @@ export default class CliLogger implements ILogger {
    * @param skipNewline if true, writes without a trailing newline
    */
   info(msg: string, skipNewline?: boolean): void {
-    if (!this.shouldLog()) return;
+    if (!this.#shouldLog()) return;
     const line = `ℹ️  ${msg}`;
     if (skipNewline) {
-      CliLogger.aroundSpinner(() => process.stdout.write(line), false);
+      CliLogger.#aroundSpinner(() => process.stdout.write(line), false);
       return;
     }
-    CliLogger.aroundSpinner(() => {
+    CliLogger.#aroundSpinner(() => {
       console.log(line);
     }, true);
   }
@@ -182,8 +182,8 @@ export default class CliLogger implements ILogger {
    * @param msg the message to log
    */
   success(msg: string): void {
-    if (this.shouldLog())
-      CliLogger.aroundSpinner(() => {
+    if (this.#shouldLog())
+      CliLogger.#aroundSpinner(() => {
         console.log(`✅ ${msg}`);
       });
   }
@@ -194,8 +194,8 @@ export default class CliLogger implements ILogger {
    * @param msg the message to log
    */
   warn(msg: string): void {
-    if (this.shouldLog())
-      CliLogger.aroundSpinner(() => {
+    if (this.#shouldLog())
+      CliLogger.#aroundSpinner(() => {
         console.warn(`🟡 ${msg}`);
       });
   }
@@ -206,8 +206,8 @@ export default class CliLogger implements ILogger {
    * @param msg the message to log
    */
   error(msg: string): void {
-    if (this.shouldLog())
-      CliLogger.aroundSpinner(() => {
+    if (this.#shouldLog())
+      CliLogger.#aroundSpinner(() => {
         console.error(`💀 ${msg}`);
       });
   }
@@ -218,22 +218,22 @@ export default class CliLogger implements ILogger {
    * @param enabled whether to enable verbose logging globally
    */
   setVerboseLogging(enabled: boolean): void {
-    CliLogger.verboseEnabled = enabled;
+    CliLogger.#verboseEnabled = enabled;
   }
 
   /**
    * Gets the current global verbose logging state.
    */
   isVerboseLoggingEnabled(): boolean {
-    return CliLogger.verboseEnabled;
+    return CliLogger.#verboseEnabled;
   }
 
   /**
    * True when output is an interactive TTY and verbose logging is off: the
    * conditions under which a spinner can safely animate and rewrite the line.
    */
-  private static isInteractive(): boolean {
-    return process.stdout.isTTY && !CliLogger.verboseEnabled;
+  static #isInteractive(): boolean {
+    return process.stdout.isTTY && !CliLogger.#verboseEnabled;
   }
 
   /**
@@ -245,12 +245,12 @@ export default class CliLogger implements ILogger {
    * @param redraw whether to redraw the spinner afterward (false for partial,
    * newline-less writes)
    */
-  private static aroundSpinner(write: () => void, redraw = true): void {
+  static #aroundSpinner(write: () => void, redraw = true): void {
     const active =
-      CliLogger.spinnerText !== undefined && CliLogger.isInteractive();
-    if (active) CliLogger.clearLine();
+      CliLogger.#spinnerText !== undefined && CliLogger.#isInteractive();
+    if (active) CliLogger.#clearLine();
     write();
-    if (active && redraw) CliLogger.renderFrame();
+    if (active && redraw) CliLogger.#renderFrame();
   }
 
   /**
@@ -260,22 +260,22 @@ export default class CliLogger implements ILogger {
    * @param id the owning handle's identity
    * @param label the status text to show
    */
-  private static claim(id: symbol, label: string): void {
-    CliLogger.stopTimer();
-    CliLogger.owner = id;
-    CliLogger.spinnerText = label;
-    CliLogger.spinnerFrame = 0;
-    if (!CliLogger.isInteractive()) {
+  static #claim(id: symbol, label: string): void {
+    CliLogger.#stopTimer();
+    CliLogger.#owner = id;
+    CliLogger.#spinnerText = label;
+    CliLogger.#spinnerFrame = 0;
+    if (!CliLogger.#isInteractive()) {
       console.log(`… ${label}`);
       return;
     }
-    CliLogger.renderFrame();
-    CliLogger.spinnerTimer = setInterval(() => {
-      CliLogger.spinnerFrame = (CliLogger.spinnerFrame + 1) % FRAMES.length;
-      CliLogger.renderFrame();
+    CliLogger.#renderFrame();
+    CliLogger.#spinnerTimer = setInterval(() => {
+      CliLogger.#spinnerFrame = (CliLogger.#spinnerFrame + 1) % FRAMES.length;
+      CliLogger.#renderFrame();
     }, FRAME_INTERVAL_MS);
     // Never let a lingering spinner hold the process open on exit.
-    CliLogger.spinnerTimer.unref();
+    CliLogger.#spinnerTimer.unref();
   }
 
   /**
@@ -284,11 +284,11 @@ export default class CliLogger implements ILogger {
    * @param id the requesting handle's identity
    * @param label the new status text
    */
-  private static redraw(id: symbol, label: string): void {
-    if (CliLogger.owner !== id) return;
-    CliLogger.spinnerText = label;
-    if (CliLogger.spinnerTimer && CliLogger.isInteractive()) {
-      CliLogger.renderFrame();
+  static #redraw(id: symbol, label: string): void {
+    if (CliLogger.#owner !== id) return;
+    CliLogger.#spinnerText = label;
+    if (CliLogger.#spinnerTimer && CliLogger.#isInteractive()) {
+      CliLogger.#renderFrame();
     }
   }
 
@@ -300,14 +300,14 @@ export default class CliLogger implements ILogger {
    *
    * @param id the releasing handle's identity
    */
-  private static release(id: symbol): void {
-    if (CliLogger.owner !== id) return;
-    CliLogger.stopTimer();
-    if (CliLogger.spinnerText !== undefined && CliLogger.isInteractive()) {
-      CliLogger.clearLine();
+  static #release(id: symbol): void {
+    if (CliLogger.#owner !== id) return;
+    CliLogger.#stopTimer();
+    if (CliLogger.#spinnerText !== undefined && CliLogger.#isInteractive()) {
+      CliLogger.#clearLine();
     }
-    CliLogger.spinnerText = undefined;
-    CliLogger.owner = undefined;
+    CliLogger.#spinnerText = undefined;
+    CliLogger.#owner = undefined;
   }
 
   /**
@@ -318,9 +318,9 @@ export default class CliLogger implements ILogger {
    * @param mark the leading status mark (e.g. `✓` or `✗`)
    * @param label the final text to print
    */
-  private static finalize(id: symbol, mark: string, label: string): void {
-    CliLogger.release(id);
-    CliLogger.aroundSpinner(() => {
+  static #finalize(id: symbol, mark: string, label: string): void {
+    CliLogger.#release(id);
+    CliLogger.#aroundSpinner(() => {
       console.log(`${mark} ${label}`);
     });
   }
@@ -328,27 +328,27 @@ export default class CliLogger implements ILogger {
   /**
    * Draws the current spinner frame and text on the active line.
    */
-  private static renderFrame(): void {
-    CliLogger.clearLine();
+  static #renderFrame(): void {
+    CliLogger.#clearLine();
     process.stdout.write(
-      `${FRAMES[CliLogger.spinnerFrame]} ${CliLogger.spinnerText ?? ''}`
+      `${FRAMES[CliLogger.#spinnerFrame]} ${CliLogger.#spinnerText ?? ''}`
     );
   }
 
   /**
    * Returns the cursor to the start of the line and clears it.
    */
-  private static clearLine(): void {
+  static #clearLine(): void {
     process.stdout.write('\r\x1b[K');
   }
 
   /**
    * Clears the animation interval if one is running.
    */
-  private static stopTimer(): void {
-    if (CliLogger.spinnerTimer) {
-      clearInterval(CliLogger.spinnerTimer);
-      CliLogger.spinnerTimer = undefined;
+  static #stopTimer(): void {
+    if (CliLogger.#spinnerTimer) {
+      clearInterval(CliLogger.#spinnerTimer);
+      CliLogger.#spinnerTimer = undefined;
     }
   }
 
@@ -356,7 +356,7 @@ export default class CliLogger implements ILogger {
    * Determines whether this instance should emit, honoring its verbose-only
    * setting against the global verbose flag.
    */
-  private shouldLog(): boolean {
-    return !this.logOnlyIfVerbose || CliLogger.verboseEnabled;
+  #shouldLog(): boolean {
+    return !this.#logOnlyIfVerbose || CliLogger.#verboseEnabled;
   }
 }

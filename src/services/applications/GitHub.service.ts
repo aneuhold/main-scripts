@@ -1,5 +1,5 @@
 import { DR } from '@aneuhold/core-ts-lib';
-import CLIService from '../CLIService.js';
+import CLIService from '../CLI.service.js';
 
 /**
  * A service for operations that interact with the GitHub CLI (`gh`).
@@ -14,7 +14,7 @@ export default class GitHubService {
   static async getPullRequestUrl(
     branchName: string
   ): Promise<string | undefined> {
-    if (!(await this.ensureGhAvailable())) {
+    if (!(await this.#ensureGhAvailable())) {
       return undefined;
     }
 
@@ -35,7 +35,7 @@ export default class GitHubService {
    *
    * @returns `true` if `gh` is available, `false` otherwise.
    */
-  private static async isGhAvailable(): Promise<boolean> {
+  static async #isGhAvailable(): Promise<boolean> {
     const { didComplete } = await CLIService.execCmd('gh --version', false);
     return didComplete;
   }
@@ -45,8 +45,8 @@ export default class GitHubService {
    *
    * @returns `true` if `gh` is available, `false` otherwise.
    */
-  private static async ensureGhAvailable(): Promise<boolean> {
-    const available = await this.isGhAvailable();
+  static async #ensureGhAvailable(): Promise<boolean> {
+    const available = await this.#isGhAvailable();
     if (!available) {
       DR.logger.error(
         'The GitHub CLI (gh) is not installed or not available on PATH. ' +

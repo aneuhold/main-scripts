@@ -1,7 +1,7 @@
 import { DR, ErrorUtils } from '@aneuhold/core-ts-lib';
 import path from 'path';
-import CLIService from '../services/CLIService.js';
-import { ProjectConfigService } from '../services/ProjectConfigService.js';
+import CLIService from '../services/CLI.service.js';
+import { ProjectConfigService } from '../services/ProjectConfig.service.js';
 
 /**
  * Starts a development watch mode using nodemon.

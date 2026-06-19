@@ -9,7 +9,7 @@ import {
   vi
 } from 'vitest';
 import { TestUtils } from '../../test-utils/TestUtils.js';
-import { ConfigService, type MainScriptsConfig } from './ConfigService.js';
+import { ConfigService, type MainScriptsConfig } from './Config.service.js';
 
 // Mock the logger to avoid console noise during tests
 vi.mock('@aneuhold/core-ts-lib', async () => {

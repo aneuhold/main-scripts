@@ -1,6 +1,6 @@
 import { DR, sleep } from '@aneuhold/core-ts-lib';
 import CurrentEnv, { OperatingSystemType } from '../../utils/CurrentEnv.js';
-import CLIService from '../CLIService.js';
+import CLIService from '../CLI.service.js';
 
 /**
  * A service that provides functionality for interacting with the Docker

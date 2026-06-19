@@ -15,9 +15,9 @@ import {
   ReconcileItem
 } from '../../config/homelab/types.js';
 import CliLogger from '../../utils/CliLogger.js';
-import { MainScriptsConfig } from '../ConfigService.js';
-import HomeLabDeployableService from './HomeLabDeployableService.js';
-import HomeLabNetworkService from './HomeLabNetworkService.js';
+import { MainScriptsConfig } from '../Config.service.js';
+import HomeLabDeployableService from './HomeLabDeployable.service.js';
+import HomeLabNetworkService from './HomeLabNetwork.service.js';
 
 /**
  * Owns desired-state reconciliation for the home lab: detects every reachable
@@ -43,7 +43,7 @@ export default class HomeLabReconcileService {
     const detect = async (
       machine: HomeLabMachine
     ): Promise<MachineSnapshot> => {
-      const snapshot = await this.detectMachine(machine);
+      const snapshot = await this.#detectMachine(machine);
       done += 1;
       spinner.update(`Detecting machines (${done}/${machineList.length})...`);
       return snapshot;
@@ -72,7 +72,7 @@ export default class HomeLabReconcileService {
    *
    * @param machine the machine to detect
    */
-  private static async detectMachine(
+  static async #detectMachine(
     machine: HomeLabMachine
   ): Promise<MachineSnapshot> {
     const reachable = await HomeLabNetworkService.sshCapture(
@@ -111,12 +111,12 @@ export default class HomeLabReconcileService {
 
     for (const target of targets) {
       const observation = await target.observe(ctx);
-      const status = this.classify(target, observation);
+      const status = this.#classify(target, observation);
       items.push({ deployable: target, observation, status });
-      actions.push(...this.planActions(target, observation, status));
+      actions.push(...this.#planActions(target, observation, status));
     }
 
-    items.push(...this.findUnmanaged(ctx));
+    items.push(...this.#findUnmanaged(ctx));
 
     return { items, actions };
   }
@@ -128,10 +128,7 @@ export default class HomeLabReconcileService {
    * @param target the deployable being reconciled
    * @param observation what the deployable observed
    */
-  private static classify(
-    target: Deployable,
-    observation: Observation
-  ): DriftStatus {
+  static #classify(target: Deployable, observation: Observation): DriftStatus {
     const { placements } = observation;
     if (placements.length === 0) return DriftStatus.Missing;
 
@@ -150,7 +147,7 @@ export default class HomeLabReconcileService {
    * @param observation what the deployable observed
    * @param status the classified drift
    */
-  private static planActions(
+  static #planActions(
     target: Deployable,
     observation: Observation,
     status: DriftStatus
@@ -187,7 +184,7 @@ export default class HomeLabReconcileService {
    *
    * @param ctx the detection context to scan
    */
-  private static findUnmanaged(ctx: DetectionContext): ReconcileItem[] {
+  static #findUnmanaged(ctx: DetectionContext): ReconcileItem[] {
     const items: ReconcileItem[] = [];
     for (const machine of Object.values(HomeLabMachine)) {
       const kind = MACHINES[machine].kind;
@@ -207,7 +204,7 @@ export default class HomeLabReconcileService {
    *
    * @param plan the plan whose actions to group
    */
-  private static groupActionsByMachine(
+  static groupActionsByMachine(
     plan: ConvergencePlan
   ): Map<HomeLabMachine, { adds: PlannedAction[]; removes: PlannedAction[] }> {
     const grouped = new Map<

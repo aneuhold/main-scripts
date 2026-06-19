@@ -1,6 +1,6 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import CurrentEnv, { OperatingSystemType } from '../../utils/CurrentEnv.js';
-import CLIService from '../CLIService.js';
+import CLIService from '../CLI.service.js';
 
 /**
  * A service for opening URLs in the default browser.

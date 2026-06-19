@@ -1,4 +1,4 @@
-import HomeLabDockerService from '../../../services/HomeLab/HomeLabDockerService.js';
+import HomeLabDockerService from '../../../services/HomeLab/HomeLabDocker.service.js';
 import { createDockerContainer } from '../drivers/createDockerContainer.js';
 import { ALL_DEPLOYABLES } from '../registry.js';
 import {

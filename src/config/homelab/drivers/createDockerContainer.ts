@@ -1,5 +1,5 @@
-import DockerService from '../../../services/applications/DockerService.js';
-import HomeLabDockerService from '../../../services/HomeLab/HomeLabDockerService.js';
+import DockerService from '../../../services/applications/Docker.service.js';
+import HomeLabDockerService from '../../../services/HomeLab/HomeLabDocker.service.js';
 import {
   Deployable,
   DeployableKind,

@@ -1,6 +1,6 @@
 import { DR, ErrorUtils } from '@aneuhold/core-ts-lib';
 import path from 'path';
-import CLIService from '../CLIService.js';
+import CLIService from '../CLI.service.js';
 
 export type WorktreeInfo = {
   path: string;
@@ -155,11 +155,21 @@ export default class GitService {
     const lines = output.trim().split('\n');
     let currentWorktree: Partial<WorktreeInfo> = {};
 
+    const pushWorktree = (worktree: Partial<WorktreeInfo>): void => {
+      if (!worktree.path) {
+        return;
+      }
+      worktrees.push({
+        path: worktree.path,
+        branch: worktree.branch ?? '',
+        commit: worktree.commit ?? '',
+        isMain: worktree.isMain ?? false
+      });
+    };
+
     for (const line of lines) {
       if (line.startsWith('worktree ')) {
-        if (currentWorktree.path) {
-          worktrees.push(currentWorktree as WorktreeInfo);
-        }
+        pushWorktree(currentWorktree);
         currentWorktree = { path: line.slice(9), isMain: false };
       } else if (line.startsWith('HEAD ')) {
         currentWorktree.commit = line.slice(5);
@@ -174,7 +184,7 @@ export default class GitService {
           if (worktrees.length === 0) {
             currentWorktree.isMain = true;
           }
-          worktrees.push(currentWorktree as WorktreeInfo);
+          pushWorktree(currentWorktree);
           currentWorktree = {};
         }
       }
@@ -185,7 +195,7 @@ export default class GitService {
       if (worktrees.length === 0) {
         currentWorktree.isMain = true;
       }
-      worktrees.push(currentWorktree as WorktreeInfo);
+      pushWorktree(currentWorktree);
     }
 
     // Fix up the main worktree path if it's inside a submodule's .git/modules

@@ -1,8 +1,10 @@
-import tsLibConfig from '@aneuhold/eslint-config/src/ts-lib-config.js';
+import tsLibConfig from '@aneuhold/eslint-config/src/configs/ts-lib-config';
 
-/** @type {import('@typescript-eslint/utils').TSESLint.FlatConfig.ConfigArray} */
 export default [
   ...tsLibConfig,
+  {
+    ignores: ['eslint.config.ts']
+  },
   {
     // other override settings. e.g. for `files: ['**/*.test.*']`
     rules: {

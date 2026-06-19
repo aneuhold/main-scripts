@@ -30,7 +30,7 @@ vi.mock('node:fs/promises', () => ({
 }));
 
 const execCmdMock = vi.fn();
-vi.mock('../services/CLIService.js', () => ({
+vi.mock('../services/CLI.service.js', () => ({
   default: {
     execCmd: execCmdMock
   }

@@ -1,5 +1,5 @@
 import { DR } from '@aneuhold/core-ts-lib';
-import HomeLabNetworkService from '../../../../services/HomeLab/HomeLabNetworkService.js';
+import HomeLabNetworkService from '../../../../services/HomeLab/HomeLabNetwork.service.js';
 import { createRouterConfig } from '../../drivers/createRouterConfig.js';
 import { HomeLabMachine } from '../../types.js';
 

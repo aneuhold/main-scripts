@@ -4,11 +4,6 @@ import { ExecOptions, exec as normalExec, spawn } from 'child_process';
 import util from 'util';
 import CurrentEnv, { OperatingSystemType } from '../utils/CurrentEnv.js';
 
-/**
- * The promisified version of the {@link normalExec} function.
- */
-const execute = util.promisify(normalExec);
-
 type ExecCmdReturnType = { didComplete: boolean; output: string };
 
 /**
@@ -16,7 +11,12 @@ type ExecCmdReturnType = { didComplete: boolean; output: string };
  * system.
  */
 export default class CLIService {
-  private static POWERSHELL_PREFIX = `pwsh -NoProfile -Command `;
+  static #POWERSHELL_PREFIX = `pwsh -NoProfile -Command `;
+
+  /**
+   * The promisified version of the {@link normalExec} function.
+   */
+  static #execute = util.promisify(normalExec);
 
   /**
    * Executes the given command in a shell environment. Spins up a separate
@@ -62,14 +62,17 @@ export default class CLIService {
     // Set the powershell prefix if the current OS is Windows so that
     // the profile is not ran before the command.
     if (CurrentEnv.os === OperatingSystemType.Windows && !useProfile) {
-      commandToExecute = `${CLIService.POWERSHELL_PREFIX}${cmd}`;
+      commandToExecute = `${CLIService.#POWERSHELL_PREFIX}${cmd}`;
     } else if (CurrentEnv.os === OperatingSystemType.Windows && useProfile) {
       execOptions.shell = 'pwsh';
     }
 
     DR.logger.verbose.info(`Executing command: ${commandToExecute}`);
     try {
-      const { stdout, stderr } = await execute(commandToExecute, execOptions);
+      const { stdout, stderr } = await CLIService.#execute(
+        commandToExecute,
+        execOptions
+      );
 
       // Convert stdout and stderr to strings to handle Buffer types
       const stdoutStr = stdout.toString().trim() || '';
@@ -169,13 +172,15 @@ export default class CLIService {
           output: errorMessage
         });
       });
-      spawnedCmd.stdout.on('data', (data) => {
-        output += data as string;
-        DR.logger.info(data as string, true);
+      spawnedCmd.stdout.on('data', (data: Buffer) => {
+        const text = data.toString();
+        output += text;
+        DR.logger.info(text, true);
       });
-      spawnedCmd.stderr.on('data', (data) => {
-        output += data as string;
-        DR.logger.info(data as string, true);
+      spawnedCmd.stderr.on('data', (data: Buffer) => {
+        const text = data.toString();
+        output += text;
+        DR.logger.info(text, true);
       });
       spawnedCmd.on('close', (exitCode) => {
         DR.logger.info(`Command "${cmd}" exited with code ${exitCode}`);

@@ -6,9 +6,9 @@ import { Stats } from 'fs';
 import { stat, unlink, writeFile } from 'fs/promises';
 import os from 'os';
 import path from 'path';
-import R2Service from '../services/applications/R2Service.js';
-import { ConfigService } from '../services/ConfigService.js';
-import FileSearchService from '../services/FileSearchService.js';
+import R2Service from '../services/applications/R2.service.js';
+import { ConfigService } from '../services/Config.service.js';
+import FileSearchService from '../services/FileSearch.service.js';
 
 const UPLOAD_RESULTS_FILENAME = 'upload-results.json';
 

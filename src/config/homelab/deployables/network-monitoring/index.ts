@@ -2,7 +2,7 @@ import { DR } from '@aneuhold/core-ts-lib';
 import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { MainScriptsConfig } from '../../../../services/ConfigService.js';
+import { MainScriptsConfig } from '../../../../services/Config.service.js';
 import {
   createDockerComposeStack,
   RemoteFile

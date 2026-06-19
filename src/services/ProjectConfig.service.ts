@@ -1,10 +1,10 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import path from 'path';
 import CurrentEnv, { TerminalType } from '../utils/CurrentEnv.js';
-import GitService from './applications/GitService.js';
-import ITermService from './applications/ITermService.js';
-import CLIService from './CLIService.js';
-import { ConfigService, MainScriptsConfigProject } from './ConfigService.js';
+import GitService from './applications/Git.service.js';
+import ITermService from './applications/ITerm.service.js';
+import CLIService from './CLI.service.js';
+import { ConfigService, MainScriptsConfigProject } from './Config.service.js';
 
 /**
  * A resolved project configuration, including the dynamically generated
@@ -18,15 +18,15 @@ export type Project = MainScriptsConfigProject & {
  * Service for loading project configurations from user config.
  */
 export class ProjectConfigService {
-  private static mergedProjects: Record<string, Project> | null = null;
+  static #mergedProjects: Record<string, Project> | null = null;
 
   /**
    * Get all user-configured projects, keyed by folder name. Each project has
    * a generated `setup` function if its `setupConfig` block is actionable.
    */
   static async getProjects(): Promise<Record<string, Project>> {
-    if (this.mergedProjects) {
-      return this.mergedProjects;
+    if (this.#mergedProjects) {
+      return this.#mergedProjects;
     }
 
     const userConfig = await ConfigService.loadConfig();
@@ -35,7 +35,7 @@ export class ProjectConfigService {
     };
 
     for (const project of Object.values(projects)) {
-      const generatedSetup = this.buildSetupFromConfig(project);
+      const generatedSetup = this.#buildSetupFromConfig(project);
       if (generatedSetup) {
         project.setup = generatedSetup;
       }
@@ -78,7 +78,7 @@ export class ProjectConfigService {
    *
    * @param project The project config to build the setup function for.
    */
-  private static buildSetupFromConfig(
+  static #buildSetupFromConfig(
     project: Project
   ): (() => Promise<void>) | undefined {
     const setupConfig = project.setupConfig;

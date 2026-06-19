@@ -6,7 +6,7 @@ import {
   HomeLabMachine,
   MachineSnapshot
 } from '../../config/homelab/types.js';
-import HomeLabReconcileService from './HomeLabReconcileService.js';
+import HomeLabReconcileService from './HomeLabReconcile.service.js';
 
 // Mock the logger to avoid console noise during tests
 vi.mock('@aneuhold/core-ts-lib', async () => {

@@ -1,5 +1,5 @@
 import { DR } from '@aneuhold/core-ts-lib';
-import CLIService from '../services/CLIService.js';
+import CLIService from '../services/CLI.service.js';
 import CurrentEnv, { OperatingSystemType } from '../utils/CurrentEnv.js';
 
 /**

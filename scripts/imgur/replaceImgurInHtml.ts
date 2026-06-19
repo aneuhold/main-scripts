@@ -1,3 +1,4 @@
+import { JsonUtils } from '@aneuhold/core-ts-lib';
 import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -12,6 +13,22 @@ type UploadResult = {
 };
 
 /**
+ * Type guard that checks whether an unknown value is an array of
+ * {@link UploadResult}.
+ *
+ * @param value the value to narrow
+ */
+const isUploadResultArray = (value: unknown): value is UploadResult[] =>
+  Array.isArray(value) &&
+  value.every(
+    (entry) =>
+      typeof entry === 'object' &&
+      entry !== null &&
+      'originalName' in entry &&
+      'status' in entry
+  );
+
+/**
  * Reads the `upload-results.json` written by `tb img all` and returns the
  * parsed array.
  *
@@ -21,11 +38,11 @@ const readUploadResults = async (
   resultsPath: string
 ): Promise<UploadResult[]> => {
   const content = await readFile(resultsPath, 'utf8');
-  const parsed: unknown = JSON.parse(content);
-  if (!Array.isArray(parsed)) {
-    throw new Error(`Expected an array in ${resultsPath}`);
-  }
-  return parsed as UploadResult[];
+  return JsonUtils.parseWithGuard(
+    content,
+    isUploadResultArray,
+    `Expected an array of upload results in ${resultsPath}`
+  );
 };
 
 /**

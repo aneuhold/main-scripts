@@ -2,13 +2,8 @@ import { DR } from '@aneuhold/core-ts-lib';
 import { spawn, spawnSync } from 'child_process';
 import { MACHINES } from '../../config/homelab/machines.js';
 import { HomeLabMachine } from '../../config/homelab/types.js';
-import { ConfigService } from '../../services/ConfigService.js';
+import { ConfigService } from '../../services/Config.service.js';
 import CliLogger from '../../utils/CliLogger.js';
-
-/**
- * Milliseconds an SSH command may stay silent before a spinner appears.
- */
-const SSH_SPINNER_DELAY_MS = 500;
 
 /**
  * Low-level SSH and utility mechanics for the home lab. The single layer that
@@ -22,6 +17,11 @@ const SSH_SPINNER_DELAY_MS = 500;
  */
 export default class HomeLabNetworkService {
   /**
+   * Milliseconds an SSH command may stay silent before a spinner appears.
+   */
+  static readonly #SSH_SPINNER_DELAY_MS = 500;
+
+  /**
    * Returns the SSH connection string (user@host) for the given machine. The
    * login user is resolved from the `homelab.machineCreds` override for that
    * machine when set, otherwise the machine's built-in default.
@@ -30,7 +30,7 @@ export default class HomeLabNetworkService {
    */
   static async sshHost(machine: HomeLabMachine): Promise<string> {
     const { host } = MACHINES[machine];
-    return `${await this.resolveUser(machine)}@${host}`;
+    return `${await this.#resolveUser(machine)}@${host}`;
   }
 
   /**
@@ -45,7 +45,7 @@ export default class HomeLabNetworkService {
     command: string
   ): Promise<number> {
     const host = await this.sshHost(machine);
-    return this.runStreaming(machine, [host, command]);
+    return this.#runStreaming(machine, [host, command]);
   }
 
   /**
@@ -79,7 +79,7 @@ export default class HomeLabNetworkService {
     }
     args.push(await this.sshHost(machine), command);
     const spinner = CliLogger.spinner(`Waiting on ${machine}...`, {
-      delayMs: SSH_SPINNER_DELAY_MS
+      delayMs: HomeLabNetworkService.#SSH_SPINNER_DELAY_MS
     });
     return new Promise((resolve) => {
       let stdout = '';
@@ -139,7 +139,7 @@ export default class HomeLabNetworkService {
     input: string
   ): Promise<number> {
     const host = await this.sshHost(machine);
-    return this.runStreaming(machine, [host, '-T'], input);
+    return this.#runStreaming(machine, [host, '-T'], input);
   }
 
   /**
@@ -201,13 +201,13 @@ export default class HomeLabNetworkService {
    * @param args the ssh argument vector (host plus command or flags)
    * @param input optional text written to the remote session's stdin
    */
-  private static runStreaming(
+  static #runStreaming(
     machine: HomeLabMachine,
     args: string[],
     input?: string
   ): Promise<number> {
     const spinner = CliLogger.spinner(`Running on ${machine}...`, {
-      delayMs: SSH_SPINNER_DELAY_MS
+      delayMs: HomeLabNetworkService.#SSH_SPINNER_DELAY_MS
     });
     return new Promise((resolve) => {
       const child = spawn('ssh', args);
@@ -239,7 +239,7 @@ export default class HomeLabNetworkService {
    *
    * @param machine the target machine
    */
-  private static async resolveUser(machine: HomeLabMachine): Promise<string> {
+  static async #resolveUser(machine: HomeLabMachine): Promise<string> {
     const config = await ConfigService.loadConfig();
     return (
       config.homelab?.machineCreds?.[machine]?.user ?? MACHINES[machine].user

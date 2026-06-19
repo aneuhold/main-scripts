@@ -3,8 +3,8 @@ import path from 'path';
 import localNpmPackages, {
   logAvailablePackages
 } from '../config/localNpmPackages.js';
-import CLIService from '../services/CLIService.js';
-import { ProjectConfigService } from '../services/ProjectConfigService.js';
+import CLIService from '../services/CLI.service.js';
+import { ProjectConfigService } from '../services/ProjectConfig.service.js';
 
 /**
  * Unsubscribes from a package using local-npm-registry.

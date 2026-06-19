@@ -10,8 +10,8 @@ import {
   vi
 } from 'vitest';
 import { TestUtils } from '../../../test-utils/TestUtils.js';
-import CLIService from '../CLIService.js';
-import GitService from './GitService.js';
+import CLIService from '../CLI.service.js';
+import GitService from './Git.service.js';
 
 // Mock the logger to avoid console noise during tests
 vi.mock('@aneuhold/core-ts-lib', async () => {

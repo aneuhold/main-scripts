@@ -1,29 +1,29 @@
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { readFile } from 'fs/promises';
 import path from 'path';
-import { ConfigService, MainScriptsConfigImg } from '../ConfigService.js';
-
-/**
- * Map from lowercased file extension (with leading dot) to the Content-Type
- * header used when uploading to R2.
- */
-const CONTENT_TYPE_BY_EXTENSION: Record<string, string> = {
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.webp': 'image/webp',
-  '.heic': 'image/heic',
-  '.svg': 'image/svg+xml',
-  '.avif': 'image/avif'
-};
+import { ConfigService, MainScriptsConfigImg } from '../Config.service.js';
 
 /**
  * A service for uploading files to a Cloudflare R2 bucket using the
  * S3-compatible API.
  */
 export default class R2Service {
-  private static client: S3Client | null = null;
+  static #client: S3Client | null = null;
+
+  /**
+   * Map from lowercased file extension (with leading dot) to the Content-Type
+   * header used when uploading to R2.
+   */
+  static readonly #CONTENT_TYPE_BY_EXTENSION: Record<string, string> = {
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.heic': 'image/heic',
+    '.svg': 'image/svg+xml',
+    '.avif': 'image/avif'
+  };
 
   /**
    * Uploads a local file to the configured R2 bucket.
@@ -36,13 +36,13 @@ export default class R2Service {
     localPath: string,
     remoteKey: string
   ): Promise<string> {
-    const client = await this.getClient();
-    const imgConfig = await this.loadImgConfig();
+    const client = await this.#getClient();
+    const imgConfig = await this.#loadImgConfig();
     const { bucketName, publicUrlBase } = imgConfig.r2;
 
     const ext = path.extname(localPath).toLowerCase();
     const contentType =
-      CONTENT_TYPE_BY_EXTENSION[ext] ?? 'application/octet-stream';
+      R2Service.#CONTENT_TYPE_BY_EXTENSION[ext] ?? 'application/octet-stream';
 
     await client.send(
       new PutObjectCommand({
@@ -59,26 +59,26 @@ export default class R2Service {
   /**
    * Returns the shared S3Client, creating it on first use.
    */
-  private static async getClient(): Promise<S3Client> {
-    if (this.client) return this.client;
+  static async #getClient(): Promise<S3Client> {
+    if (this.#client) return this.#client;
 
-    const imgConfig = await this.loadImgConfig();
+    const imgConfig = await this.#loadImgConfig();
     const { accountId, accessKeyId, secretAccessKey } = imgConfig.r2;
 
-    this.client = new S3Client({
+    this.#client = new S3Client({
       region: 'auto',
       endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
       credentials: { accessKeyId, secretAccessKey },
       forcePathStyle: true
     });
-    return this.client;
+    return this.#client;
   }
 
   /**
    * Loads and validates the `img` configuration block, throwing a
    * descriptive error if it is missing.
    */
-  private static async loadImgConfig(): Promise<MainScriptsConfigImg> {
+  static async #loadImgConfig(): Promise<MainScriptsConfigImg> {
     const config = await ConfigService.loadConfig();
     if (!config.img?.r2) {
       throw new Error(
