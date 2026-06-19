@@ -91,6 +91,33 @@ export default class HomeLabNetworkService {
   }
 
   /**
+   * Runs a command on the given machine via SSH with a pseudo-terminal allocated
+   * (`-tt`) and the local terminal handed directly to ssh (`stdio: 'inherit'`),
+   * so remote prompts like `sudo` reach the user and keystrokes flow back. Skips
+   * the spinner: it owns stdout on a timer and would clobber an interactive
+   * prompt. Resolves with the remote exit code.
+   *
+   * @param machine the target machine
+   * @param command shell command to run on the remote machine
+   */
+  static sshRunInteractive(
+    machine: HomeLabMachine,
+    command: string
+  ): Promise<number> {
+    return new Promise((resolve) => {
+      const child = spawn('ssh', ['-tt', MACHINES[machine].sshHost, command], {
+        stdio: 'inherit'
+      });
+      child.on('error', () => {
+        resolve(1);
+      });
+      child.on('close', (code) => {
+        resolve(code ?? 0);
+      });
+    });
+  }
+
+  /**
    * Runs a non-interactive SSH session on the given machine, piping `input` to
    * its stdin and streaming its output as it arrives. Used to feed a batch of
    * commands to a remote shell. Resolves with the remote exit code.
