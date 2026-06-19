@@ -12,6 +12,7 @@
 
 - **Platform Detection**: Use `CurrentEnv.os` to branch logic for Windows/macOS/Linux
 - **OSA Script Builder**: `OsaScriptBuilder` in `src/utils/` constructs AppleScript commands for iTerm2 automation on macOS
+- **Application Services** (`src/services/applications/`): General, cross-OS services for interacting with applications that run on a machine (e.g. `DockerService`, `GitService`). They are shared building blocks — other areas (e.g. `HomeLab`) should reuse and extend them rather than duplicating that logic. Keep these services focused on the application they cover as if running the service on the machine where the application is housed. Remote access services can thread the output from application services.
 
 ## Project-Specific Conventions
 
