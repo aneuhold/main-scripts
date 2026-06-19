@@ -43,7 +43,7 @@
     "Node.js"
   ],
   "dependencies": {
-    "@aneuhold/core-ts-lib": "^2.3.18",
+    "@aneuhold/core-ts-lib": "^2.4.5",
     "@aws-sdk/client-s3": "^3.1028.0",
     "@inquirer/prompts": "^8.2.1",
     "better-sqlite3": "^12.6.2",
@@ -55,7 +55,7 @@
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "@aneuhold/eslint-config": "^2.0.2",
+    "@aneuhold/eslint-config": "^3.0.1",
     "@types/better-sqlite3": "^7.6.13",
     "@types/fluent-ffmpeg": "^2.1.28",
     "@types/fs-extra": "^11.0.4",
