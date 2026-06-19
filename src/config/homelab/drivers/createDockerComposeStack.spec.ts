@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import HomeLabNetworkService from '../../../services/HomeLab/HomeLabNetworkService.js';
-import { MainScriptsConfig } from '../../../services/ConfigService.js';
+import HomeLabNetworkService from '../../../services/HomeLab/HomeLabNetwork.service.js';
+import { MainScriptsConfig } from '../../../services/Config.service.js';
 import { HomeLabMachine } from '../types.js';
 import { createDockerComposeStack } from './createDockerComposeStack.js';
 

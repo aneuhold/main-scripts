@@ -2,7 +2,7 @@ import { DR } from '@aneuhold/core-ts-lib';
 import OsaScriptBuilder, {
   OsaScriptTellBlock
 } from '../../utils/OsaScriptBuilder.js';
-import CLIService from '../CLIService.js';
+import CLIService from '../CLI.service.js';
 
 export default class ITermService {
   /**

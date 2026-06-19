@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 import { randomUUID } from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
-import type { MainScriptsConfig } from '../src/services/ConfigService.js';
+import type { MainScriptsConfig } from '../src/services/Config.service.js';
 
 /**
  * Test utilities for creating temporary test directories with isolated configurations.
@@ -22,38 +22,52 @@ import type { MainScriptsConfig } from '../src/services/ConfigService.js';
  * ```
  */
 export class TestUtils {
-  private static globalTempDir: string;
-  private static originalCwd: string;
-  private static testInstanceDir: string;
+  static #globalTempDir: string;
+  static #originalCwd: string;
+  static #testInstanceDir: string;
+
+  /**
+   * Type guard for a SQLite row that holds a `value` BLOB column.
+   *
+   * @param value the value to narrow
+   */
+  static isValueRow(value: unknown): value is { value: Buffer } {
+    return (
+      typeof value === 'object' &&
+      value !== null &&
+      'value' in value &&
+      Buffer.isBuffer(value.value)
+    );
+  }
 
   /**
    * Sets up the global tmp directory (called once before all test files).
    * Creates a unique temporary directory in the project root.
    */
   static async setupGlobalTempDir(): Promise<void> {
-    if (!TestUtils.originalCwd) {
-      TestUtils.originalCwd = process.cwd();
+    if (!TestUtils.#originalCwd) {
+      TestUtils.#originalCwd = process.cwd();
     }
 
     // Create tmp directory with random UUID in the project root
     const projectRoot = path.resolve(__dirname, '..');
     const tmpDirName = `tmp-${randomUUID()}`;
-    TestUtils.globalTempDir = path.join(projectRoot, tmpDirName);
+    TestUtils.#globalTempDir = path.join(projectRoot, tmpDirName);
 
     // Clean and recreate the tmp directory
-    await fs.remove(TestUtils.globalTempDir);
-    await fs.ensureDir(TestUtils.globalTempDir);
+    await fs.remove(TestUtils.#globalTempDir);
+    await fs.ensureDir(TestUtils.#globalTempDir);
   }
 
   /**
    * Cleans up the global tmp directory (called once after all tests in a test file).
    */
   static async cleanupGlobalTempDir(): Promise<void> {
-    if (TestUtils.globalTempDir) {
-      await fs.remove(TestUtils.globalTempDir);
+    if (TestUtils.#globalTempDir) {
+      await fs.remove(TestUtils.#globalTempDir);
     }
-    if (TestUtils.originalCwd) {
-      process.chdir(TestUtils.originalCwd);
+    if (TestUtils.#originalCwd) {
+      process.chdir(TestUtils.#originalCwd);
     }
   }
 
@@ -62,7 +76,7 @@ export class TestUtils {
    * Returns the path to the test instance directory.
    */
   static async setupTestInstance(): Promise<string> {
-    if (!TestUtils.globalTempDir) {
+    if (!TestUtils.#globalTempDir) {
       throw new Error(
         'Global temp directory not initialized. Call setupGlobalTempDir() first.'
       );
@@ -70,10 +84,10 @@ export class TestUtils {
 
     // Create a unique directory for this test instance using a UUID
     const testId = randomUUID();
-    TestUtils.testInstanceDir = path.join(TestUtils.globalTempDir, testId);
-    await fs.ensureDir(TestUtils.testInstanceDir);
+    TestUtils.#testInstanceDir = path.join(TestUtils.#globalTempDir, testId);
+    await fs.ensureDir(TestUtils.#testInstanceDir);
 
-    return TestUtils.testInstanceDir;
+    return TestUtils.#testInstanceDir;
   }
 
   /**
@@ -81,13 +95,13 @@ export class TestUtils {
    */
   static async cleanupTestInstance(): Promise<void> {
     // Restore original working directory
-    if (TestUtils.originalCwd) {
-      process.chdir(TestUtils.originalCwd);
+    if (TestUtils.#originalCwd) {
+      process.chdir(TestUtils.#originalCwd);
     }
 
     // Remove the test instance directory
-    if (TestUtils.testInstanceDir) {
-      await fs.remove(TestUtils.testInstanceDir);
+    if (TestUtils.#testInstanceDir) {
+      await fs.remove(TestUtils.#testInstanceDir);
     }
   }
 
@@ -104,12 +118,12 @@ export class TestUtils {
    * Gets the current test instance directory.
    */
   static getTestInstanceDir(): string {
-    if (!TestUtils.testInstanceDir) {
+    if (!TestUtils.#testInstanceDir) {
       throw new Error(
         'Test instance directory not initialized. Call setupTestInstance() first.'
       );
     }
-    return TestUtils.testInstanceDir;
+    return TestUtils.#testInstanceDir;
   }
 
   /**
@@ -177,11 +191,11 @@ export class TestUtils {
     const db = new Database(targetPath);
 
     try {
-      const row = db
+      const row: unknown = db
         .prepare('SELECT value FROM ItemTable WHERE key = ?')
-        .get('memento/workbench.parts.editor') as { value: Buffer } | undefined;
+        .get('memento/workbench.parts.editor');
 
-      if (row) {
+      if (TestUtils.isValueRow(row)) {
         const editorState: unknown = JSON.parse(row.value.toString('utf8'));
         let stateString = JSON.stringify(editorState);
 

@@ -7,11 +7,11 @@ import {
 import { select } from '@inquirer/prompts';
 import { copy } from 'fs-extra';
 import path from 'path';
-import GitService from '../services/applications/GitService.js';
-import VSCodeService from '../services/applications/VSCodeService.js';
-import CLIService from '../services/CLIService.js';
-import { ConfigService } from '../services/ConfigService.js';
-import { ProjectConfigService } from '../services/ProjectConfigService.js';
+import GitService from '../services/applications/Git.service.js';
+import VSCodeService from '../services/applications/VSCode.service.js';
+import CLIService from '../services/CLI.service.js';
+import { ConfigService } from '../services/Config.service.js';
+import { ProjectConfigService } from '../services/ProjectConfig.service.js';
 import open from './open.js';
 
 /**

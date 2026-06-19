@@ -1,6 +1,6 @@
 import { DR } from '@aneuhold/core-ts-lib';
-import { MainScriptsConfig } from '../../../services/ConfigService.js';
-import HomeLabNetworkService from '../../../services/HomeLab/HomeLabNetworkService.js';
+import { MainScriptsConfig } from '../../../services/Config.service.js';
+import HomeLabNetworkService from '../../../services/HomeLab/HomeLabNetwork.service.js';
 import {
   Deployable,
   DeployableKind,

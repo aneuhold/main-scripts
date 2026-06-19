@@ -1,8 +1,8 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { spawnSync } from 'child_process';
 import { HomeLabMachine } from '../config/homelab/registry.js';
-import CLIService from '../services/CLIService.js';
-import HomeLabNetworkService from '../services/HomeLab/HomeLabNetworkService.js';
+import CLIService from '../services/CLI.service.js';
+import HomeLabNetworkService from '../services/HomeLab/HomeLabNetwork.service.js';
 
 enum ConnectTarget {
   Pi1 = 'pi1',

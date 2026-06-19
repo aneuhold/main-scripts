@@ -1,5 +1,5 @@
 import { DR } from '@aneuhold/core-ts-lib';
-import CLIService from '../services/CLIService.js';
+import CLIService from '../services/CLI.service.js';
 
 /**
  * Runs `git fetch -a` and then `git pull`.

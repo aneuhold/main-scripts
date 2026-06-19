@@ -18,7 +18,7 @@ export type OsaScriptCommand = string;
 export type OsaScriptSection = OsaScriptTellBlock | OsaScriptCommand;
 
 export default class OsaScriptBuilder {
-  private currentScript: OsaScriptSection[] = [];
+  #currentScript: OsaScriptSection[] = [];
 
   /**
    * Adds a command to the OSA script.
@@ -28,7 +28,7 @@ export default class OsaScriptBuilder {
    * @param command The command to add.
    */
   public addCommand(command: string): void {
-    this.currentScript.push(command);
+    this.#currentScript.push(command);
   }
 
   /**
@@ -37,7 +37,7 @@ export default class OsaScriptBuilder {
    * @param tellBlock The tell block to add.
    */
   public addTellBlock(tellBlock: OsaScriptTellBlock): void {
-    this.currentScript.push(tellBlock);
+    this.#currentScript.push(tellBlock);
   }
 
   /**
@@ -48,8 +48,8 @@ export default class OsaScriptBuilder {
    */
   getFullCommand(): string {
     let stringifiedScript = `osascript`;
-    this.currentScript.forEach((section) => {
-      stringifiedScript += this.stringifySection(section);
+    this.#currentScript.forEach((section) => {
+      stringifiedScript += this.#stringifySection(section);
     });
     return stringifiedScript;
   }
@@ -59,15 +59,15 @@ export default class OsaScriptBuilder {
    *
    * @param section The section to stringify.
    */
-  private stringifySection(section: OsaScriptSection): string {
+  #stringifySection(section: OsaScriptSection): string {
     if (typeof section === 'string') {
-      return ` -e '${OsaScriptBuilder.escapeSingleQuotes(section)}'`;
+      return ` -e '${OsaScriptBuilder.#escapeSingleQuotes(section)}'`;
     }
-    let stringifiedSection = ` -e 'tell ${OsaScriptBuilder.escapeSingleQuotes(
+    let stringifiedSection = ` -e 'tell ${OsaScriptBuilder.#escapeSingleQuotes(
       section.tellCommand
     )}'`;
     section.sections.forEach((subSection) => {
-      stringifiedSection += this.stringifySection(subSection);
+      stringifiedSection += this.#stringifySection(subSection);
     });
     stringifiedSection += ` -e 'end tell'`;
     return stringifiedSection;
@@ -78,7 +78,7 @@ export default class OsaScriptBuilder {
    *
    * @param stringToEscape The string to escape.
    */
-  private static escapeSingleQuotes(stringToEscape: string): string {
+  static #escapeSingleQuotes(stringToEscape: string): string {
     return stringToEscape.replace(/'/g, `'\\''`);
   }
 }

@@ -81,8 +81,8 @@ export default async function mergeVideos(pathToFolder: string) {
     ffmpegCommand.on('error', (err, stdout, stderr) => {
       // All outputs have to be logged to see detailed error messages
       DR.logger.error(JSON.stringify(err));
-      DR.logger.error(stdout as string);
-      DR.logger.error(stderr as string);
+      DR.logger.error(stdout ?? '');
+      DR.logger.error(stderr ?? '');
       reject(new Error('Error merging videos'));
     });
     ffmpegCommand.mergeToFile(outputFilePath, tempFolderPath);
@@ -139,8 +139,8 @@ async function convertVideoToConsistentSize(
       .on('error', (err, stdout, stderr) => {
         // All outputs have to be logged to see detailed error messages
         DR.logger.error(JSON.stringify(err));
-        DR.logger.error(stdout as string);
-        DR.logger.error(stderr as string);
+        DR.logger.error(stdout ?? '');
+        DR.logger.error(stderr ?? '');
         reject(new Error('Error converting videos'));
       })
       .save(videoPath);

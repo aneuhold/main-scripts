@@ -1,9 +1,9 @@
+import { JsonUtils } from '@aneuhold/core-ts-lib';
 import Database from 'better-sqlite3';
 import {
   ensureDir,
   pathExists,
   readFile,
-  readJson,
   writeFile,
   writeJson
 } from 'fs-extra';
@@ -19,7 +19,18 @@ import {
   vi
 } from 'vitest';
 import { TestUtils } from '../../../test-utils/TestUtils.js';
-import VSCodeService from './VSCodeService.js';
+import VSCodeService from './VSCode.service.js';
+
+/**
+ * Type guard for the `workspace.json` metadata shape used in these tests.
+ *
+ * @param value the value to narrow
+ */
+const isWorkspaceFolderJson = (value: unknown): value is { folder: string } =>
+  typeof value === 'object' &&
+  value !== null &&
+  'folder' in value &&
+  typeof value.folder === 'string';
 
 // Mock the logger to avoid console noise during tests
 vi.mock('@aneuhold/core-ts-lib', async () => {
@@ -133,9 +144,10 @@ describe('VSCodeService', () => {
       const workspaceJsonPath = path.join(result.storagePath, 'workspace.json');
       expect(await pathExists(workspaceJsonPath)).toBe(true);
 
-      const workspaceJson = (await readJson(workspaceJsonPath)) as {
-        folder: string;
-      };
+      const workspaceJson = JsonUtils.parseWithGuard(
+        await readFile(workspaceJsonPath, 'utf8'),
+        isWorkspaceFolderJson
+      );
       expect(workspaceJson.folder).toBe(`file://${testInstanceDir}`);
     });
   });
@@ -375,29 +387,27 @@ describe('VSCodeService', () => {
 
       try {
         // Verify that problematic keys were removed
-        const editorRow = db
+        const editorRow: unknown = db
           .prepare('SELECT value FROM ItemTable WHERE key = ?')
-          .get('memento/workbench.parts.editor') as
-          | { value: Buffer }
-          | undefined;
+          .get('memento/workbench.parts.editor');
 
         expect(editorRow).toBeUndefined();
 
-        const historyRow = db
+        const historyRow: unknown = db
           .prepare('SELECT value FROM ItemTable WHERE key = ?')
-          .get('history.entries') as { value: Buffer } | undefined;
+          .get('history.entries');
 
         expect(historyRow).toBeUndefined();
 
-        const searchHistoryRow = db
+        const searchHistoryRow: unknown = db
           .prepare('SELECT value FROM ItemTable WHERE key = ?')
-          .get('workbench.search.history') as { value: Buffer } | undefined;
+          .get('workbench.search.history');
 
         expect(searchHistoryRow).toBeUndefined();
 
-        const findHistoryRow = db
+        const findHistoryRow: unknown = db
           .prepare('SELECT value FROM ItemTable WHERE key = ?')
-          .get('workbench.find.history') as { value: Buffer } | undefined;
+          .get('workbench.find.history');
 
         expect(findHistoryRow).toBeUndefined();
       } finally {

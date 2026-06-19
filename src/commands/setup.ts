@@ -1,5 +1,5 @@
 import { DR } from '@aneuhold/core-ts-lib';
-import { ProjectConfigService } from '../services/ProjectConfigService.js';
+import { ProjectConfigService } from '../services/ProjectConfig.service.js';
 import CurrentEnv from '../utils/CurrentEnv.js';
 
 /**

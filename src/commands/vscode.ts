@@ -1,6 +1,6 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { checkbox } from '@inquirer/prompts';
-import VSCodeService from '../services/applications/VSCodeService.js';
+import VSCodeService from '../services/applications/VSCode.service.js';
 
 /**
  * Lists all VS Code workspace storage directories.

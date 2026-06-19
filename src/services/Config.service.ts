@@ -114,36 +114,47 @@ export type MainScriptsConfigHomelab = {
 };
 
 /**
- * Default configuration with all required fields.
- */
-const DEFAULT_CONFIG: MainScriptsConfig = {
-  projects: {},
-  worktreeBaseDir: '../',
-  vsCodeAlternativeCommand: 'code'
-};
-
-/**
  * Service for loading user configuration using cosmiconfig.
  * Searches for configuration in the user's home directory.
  */
 export class ConfigService {
-  private static cachedConfig: MainScriptsConfig | null = null;
-  private static readonly MODULE_NAME = 'tb-main-scripts';
+  static #cachedConfig: MainScriptsConfig | null = null;
+  static readonly #MODULE_NAME = 'tb-main-scripts';
+
+  /**
+   * Default configuration with all required fields.
+   */
+  static readonly #DEFAULT_CONFIG: MainScriptsConfig = {
+    projects: {},
+    worktreeBaseDir: '../',
+    vsCodeAlternativeCommand: 'code'
+  };
+
+  /**
+   * Type guard that checks whether an unknown value matches the
+   * {@link MainScriptsConfig} shape. Every field is optional, so any non-null
+   * object qualifies.
+   *
+   * @param value the value to narrow
+   */
+  static #isMainScriptsConfig(value: unknown): value is MainScriptsConfig {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+  }
 
   /**
    * Load user configuration using cosmiconfig.
    * Configuration can be provided in ~/.config/tb-main-scripts.json
    */
   static async loadConfig(): Promise<MainScriptsConfig> {
-    if (this.cachedConfig) {
-      return this.cachedConfig;
+    if (this.#cachedConfig) {
+      return this.#cachedConfig;
     }
 
-    const explorer = cosmiconfig(this.MODULE_NAME, {
+    const explorer = cosmiconfig(this.#MODULE_NAME, {
       searchPlaces: [
-        `.config/${this.MODULE_NAME}.json`,
+        `.config/${this.#MODULE_NAME}.json`,
         // Project directory configs (for dev dependency usage)
-        `.${this.MODULE_NAME}.json`,
+        `.${this.#MODULE_NAME}.json`,
         // package.json field
         'package.json'
       ],
@@ -159,11 +170,14 @@ export class ConfigService {
         `Cosmiconfig search result: ${JSON.stringify(result)}`
       );
 
-      const userConfig = result?.config as MainScriptsConfig | undefined;
+      const rawConfig: unknown = result?.config;
+      const userConfig = ConfigService.#isMainScriptsConfig(rawConfig)
+        ? rawConfig
+        : undefined;
 
       // Merge user config with defaults
-      this.cachedConfig = {
-        ...DEFAULT_CONFIG,
+      this.#cachedConfig = {
+        ...ConfigService.#DEFAULT_CONFIG,
         ...userConfig
       };
 
@@ -176,10 +190,10 @@ export class ConfigService {
       );
 
       // Purposefully spread to ensure it is a new object
-      this.cachedConfig = { ...DEFAULT_CONFIG };
+      this.#cachedConfig = { ...ConfigService.#DEFAULT_CONFIG };
     }
 
-    return this.cachedConfig;
+    return this.#cachedConfig;
   }
 
   /**
@@ -187,14 +201,14 @@ export class ConfigService {
    * Useful for testing to ensure fresh config loads.
    */
   static clearCache(): void {
-    this.cachedConfig = null;
+    this.#cachedConfig = null;
   }
 
   /**
    * Gets the path to the default config file location in the home directory.
    */
   static getHomeDirectoryConfigPath(): string {
-    return path.join(os.homedir(), '.config', `${this.MODULE_NAME}.json`);
+    return path.join(os.homedir(), '.config', `${this.#MODULE_NAME}.json`);
   }
 
   /**
@@ -225,7 +239,7 @@ export class ConfigService {
     const configDir = path.dirname(configPath);
     await FileSystemService.checkOrCreateFolder(configDir);
 
-    const defaultConfig = { ...DEFAULT_CONFIG };
+    const defaultConfig = { ...ConfigService.#DEFAULT_CONFIG };
     const configContent = JSON.stringify(defaultConfig, null, 2);
 
     await writeFile(configPath, configContent, 'utf-8');
@@ -251,7 +265,7 @@ export class ConfigService {
     if (!config.projects) {
       config.projects = {};
     }
-    const projectConfig = this.createProjectTemplate(folderName);
+    const projectConfig = this.#createProjectTemplate(folderName);
     config.projects[folderName] = projectConfig;
 
     // Write back to file
@@ -268,9 +282,7 @@ export class ConfigService {
    * @param folderName The name of the project folder
    * @returns A complete project configuration template
    */
-  private static createProjectTemplate(
-    folderName: string
-  ): MainScriptsConfigProject {
+  static #createProjectTemplate(folderName: string): MainScriptsConfigProject {
     return {
       folderName,
       solutionFilePath: '',

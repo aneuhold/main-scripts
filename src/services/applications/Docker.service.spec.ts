@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import DockerService from './DockerService.js';
+import DockerService from './Docker.service.js';
 
 describe('DockerService command builders', () => {
   describe('compose builders', () => {

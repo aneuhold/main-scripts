@@ -1,14 +1,14 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import path from 'path';
-import BrowserService from '../services/applications/BrowserService.js';
-import ChromeService from '../services/applications/ChromeService.js';
-import GitHubService from '../services/applications/GitHubService.js';
-import GitService from '../services/applications/GitService.js';
-import OSFileSystemService from '../services/applications/OSFileSystemService.js';
-import VSCodeService from '../services/applications/VSCodeService.js';
-import CLIService from '../services/CLIService.js';
-import FileSearchService from '../services/FileSearchService.js';
-import { ProjectConfigService } from '../services/ProjectConfigService.js';
+import BrowserService from '../services/applications/Browser.service.js';
+import ChromeService from '../services/applications/Chrome.service.js';
+import GitHubService from '../services/applications/GitHub.service.js';
+import GitService from '../services/applications/Git.service.js';
+import OSFileSystemService from '../services/applications/OSFileSystem.service.js';
+import VSCodeService from '../services/applications/VSCode.service.js';
+import CLIService from '../services/CLI.service.js';
+import FileSearchService from '../services/FileSearch.service.js';
+import { ProjectConfigService } from '../services/ProjectConfig.service.js';
 import CurrentEnv from '../utils/CurrentEnv.js';
 
 /**
@@ -30,6 +30,16 @@ export enum AppName {
 }
 
 /**
+ * Returns true if the given string is a valid {@link AppName}.
+ *
+ * @param value the string to check
+ */
+function isAppName(value: string): value is AppName {
+  const values: string[] = Object.values(AppName);
+  return values.includes(value);
+}
+
+/**
  * Starts the process of opening a specific application.
  *
  * @param appName the name of the app to open. This doesn't have to be
@@ -37,13 +47,12 @@ export enum AppName {
  * @param methodName the name of the method to run with that app if it exists
  */
 async function openApplication(appName: string, methodName?: string) {
-  const appIsSetup = Object.prototype.hasOwnProperty.call(AppName, appName);
-  if (appIsSetup) {
+  if (isAppName(appName)) {
     // Look for a second level operation if one is specified
     if (methodName) {
       console.log('Extra methods arent setup yet');
     }
-    await runApplication(appName as AppName);
+    await runApplication(appName);
   } else {
     DR.logger.error(
       `The app with the name "${appName}" is not one of the programmed ` +

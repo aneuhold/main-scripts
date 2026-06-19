@@ -17,6 +17,26 @@ export enum PackageAction {
 }
 
 /**
+ * Returns true if the given string is a valid {@link PackageAction}.
+ *
+ * @param value the string to check
+ */
+function isPackageAction(value: string): value is PackageAction {
+  const values: string[] = Object.values(PackageAction);
+  return values.includes(value);
+}
+
+/**
+ * Returns true if the given string is a valid {@link VersionType}.
+ *
+ * @param value the string to check
+ */
+function isVersionType(value: string): value is VersionType {
+  const values: string[] = Object.values(VersionType);
+  return values.includes(value);
+}
+
+/**
  * Performs a package action, such as validating or publishing a JSR/npm package.
  *
  * @param packageAction The package action to perform.
@@ -34,7 +54,7 @@ export default async function pkg(
   newString?: string,
   allowSlowTypes?: boolean
 ): Promise<void> {
-  if (!(packageAction in PackageAction)) {
+  if (!isPackageAction(packageAction)) {
     DR.logger.error(`The package action ${packageAction} is not supported.`);
     DR.logger.info(`The supported package actions are:`);
     Object.keys(PackageAction).forEach((name) => {
@@ -43,7 +63,7 @@ export default async function pkg(
     return;
   }
 
-  switch (packageAction as PackageAction) {
+  switch (packageAction) {
     case PackageAction.validateJsr:
       await validateJsr(alternativePackageNames, allowSlowTypes);
       break;
@@ -135,17 +155,17 @@ async function testStringReplacement(
  * @param versionType The type of version bump (patch, minor, major). Defaults to patch.
  */
 async function prepare(versionType?: string) {
-  const validVersionTypes = ['patch', 'minor', 'major'];
   let parsedVersionType: VersionType | undefined;
 
   if (versionType) {
-    if (!validVersionTypes.includes(versionType)) {
+    if (!isVersionType(versionType)) {
+      const validVersionTypes: string[] = Object.values(VersionType);
       DR.logger.error(
         `Invalid version type: ${versionType}. Valid types are: ${validVersionTypes.join(', ')}`
       );
       return;
     }
-    parsedVersionType = versionType as VersionType;
+    parsedVersionType = versionType;
   }
 
   await PackageService.bumpVersionIfNeededAndInitializeChangelog(

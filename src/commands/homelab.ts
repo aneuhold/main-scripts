@@ -7,10 +7,10 @@ import {
   DEPLOYABLES,
   getExpectedContainers
 } from '../config/homelab/registry.js';
-import CLIService from '../services/CLIService.js';
-import { ConfigService } from '../services/ConfigService.js';
-import HomeLabDeployableService from '../services/HomeLab/HomeLabDeployableService.js';
-import HomeLabReconcileService from '../services/HomeLab/HomeLabReconcileService.js';
+import CLIService from '../services/CLI.service.js';
+import { ConfigService } from '../services/Config.service.js';
+import HomeLabDeployableService from '../services/HomeLab/HomeLabDeployable.service.js';
+import HomeLabReconcileService from '../services/HomeLab/HomeLabReconcile.service.js';
 
 enum HomelabSubcommand {
   Deploy = 'deploy',
@@ -29,7 +29,8 @@ enum HomelabSubcommand {
  * @param value the string to check
  */
 function isHomelabSubcommand(value: string): value is HomelabSubcommand {
-  return Object.values(HomelabSubcommand).includes(value as HomelabSubcommand);
+  const values: string[] = Object.values(HomelabSubcommand);
+  return values.includes(value);
 }
 
 /**

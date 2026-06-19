@@ -1,7 +1,7 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { findDeployable } from '../../config/homelab/registry.js';
 import { Deployable, DeployableOpKey } from '../../config/homelab/types.js';
-import { MainScriptsConfig } from '../ConfigService.js';
+import { MainScriptsConfig } from '../Config.service.js';
 
 /**
  * Extra argument carried by an op: a service name for `logs`, a `removeVolumes`
@@ -38,10 +38,10 @@ export default class HomeLabDeployableService {
       return;
     }
     if (op === 'deploy') {
-      await this.deployWithDependencies(target, config, new Set());
+      await this.#deployWithDependencies(target, config, new Set());
       return;
     }
-    await this.invoke(op, target, config, extraArg);
+    await this.#invoke(op, target, config, extraArg);
   }
 
   /**
@@ -52,7 +52,7 @@ export default class HomeLabDeployableService {
    * @param config user config (used by `deploy`)
    * @param extraArg service name for `logs`, or `removeVolumes` for `teardown`
    */
-  private static async invoke(
+  static async #invoke(
     op: DeployableOpKey,
     target: Deployable,
     config: MainScriptsConfig,
@@ -96,7 +96,7 @@ export default class HomeLabDeployableService {
    * @param config user config passed to each deploy op
    * @param visited names already deployed in this run
    */
-  private static async deployWithDependencies(
+  static async #deployWithDependencies(
     target: Deployable,
     config: MainScriptsConfig,
     visited: Set<string>
@@ -112,7 +112,7 @@ export default class HomeLabDeployableService {
         );
         continue;
       }
-      await this.deployWithDependencies(dependency, config, visited);
+      await this.#deployWithDependencies(dependency, config, visited);
     }
 
     if (!target.ops.deploy) {

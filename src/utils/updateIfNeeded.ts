@@ -1,8 +1,14 @@
-import { DateService, DR } from '@aneuhold/core-ts-lib';
+import {
+  DateService,
+  DR,
+  isPackageJson,
+  JsonUtils,
+  PackageJson
+} from '@aneuhold/core-ts-lib';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import CLIService from '../services/CLIService.js';
+import CLIService from '../services/CLI.service.js';
 import Store from '../utils/Store.js';
 import CurrentEnv from './CurrentEnv.js';
 
@@ -93,13 +99,14 @@ export async function updateIfNeeded(): Promise<void> {
 }
 
 /**
- *
+ * Reads this package's own `package.json` from disk.
  */
-async function readPackageJson(): Promise<{ name: string }> {
+async function readPackageJson(): Promise<PackageJson> {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
   const packageJsonPath = join(__dirname, '../package.json');
-  return JSON.parse(await readFile(packageJsonPath, 'utf-8')) as {
-    name: string;
-  };
+  return JsonUtils.parseWithGuard(
+    await readFile(packageJsonPath, 'utf-8'),
+    isPackageJson
+  );
 }
