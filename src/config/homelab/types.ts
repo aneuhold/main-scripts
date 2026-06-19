@@ -92,23 +92,11 @@ export type Placement = {
 };
 
 /**
- * What one deployable's {@link Deployable.observe} found. Empty placements mean
- * it was found nowhere.
+ * Docker daemon snapshot for a docker-host machine: the container name sets used
+ * to detect placements. Present on a {@link MachineSnapshot} only when the host
+ * is reachable and its daemon is up.
  */
-export type Observation = {
-  placements: Placement[];
-  /** Optional kind-specific detail for display. */
-  detail?: string;
-};
-
-/**
- * Per-machine actual state, probed once and shared with every `observe`.
- */
-export type MachineProbe = {
-  /** Whether the machine answered SSH. */
-  reachable: boolean;
-  /** Whether the Docker daemon is up (docker-host machines only). */
-  dockerOk: boolean;
+export type DockerSnapshot = {
   /** Names of currently running containers. */
   running: ReadonlySet<string>;
   /** Names of stopped (exited) containers. */
@@ -116,11 +104,23 @@ export type MachineProbe = {
 };
 
 /**
- * Collected once per reconcile and handed to every {@link Deployable.observe},
- * so a deployable can detect itself from shared state instead of re-probing.
+ * Per-machine actual state, detected once and shared with every `observe`.
+ * {@link reachable} is universal; capability detectors fill in the rest, so the
+ * generic reconcile core stays free of any single service's concepts.
  */
-export type ProbeContext = {
-  machines: Record<HomeLabMachine, MachineProbe>;
+export type MachineSnapshot = {
+  /** Whether the machine answered SSH. */
+  reachable: boolean;
+  /** Docker snapshot; present only for reachable docker hosts whose daemon is up. */
+  docker?: DockerSnapshot;
+};
+
+/**
+ * Collected once per reconcile and handed to every {@link Deployable.observe},
+ * so a deployable can detect itself from shared state instead of re-detecting.
+ */
+export type DetectionContext = {
+  machines: Record<HomeLabMachine, MachineSnapshot>;
 };
 
 /**
@@ -147,6 +147,30 @@ export type ReconcileItem = {
   deployable: Deployable;
   observation: Observation;
   status: DriftStatus;
+};
+
+/**
+ * A pluggable per-capability machine detector. The reconcile service detects
+ * universal reachability, then runs every detector whose {@link appliesTo}
+ * includes a machine's {@link MachineKind} to fill in capability-specific state
+ * (e.g. Docker container sets) and to surface entities that match no registry
+ * deployable. Keeps capability knowledge out of the generic reconcile core —
+ * adding a capability means appending a detector, never editing the reconciler.
+ */
+export type MachineCapabilityDetector = {
+  /** Machine kinds this detector applies to. */
+  appliesTo: MachineKind[];
+  /** Fills in this capability's slice of a machine's snapshot. */
+  detect: (machine: HomeLabMachine) => Partial<MachineSnapshot>;
+  /**
+   * Reports entities this capability found on the machine that match no registry
+   * deployable (e.g. stray containers). Omitted if the capability has nothing to
+   * report.
+   */
+  findUnmanaged?: (
+    machine: HomeLabMachine,
+    snapshot: MachineSnapshot
+  ) => ReconcileItem[];
 };
 
 /**
@@ -199,14 +223,24 @@ export type Deployable = {
    */
   dependsOn: string[];
   /**
-   * Self-audit: probes where this deployable actually is and in what state,
-   * using the shared {@link ProbeContext}. The detection is driver-specific.
+   * Self-audit: detects where this deployable actually is and in what state,
+   * using the shared {@link DetectionContext}. The detection is driver-specific.
    */
-  observe: (ctx: ProbeContext) => Promise<Observation>;
+  observe: (ctx: DetectionContext) => Promise<Observation>;
   /**
    * Re-binds this deployable to a different machine, returning an equivalent
    * `Deployable` whose ops/observe target that machine — e.g. to act on it where
    * it currently runs rather than where it is configured to run.
    */
   onMachine: (machine: HomeLabMachine) => Deployable;
+};
+
+/**
+ * What one deployable's {@link Deployable.observe} found. Empty placements mean
+ * it was found nowhere.
+ */
+export type Observation = {
+  placements: Placement[];
+  /** Optional kind-specific detail for display. */
+  detail?: string;
 };

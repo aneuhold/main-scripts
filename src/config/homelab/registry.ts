@@ -1,7 +1,7 @@
 export * from './types.js';
-import { dockerHostSetup } from './deployables/docker-host-setup/index.js';
+import { dockerHostSetup } from './deployables/dockerHostSetup.js';
 import { networkMonitoring } from './deployables/network-monitoring/index.js';
-import { routerNetflow } from './deployables/router-netflow/index.js';
+import { routerNetflow } from './deployables/routerNetflow.js';
 import { Deployable, DeployableKind, HomeLabMachine } from './types.js';
 
 /**

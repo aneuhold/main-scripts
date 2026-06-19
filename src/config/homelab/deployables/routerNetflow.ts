@@ -1,7 +1,7 @@
 import { DR } from '@aneuhold/core-ts-lib';
-import HomeLabNetworkService from '../../../../services/HomeLab/HomeLabNetworkService.js';
-import { createRouterConfig } from '../../drivers/createRouterConfig.js';
-import { HomeLabMachine } from '../../types.js';
+import HomeLabNetworkService from '../../../services/HomeLab/HomeLabNetworkService.js';
+import { createRouterConfig } from '../drivers/createRouterConfig.js';
+import { HomeLabMachine } from '../types.js';
 
 /**
  * Configures the EdgeRouter to export NetFlow (v9) and syslog to the Pi-hole

@@ -6,8 +6,8 @@ import {
   DeployableKind,
   DeployableOps,
   DeployableState,
-  HomeLabMachine,
-  ProbeContext
+  DetectionContext,
+  HomeLabMachine
 } from '../types.js';
 
 /**
@@ -70,7 +70,7 @@ export function createRouterConfig({
     ops: { ...driverDefaults, ...opsOverride },
     children: [],
     dependsOn,
-    observe: (ctx: ProbeContext) => {
+    observe: (ctx: DetectionContext) => {
       const reachable = ctx.machines[machine].reachable;
       return Promise.resolve({
         placements: reachable

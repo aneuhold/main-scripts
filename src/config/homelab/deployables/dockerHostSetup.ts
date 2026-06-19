@@ -1,5 +1,5 @@
-import { createHostSetup } from '../../drivers/createHostSetup.js';
-import { HomeLabMachine } from '../../types.js';
+import { createHostSetup } from '../drivers/createHostSetup.js';
+import { HomeLabMachine } from '../types.js';
 
 /**
  * Installs Docker on the primary Pi and adds the login user to the `docker`
@@ -13,5 +13,6 @@ export const dockerHostSetup = createHostSetup({
   commands: [
     'curl -fsSL https://get.docker.com | sudo sh',
     'sudo usermod -aG docker neuholda'
-  ]
+  ],
+  verify: (ctx, machine) => !!ctx.machines[machine].docker
 });

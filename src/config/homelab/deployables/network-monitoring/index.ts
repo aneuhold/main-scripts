@@ -8,8 +8,8 @@ import {
   RemoteFile
 } from '../../drivers/createDockerComposeStack.js';
 import { HomeLabMachine } from '../../types.js';
-import { dockerHostSetup } from '../docker-host-setup/index.js';
-import { routerNetflow } from '../router-netflow/index.js';
+import { dockerHostSetup } from '../dockerHostSetup.js';
+import { routerNetflow } from '../routerNetflow.js';
 
 /**
  * Directory holding this deployable's co-located yaml assets. `pnpm build`

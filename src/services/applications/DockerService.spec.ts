@@ -57,7 +57,7 @@ describe('DockerService command builders', () => {
     });
   });
 
-  describe('probe builders', () => {
+  describe('detection builders', () => {
     it('preserves the exact --format strings for ps queries', () => {
       expect(DockerService.getRunningContainersCommand()).toBe(
         "docker ps --format '{{.Names}}'"

@@ -1,102 +1,71 @@
 import { DR } from '@aneuhold/core-ts-lib';
-import { createContainer } from '../../config/homelab/drivers/createContainer.js';
 import { MACHINES } from '../../config/homelab/machines.js';
-import { ALL_DEPLOYABLES, DEPLOYABLES } from '../../config/homelab/registry.js';
+import { CAPABILITY_DETECTORS } from '../../config/homelab/detectors/index.js';
+import { DEPLOYABLES } from '../../config/homelab/registry.js';
 import {
   ConvergencePlan,
   Deployable,
-  DeployableKind,
   DeployableState,
+  DetectionContext,
   DriftStatus,
   HomeLabMachine,
-  MachineKind,
-  MachineProbe,
+  MachineSnapshot,
   Observation,
   PlannedAction,
-  ProbeContext,
   ReconcileItem
 } from '../../config/homelab/types.js';
 import { MainScriptsConfig } from '../ConfigService.js';
-import DockerService from '../applications/DockerService.js';
 import HomeLabDeployableService from './HomeLabDeployableService.js';
 import HomeLabNetworkService from './HomeLabNetworkService.js';
 
 /**
- * Owns desired-state reconciliation for the home lab: probes every reachable
+ * Owns desired-state reconciliation for the home lab: detects every reachable
  * machine once, asks each deployable to observe itself against that shared
  * snapshot, diffs observed vs. desired, and emits a {@link ConvergencePlan}.
  * `audit` prints the plan (dry run); `deploy`/apply executes it.
  */
 export default class HomeLabReconcileService {
   /**
-   * Probes every machine a single time into a shared {@link ProbeContext}:
-   * reachability for all, and the running/stopped container sets plus docker
-   * daemon state for docker hosts.
+   * Detects every machine a single time into a shared {@link DetectionContext}:
+   * reachability for all, plus whatever each applicable capability detector
+   * contributes (e.g. container sets for docker hosts).
    */
-  static buildProbeContext(): Promise<ProbeContext> {
-    const machines: Record<HomeLabMachine, MachineProbe> = {
-      [HomeLabMachine.Pi1]: this.probeMachine(HomeLabMachine.Pi1),
-      [HomeLabMachine.Pi2]: this.probeMachine(HomeLabMachine.Pi2),
-      [HomeLabMachine.Router]: this.probeMachine(HomeLabMachine.Router)
+  static buildDetectionContext(): Promise<DetectionContext> {
+    const machines: Record<HomeLabMachine, MachineSnapshot> = {
+      [HomeLabMachine.Pi1]: this.detectMachine(HomeLabMachine.Pi1),
+      [HomeLabMachine.Pi2]: this.detectMachine(HomeLabMachine.Pi2),
+      [HomeLabMachine.Router]: this.detectMachine(HomeLabMachine.Router)
     };
     return Promise.resolve({ machines });
   }
 
   /**
-   * Probes a single machine: SSH reachability, and for docker hosts the daemon
-   * state plus running/stopped container name sets.
+   * Detects a single machine: universal SSH reachability, then each capability
+   * detector that applies to the machine's kind (e.g. Docker container sets for
+   * docker hosts). Capability knowledge lives in {@link CAPABILITY_DETECTORS},
+   * not here.
    *
-   * @param machine the machine to probe
+   * @param machine the machine to detect
    */
-  private static probeMachine(machine: HomeLabMachine): MachineProbe {
-    const empty: ReadonlySet<string> = new Set();
+  private static detectMachine(machine: HomeLabMachine): MachineSnapshot {
     const reachable = HomeLabNetworkService.sshCapture(machine, 'echo ok', 8);
-    const isReachable = reachable.exitCode === 0 && reachable.output === 'ok';
+    let snapshot: MachineSnapshot = {
+      reachable: reachable.exitCode === 0 && reachable.output === 'ok'
+    };
+    if (!snapshot.reachable) return snapshot;
 
-    if (!isReachable || MACHINES[machine].kind !== MachineKind.DockerHost) {
-      return {
-        reachable: isReachable,
-        dockerOk: false,
-        running: empty,
-        stopped: empty
-      };
+    const kind = MACHINES[machine].kind;
+    for (const detector of CAPABILITY_DETECTORS) {
+      if (detector.appliesTo.includes(kind)) {
+        snapshot = { ...snapshot, ...detector.detect(machine) };
+      }
     }
-
-    const dockerCheck = HomeLabNetworkService.sshCapture(
-      machine,
-      DockerService.getDockerInfoCheckCommand()
-    );
-    if (dockerCheck.output !== 'ok') {
-      return {
-        reachable: true,
-        dockerOk: false,
-        running: empty,
-        stopped: empty
-      };
-    }
-
-    const running = new Set(
-      HomeLabNetworkService.parseContainerNames(
-        HomeLabNetworkService.sshCapture(
-          machine,
-          DockerService.getRunningContainersCommand()
-        ).output
-      )
-    );
-    const stopped = new Set(
-      HomeLabNetworkService.parseContainerNames(
-        HomeLabNetworkService.sshCapture(
-          machine,
-          DockerService.getExitedContainersCommand()
-        ).output
-      )
-    );
-    return { reachable: true, dockerOk: true, running, stopped };
+    return snapshot;
   }
 
   /**
    * Observes the given targets (default: all top-level deployables) against a
-   * fresh probe context, classifies drift, and emits convergence actions. Also
+   * fresh detection context, classifies drift, and emits convergence actions. Also
    * reports containers found on docker hosts that match no registry deployable
    * as {@link DriftStatus.Unmanaged}.
    *
@@ -105,7 +74,7 @@ export default class HomeLabReconcileService {
   static async reconcile(
     targets: Deployable[] = DEPLOYABLES
   ): Promise<ConvergencePlan> {
-    const ctx = await this.buildProbeContext();
+    const ctx = await this.buildDetectionContext();
     const items: ReconcileItem[] = [];
     const actions: PlannedAction[] = [];
 
@@ -181,31 +150,21 @@ export default class HomeLabReconcileService {
   }
 
   /**
-   * Finds containers present on any docker host that match no registry
-   * deployable and reports them as unmanaged.
+   * Asks each capability detector for entities present on the machines it
+   * applies to that match no registry deployable (e.g. stray containers on a
+   * docker host), reported as {@link DriftStatus.Unmanaged}.
    *
-   * @param ctx the probe context to scan
+   * @param ctx the detection context to scan
    */
-  private static findUnmanaged(ctx: ProbeContext): ReconcileItem[] {
-    const managed = new Set(
-      ALL_DEPLOYABLES.filter((d) => d.kind === DeployableKind.Container).map(
-        (d) => d.name
-      )
-    );
+  private static findUnmanaged(ctx: DetectionContext): ReconcileItem[] {
     const items: ReconcileItem[] = [];
-
     for (const machine of Object.values(HomeLabMachine)) {
-      const probe = ctx.machines[machine];
-      for (const name of [...probe.running, ...probe.stopped]) {
-        if (managed.has(name)) continue;
-        const state = probe.running.has(name)
-          ? DeployableState.Running
-          : DeployableState.Stopped;
-        items.push({
-          deployable: createContainer({ name, machine }),
-          observation: { placements: [{ machine, state }] },
-          status: DriftStatus.Unmanaged
-        });
+      const kind = MACHINES[machine].kind;
+      const snapshot = ctx.machines[machine];
+      for (const detector of CAPABILITY_DETECTORS) {
+        if (detector.appliesTo.includes(kind) && detector.findUnmanaged) {
+          items.push(...detector.findUnmanaged(machine, snapshot));
+        }
       }
     }
     return items;

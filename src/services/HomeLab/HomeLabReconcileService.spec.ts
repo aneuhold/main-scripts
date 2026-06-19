@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createDockerComposeStack } from '../../config/homelab/drivers/createDockerComposeStack.js';
 import {
+  DetectionContext,
   DriftStatus,
   HomeLabMachine,
-  MachineProbe,
-  ProbeContext
+  MachineSnapshot
 } from '../../config/homelab/types.js';
 import HomeLabReconcileService from './HomeLabReconcileService.js';
 
@@ -26,7 +26,7 @@ vi.mock('@aneuhold/core-ts-lib', async () => {
 });
 
 /**
- * Builds a probe context from a per-machine list of running container names.
+ * Builds a detection context from a per-machine list of running container names.
  * Machines absent from the map are treated as reachable docker hosts with no
  * containers.
  *
@@ -34,23 +34,19 @@ vi.mock('@aneuhold/core-ts-lib', async () => {
  */
 function makeContext(
   running: Partial<Record<HomeLabMachine, string[]>>
-): ProbeContext {
-  const probe = (machine: HomeLabMachine): MachineProbe => ({
+): DetectionContext {
+  const snapshot = (machine: HomeLabMachine): MachineSnapshot => ({
     reachable: true,
-    dockerOk: true,
-    running: new Set(running[machine] ?? []),
-    stopped: new Set()
+    docker: {
+      running: new Set(running[machine] ?? []),
+      stopped: new Set()
+    }
   });
   return {
     machines: {
-      [HomeLabMachine.Pi1]: probe(HomeLabMachine.Pi1),
-      [HomeLabMachine.Pi2]: probe(HomeLabMachine.Pi2),
-      [HomeLabMachine.Router]: {
-        reachable: true,
-        dockerOk: false,
-        running: new Set(),
-        stopped: new Set()
-      }
+      [HomeLabMachine.Pi1]: snapshot(HomeLabMachine.Pi1),
+      [HomeLabMachine.Pi2]: snapshot(HomeLabMachine.Pi2),
+      [HomeLabMachine.Router]: { reachable: true }
     }
   };
 }
@@ -67,9 +63,10 @@ describe('HomeLabReconcileService', () => {
   it('classifies a stack observed on the wrong machine as Misplaced', async () => {
     // Desired on Pi2 but its containers are running on Pi1.
     const ctx = makeContext({ [HomeLabMachine.Pi1]: ['svc-a', 'svc-b'] });
-    vi.spyOn(HomeLabReconcileService, 'buildProbeContext').mockResolvedValue(
-      ctx
-    );
+    vi.spyOn(
+      HomeLabReconcileService,
+      'buildDetectionContext'
+    ).mockResolvedValue(ctx);
 
     const plan = await HomeLabReconcileService.reconcile([stack]);
 
@@ -79,9 +76,10 @@ describe('HomeLabReconcileService', () => {
 
   it('plans teardown-on-Pi1 and deploy-on-Pi2 for the misplacement', async () => {
     const ctx = makeContext({ [HomeLabMachine.Pi1]: ['svc-a', 'svc-b'] });
-    vi.spyOn(HomeLabReconcileService, 'buildProbeContext').mockResolvedValue(
-      ctx
-    );
+    vi.spyOn(
+      HomeLabReconcileService,
+      'buildDetectionContext'
+    ).mockResolvedValue(ctx);
 
     const plan = await HomeLabReconcileService.reconcile([stack]);
 
@@ -97,9 +95,10 @@ describe('HomeLabReconcileService', () => {
 
   it('classifies a stack on its desired machine as Ok with no actions', async () => {
     const ctx = makeContext({ [HomeLabMachine.Pi2]: ['svc-a', 'svc-b'] });
-    vi.spyOn(HomeLabReconcileService, 'buildProbeContext').mockResolvedValue(
-      ctx
-    );
+    vi.spyOn(
+      HomeLabReconcileService,
+      'buildDetectionContext'
+    ).mockResolvedValue(ctx);
 
     const plan = await HomeLabReconcileService.reconcile([stack]);
 
@@ -110,9 +109,10 @@ describe('HomeLabReconcileService', () => {
 
   it('flags containers matching no registry deployable as Unmanaged', async () => {
     const ctx = makeContext({ [HomeLabMachine.Pi1]: ['rogue-container'] });
-    vi.spyOn(HomeLabReconcileService, 'buildProbeContext').mockResolvedValue(
-      ctx
-    );
+    vi.spyOn(
+      HomeLabReconcileService,
+      'buildDetectionContext'
+    ).mockResolvedValue(ctx);
 
     const plan = await HomeLabReconcileService.reconcile([stack]);
 
