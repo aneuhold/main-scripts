@@ -109,48 +109,42 @@ export function createDockerComposeStack({
       }
       DR.logger.info(`${name} is up!`);
     },
-    teardown: (removeVolumes) => {
+    teardown: (removeVolumes) =>
       HomeLabDockerService.runIfDeployed(
         machine,
         remoteDir,
         DockerService.getComposeDownCommand(remoteDir, removeVolumes)
-      );
-    },
-    start: () => {
+      ),
+    start: () =>
       HomeLabDockerService.runIfDeployed(
         machine,
         remoteDir,
         DockerService.getComposeUpCommand(remoteDir)
-      );
-    },
-    stop: () => {
+      ),
+    stop: () =>
       HomeLabDockerService.runIfDeployed(
         machine,
         remoteDir,
         DockerService.getComposeStopCommand(remoteDir)
-      );
-    },
-    restart: () => {
+      ),
+    restart: () =>
       HomeLabDockerService.runIfDeployed(
         machine,
         remoteDir,
         DockerService.getComposeRestartCommand(remoteDir)
-      );
-    },
-    status: () => {
+      ),
+    status: () =>
       HomeLabDockerService.runIfDeployed(
         machine,
         remoteDir,
         DockerService.getComposePsCommand(remoteDir)
-      );
-    },
-    logs: (service) => {
+      ),
+    logs: (service) =>
       HomeLabDockerService.runIfDeployed(
         machine,
         remoteDir,
         DockerService.getComposeLogsCommand(remoteDir, service)
-      );
-    }
+      )
   };
 
   return {

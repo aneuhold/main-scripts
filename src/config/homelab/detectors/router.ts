@@ -10,5 +10,5 @@ import { MachineCapabilityDetector, MachineKind } from '../types.js';
  */
 export const routerDetector: MachineCapabilityDetector = {
   appliesTo: [MachineKind.Router],
-  detect: () => ({})
+  detect: () => Promise.resolve({})
 };

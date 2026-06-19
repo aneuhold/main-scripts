@@ -1,6 +1,6 @@
 import { DR } from '@aneuhold/core-ts-lib';
-import { MACHINES } from '../../config/homelab/machines.js';
 import { CAPABILITY_DETECTORS } from '../../config/homelab/detectors/index.js';
+import { MACHINES } from '../../config/homelab/machines.js';
 import { DEPLOYABLES } from '../../config/homelab/registry.js';
 import {
   ConvergencePlan,
@@ -14,6 +14,7 @@ import {
   PlannedAction,
   ReconcileItem
 } from '../../config/homelab/types.js';
+import CliLogger from '../../utils/CliLogger.js';
 import { MainScriptsConfig } from '../ConfigService.js';
 import HomeLabDeployableService from './HomeLabDeployableService.js';
 import HomeLabNetworkService from './HomeLabNetworkService.js';
@@ -28,15 +29,39 @@ export default class HomeLabReconcileService {
   /**
    * Detects every machine a single time into a shared {@link DetectionContext}:
    * reachability for all, plus whatever each applicable capability detector
-   * contributes (e.g. container sets for docker hosts).
+   * contributes (e.g. container sets for docker hosts). The machines are probed
+   * concurrently behind a spinner, so an unreachable host's connect timeout no
+   * longer serializes onto the others and the user sees live progress.
    */
-  static buildDetectionContext(): Promise<DetectionContext> {
-    const machines: Record<HomeLabMachine, MachineSnapshot> = {
-      [HomeLabMachine.Pi1]: this.detectMachine(HomeLabMachine.Pi1),
-      [HomeLabMachine.Pi2]: this.detectMachine(HomeLabMachine.Pi2),
-      [HomeLabMachine.Router]: this.detectMachine(HomeLabMachine.Router)
+  static async buildDetectionContext(): Promise<DetectionContext> {
+    const machineList = Object.values(HomeLabMachine);
+    let done = 0;
+    CliLogger.startSpinner(`Detecting machines (0/${machineList.length})...`);
+
+    const detect = async (
+      machine: HomeLabMachine
+    ): Promise<MachineSnapshot> => {
+      const snapshot = await this.detectMachine(machine);
+      done += 1;
+      CliLogger.updateSpinner(
+        `Detecting machines (${done}/${machineList.length})...`
+      );
+      return snapshot;
     };
-    return Promise.resolve({ machines });
+
+    const [pi1, pi2, router] = await Promise.all([
+      detect(HomeLabMachine.Pi1),
+      detect(HomeLabMachine.Pi2),
+      detect(HomeLabMachine.Router)
+    ]);
+    CliLogger.succeedSpinner(`Detected ${machineList.length} machines`);
+
+    const machines: Record<HomeLabMachine, MachineSnapshot> = {
+      [HomeLabMachine.Pi1]: pi1,
+      [HomeLabMachine.Pi2]: pi2,
+      [HomeLabMachine.Router]: router
+    };
+    return { machines };
   }
 
   /**
@@ -47,8 +72,14 @@ export default class HomeLabReconcileService {
    *
    * @param machine the machine to detect
    */
-  private static detectMachine(machine: HomeLabMachine): MachineSnapshot {
-    const reachable = HomeLabNetworkService.sshCapture(machine, 'echo ok', 8);
+  private static async detectMachine(
+    machine: HomeLabMachine
+  ): Promise<MachineSnapshot> {
+    const reachable = await HomeLabNetworkService.sshCapture(
+      machine,
+      'echo ok',
+      8
+    );
     let snapshot: MachineSnapshot = {
       reachable: reachable.exitCode === 0 && reachable.output === 'ok'
     };
@@ -57,7 +88,7 @@ export default class HomeLabReconcileService {
     const kind = MACHINES[machine].kind;
     for (const detector of CAPABILITY_DETECTORS) {
       if (detector.appliesTo.includes(kind)) {
-        snapshot = { ...snapshot, ...detector.detect(machine) };
+        snapshot = { ...snapshot, ...(await detector.detect(machine)) };
       }
     }
     return snapshot;

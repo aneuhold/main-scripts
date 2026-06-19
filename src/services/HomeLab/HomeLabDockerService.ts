@@ -16,13 +16,12 @@ export default class HomeLabDockerService {
    *
    * @param machine the machine to check
    */
-  static isAvailable(machine: HomeLabMachine): boolean {
-    return (
-      HomeLabNetworkService.sshCapture(
-        machine,
-        DockerService.getDockerInfoCheckCommand()
-      ).output === 'ok'
+  static async isAvailable(machine: HomeLabMachine): Promise<boolean> {
+    const { output } = await HomeLabNetworkService.sshCapture(
+      machine,
+      DockerService.getDockerInfoCheckCommand()
     );
+    return output === 'ok';
   }
 
   /**
@@ -30,7 +29,7 @@ export default class HomeLabDockerService {
    *
    * @param machine the machine to query
    */
-  static runningContainers(machine: HomeLabMachine): Set<string> {
+  static runningContainers(machine: HomeLabMachine): Promise<Set<string>> {
     return this.captureNames(
       machine,
       DockerService.getRunningContainersCommand()
@@ -42,7 +41,7 @@ export default class HomeLabDockerService {
    *
    * @param machine the machine to query
    */
-  static exitedContainers(machine: HomeLabMachine): Set<string> {
+  static exitedContainers(machine: HomeLabMachine): Promise<Set<string>> {
     return this.captureNames(
       machine,
       DockerService.getExitedContainersCommand()
@@ -57,8 +56,11 @@ export default class HomeLabDockerService {
    * @param machine the machine to run on
    * @param command the docker command to run, built via {@link DockerService}
    */
-  static runIfAvailable(machine: HomeLabMachine, command: string): void {
-    if (!this.isAvailable(machine)) {
+  static async runIfAvailable(
+    machine: HomeLabMachine,
+    command: string
+  ): Promise<void> {
+    if (!(await this.isAvailable(machine))) {
       DR.logger.info(
         `Docker is not available on ${machine} — ` +
           'run "tb homelab deploy" to set up the Docker host first.'
@@ -77,12 +79,12 @@ export default class HomeLabDockerService {
    * @param remoteDir the stack's remote compose directory
    * @param command the compose command to run, built via {@link DockerService}
    */
-  static runIfDeployed(
+  static async runIfDeployed(
     machine: HomeLabMachine,
     remoteDir: string,
     command: string
-  ): void {
-    if (!HomeLabNetworkService.remoteDirExists(machine, remoteDir)) {
+  ): Promise<void> {
+    if (!(await HomeLabNetworkService.remoteDirExists(machine, remoteDir))) {
       DR.logger.info(
         `Compose project "${remoteDir}" is not deployed on ${machine} — ` +
           'run "tb homelab deploy" first.'
@@ -99,11 +101,11 @@ export default class HomeLabDockerService {
    * @param machine the machine to query
    * @param command the ps command to run
    */
-  private static captureNames(
+  private static async captureNames(
     machine: HomeLabMachine,
     command: string
-  ): Set<string> {
-    const { output } = HomeLabNetworkService.sshCapture(machine, command);
+  ): Promise<Set<string>> {
+    const { output } = await HomeLabNetworkService.sshCapture(machine, command);
     return new Set(
       output
         .split('\n')

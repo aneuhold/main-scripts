@@ -20,16 +20,15 @@ import {
  *
  * @param machine the docker-host machine to inspect
  */
-const detectDockerHost = (
+const detectDockerHost = async (
   machine: HomeLabMachine
-): Partial<MachineSnapshot> => {
-  if (!HomeLabDockerService.isAvailable(machine)) return {};
-  return {
-    docker: {
-      running: HomeLabDockerService.runningContainers(machine),
-      stopped: HomeLabDockerService.exitedContainers(machine)
-    }
-  };
+): Promise<Partial<MachineSnapshot>> => {
+  if (!(await HomeLabDockerService.isAvailable(machine))) return {};
+  const [running, stopped] = await Promise.all([
+    HomeLabDockerService.runningContainers(machine),
+    HomeLabDockerService.exitedContainers(machine)
+  ]);
+  return { docker: { running, stopped } };
 };
 
 /**

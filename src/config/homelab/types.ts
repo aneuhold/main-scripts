@@ -161,7 +161,7 @@ export type MachineCapabilityDetector = {
   /** Machine kinds this detector applies to. */
   appliesTo: MachineKind[];
   /** Fills in this capability's slice of a machine's snapshot. */
-  detect: (machine: HomeLabMachine) => Partial<MachineSnapshot>;
+  detect: (machine: HomeLabMachine) => Promise<Partial<MachineSnapshot>>;
   /**
    * Reports entities this capability found on the machine that match no registry
    * deployable (e.g. stray containers). Omitted if the capability has nothing to

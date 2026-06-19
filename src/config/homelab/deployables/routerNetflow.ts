@@ -12,11 +12,11 @@ export const routerNetflow = createRouterConfig({
   name: 'router-netflow',
   label: 'router NetFlow / syslog',
   machine: HomeLabMachine.Router,
-  buildCommands: () => {
+  buildCommands: async () => {
     const piholeMachine = HomeLabMachine.Pi1;
     DR.logger.info(`Discovering IP of ${piholeMachine}...`);
 
-    const ipResult = HomeLabNetworkService.sshCapture(
+    const ipResult = await HomeLabNetworkService.sshCapture(
       piholeMachine,
       "hostname -I | awk '{print $1}'"
     );

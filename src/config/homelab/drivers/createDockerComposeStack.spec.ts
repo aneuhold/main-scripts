@@ -83,7 +83,7 @@ describe('createDockerComposeStack driver', () => {
   it('status skips with a hint when the stack is not deployed', async () => {
     const dirSpy = vi
       .spyOn(HomeLabNetworkService, 'remoteDirExists')
-      .mockReturnValue(false);
+      .mockResolvedValue(false);
     const runSpy = vi.spyOn(HomeLabNetworkService, 'sshRun').mockReturnValue(0);
 
     const stack = createDockerComposeStack({
@@ -101,7 +101,7 @@ describe('createDockerComposeStack driver', () => {
   });
 
   it('status runs compose ps when the stack is deployed', async () => {
-    vi.spyOn(HomeLabNetworkService, 'remoteDirExists').mockReturnValue(true);
+    vi.spyOn(HomeLabNetworkService, 'remoteDirExists').mockResolvedValue(true);
     const runSpy = vi.spyOn(HomeLabNetworkService, 'sshRun').mockReturnValue(0);
 
     const stack = createDockerComposeStack({

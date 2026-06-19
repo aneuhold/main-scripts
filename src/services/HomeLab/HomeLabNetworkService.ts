@@ -1,5 +1,5 @@
 import { DR } from '@aneuhold/core-ts-lib';
-import { spawnSync } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import { MACHINES } from '../../config/homelab/machines.js';
 import { HomeLabMachine } from '../../config/homelab/types.js';
 
@@ -36,7 +36,9 @@ export default class HomeLabNetworkService {
   /**
    * Runs a command on the given machine via SSH and captures stdout. Does not
    * stream to the terminal. Useful for audit-style checks where the output
-   * needs to be inspected programmatically.
+   * needs to be inspected programmatically. Async (non-blocking `spawn`) so the
+   * event loop stays free — letting a spinner animate and multiple machines be
+   * probed concurrently while these calls are in flight.
    *
    * @param machine the target machine
    * @param command shell command to run on the remote machine
@@ -47,10 +49,10 @@ export default class HomeLabNetworkService {
     machine: HomeLabMachine,
     command: string,
     connectTimeout?: number
-  ): {
+  ): Promise<{
     output: string;
     exitCode: number;
-  } {
+  }> {
     const args: string[] = [];
     if (connectTimeout !== undefined) {
       args.push(
@@ -61,11 +63,19 @@ export default class HomeLabNetworkService {
       );
     }
     args.push(MACHINES[machine].sshHost, command);
-    const result = spawnSync('ssh', args, { encoding: 'utf8' });
-    return {
-      output: result.stdout.trim(),
-      exitCode: result.status ?? 1
-    };
+    return new Promise((resolve) => {
+      let stdout = '';
+      const child = spawn('ssh', args);
+      child.stdout.on('data', (data: Buffer) => {
+        stdout += data.toString();
+      });
+      child.on('error', () => {
+        resolve({ output: '', exitCode: 1 });
+      });
+      child.on('close', (code) => {
+        resolve({ output: stdout.trim(), exitCode: code ?? 1 });
+      });
+    });
   }
 
   /**
@@ -118,8 +128,14 @@ export default class HomeLabNetworkService {
    * @param machine the target machine
    * @param remotePath the directory path to check
    */
-  static remoteDirExists(machine: HomeLabMachine, remotePath: string): boolean {
-    const result = this.sshCapture(machine, `test -d ${remotePath} && echo ok`);
+  static async remoteDirExists(
+    machine: HomeLabMachine,
+    remotePath: string
+  ): Promise<boolean> {
+    const result = await this.sshCapture(
+      machine,
+      `test -d ${remotePath} && echo ok`
+    );
     return result.output === 'ok';
   }
 }

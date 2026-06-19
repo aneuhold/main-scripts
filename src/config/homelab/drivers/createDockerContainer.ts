@@ -58,36 +58,31 @@ export function createDockerContainer({
   opsOverride?: DeployableOps;
 }): Deployable {
   const driverDefaults: DeployableOps = {
-    start: () => {
+    start: () =>
       HomeLabDockerService.runIfAvailable(
         machine,
         DockerService.getContainerStartCommand(name)
-      );
-    },
-    stop: () => {
+      ),
+    stop: () =>
       HomeLabDockerService.runIfAvailable(
         machine,
         DockerService.getContainerStopCommand(name)
-      );
-    },
-    restart: () => {
+      ),
+    restart: () =>
       HomeLabDockerService.runIfAvailable(
         machine,
         DockerService.getContainerRestartCommand(name)
-      );
-    },
-    status: () => {
+      ),
+    status: () =>
       HomeLabDockerService.runIfAvailable(
         machine,
         DockerService.getContainerStatusCommand(name)
-      );
-    },
-    logs: () => {
+      ),
+    logs: () =>
       HomeLabDockerService.runIfAvailable(
         machine,
         DockerService.getContainerLogsCommand(name)
-      );
-    }
+      )
   };
 
   return {

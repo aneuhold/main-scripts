@@ -26,7 +26,12 @@ import {
   removeWorktree
 } from './commands/worktree.js';
 import calculateProbabilities from './utils/calculator.js';
+import CliLogger from './utils/CliLogger.js';
 import { triggerUpdate } from './utils/updateIfNeeded.js';
+
+// Use our spinner-aware logger so long-running work can show a live loading
+// indicator that cooperates with normal log output.
+DR.registerLogger(new CliLogger());
 
 program.name('tb');
 
