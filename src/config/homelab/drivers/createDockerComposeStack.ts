@@ -1,7 +1,7 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { MainScriptsConfig } from '../../../services/ConfigService.js';
+import DockerService from '../../../services/applications/DockerService.js';
 import HomeLabNetworkService from '../../../services/HomeLab/HomeLabNetworkService.js';
-import RemoteDocker from '../../../services/HomeLab/RemoteDocker.js';
 import {
   Deployable,
   DeployableKind,
@@ -77,6 +77,24 @@ export function createDockerComposeStack({
     createContainer({ name: service, machine })
   );
 
+  /**
+   * Runs a compose command in the stack's remote directory, but only after
+   * confirming the stack has been deployed there. If the directory is missing,
+   * prints a hint and skips the command rather than surfacing a raw `cd` error.
+   *
+   * @param command the compose command to run
+   */
+  const runInRemoteDir = (command: string): void => {
+    if (!HomeLabNetworkService.remoteDirExists(machine, remoteDir)) {
+      DR.logger.info(
+        `${name} is not deployed on ${machine} — "${remoteDir}" does not exist. ` +
+          'Run "tb homelab deploy" first.'
+      );
+      return;
+    }
+    HomeLabNetworkService.sshRun(machine, command);
+  };
+
   const driverDefaults: DeployableOps = {
     deploy: (config: MainScriptsConfig) => {
       const allFiles: RemoteFile[] = [...files, ...(env ? env(config) : [])];
@@ -92,7 +110,7 @@ export function createDockerComposeStack({
       DR.logger.info(`Starting ${name}...`);
       const upCode = HomeLabNetworkService.sshRun(
         machine,
-        RemoteDocker.composeUp(remoteDir)
+        DockerService.getComposeUpCommand(remoteDir)
       );
       if (upCode !== 0) {
         DR.logger.error(`docker compose up failed (exit ${upCode})`);
@@ -100,36 +118,26 @@ export function createDockerComposeStack({
       }
       DR.logger.info(`${name} is up!`);
     },
-    teardown: (removeVolumes) =>
-      void HomeLabNetworkService.sshRun(
-        machine,
-        RemoteDocker.composeDown(remoteDir, removeVolumes)
-      ),
-    start: () =>
-      void HomeLabNetworkService.sshRun(
-        machine,
-        RemoteDocker.composeUp(remoteDir)
-      ),
-    stop: () =>
-      void HomeLabNetworkService.sshRun(
-        machine,
-        RemoteDocker.composeStop(remoteDir)
-      ),
-    restart: () =>
-      void HomeLabNetworkService.sshRun(
-        machine,
-        RemoteDocker.composeRestart(remoteDir)
-      ),
-    status: () =>
-      void HomeLabNetworkService.sshRun(
-        machine,
-        RemoteDocker.composePs(remoteDir)
-      ),
-    logs: (service) =>
-      void HomeLabNetworkService.sshRun(
-        machine,
-        RemoteDocker.composeLogs(remoteDir, service)
-      )
+    teardown: (removeVolumes) => {
+      runInRemoteDir(
+        DockerService.getComposeDownCommand(remoteDir, removeVolumes)
+      );
+    },
+    start: () => {
+      runInRemoteDir(DockerService.getComposeUpCommand(remoteDir));
+    },
+    stop: () => {
+      runInRemoteDir(DockerService.getComposeStopCommand(remoteDir));
+    },
+    restart: () => {
+      runInRemoteDir(DockerService.getComposeRestartCommand(remoteDir));
+    },
+    status: () => {
+      runInRemoteDir(DockerService.getComposePsCommand(remoteDir));
+    },
+    logs: (service) => {
+      runInRemoteDir(DockerService.getComposeLogsCommand(remoteDir, service));
+    }
   };
 
   return {

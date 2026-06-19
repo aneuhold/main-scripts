@@ -79,4 +79,44 @@ describe('createDockerComposeStack driver', () => {
       writeSpy.mock.invocationCallOrder[1]
     );
   });
+
+  it('status skips with a hint when the stack is not deployed', async () => {
+    const dirSpy = vi
+      .spyOn(HomeLabNetworkService, 'remoteDirExists')
+      .mockReturnValue(false);
+    const runSpy = vi.spyOn(HomeLabNetworkService, 'sshRun').mockReturnValue(0);
+
+    const stack = createDockerComposeStack({
+      name: 'monitoring',
+      machine: HomeLabMachine.Pi1,
+      remoteDir: '~/monitoring',
+      files: [],
+      services: ['pihole']
+    });
+
+    await stack.ops.status?.();
+
+    expect(dirSpy).toHaveBeenCalledWith(HomeLabMachine.Pi1, '~/monitoring');
+    expect(runSpy).not.toHaveBeenCalled();
+  });
+
+  it('status runs compose ps when the stack is deployed', async () => {
+    vi.spyOn(HomeLabNetworkService, 'remoteDirExists').mockReturnValue(true);
+    const runSpy = vi.spyOn(HomeLabNetworkService, 'sshRun').mockReturnValue(0);
+
+    const stack = createDockerComposeStack({
+      name: 'monitoring',
+      machine: HomeLabMachine.Pi1,
+      remoteDir: '~/monitoring',
+      files: [],
+      services: ['pihole']
+    });
+
+    await stack.ops.status?.();
+
+    expect(runSpy).toHaveBeenCalledWith(
+      HomeLabMachine.Pi1,
+      'cd ~/monitoring && docker compose ps'
+    );
+  });
 });

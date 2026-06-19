@@ -113,6 +113,17 @@ export default class HomeLabNetworkService {
   }
 
   /**
+   * Returns true if the given directory exists on the machine.
+   *
+   * @param machine the target machine
+   * @param remotePath the directory path to check
+   */
+  static remoteDirExists(machine: HomeLabMachine, remotePath: string): boolean {
+    const result = this.sshCapture(machine, `test -d ${remotePath} && echo ok`);
+    return result.output === 'ok';
+  }
+
+  /**
    * Parses a newline-delimited list of container names from `docker ps` output,
    * ignoring empty lines.
    *

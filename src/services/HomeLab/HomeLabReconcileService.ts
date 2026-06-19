@@ -17,9 +17,9 @@ import {
   ReconcileItem
 } from '../../config/homelab/types.js';
 import { MainScriptsConfig } from '../ConfigService.js';
+import DockerService from '../applications/DockerService.js';
 import HomeLabDeployableService from './HomeLabDeployableService.js';
 import HomeLabNetworkService from './HomeLabNetworkService.js';
-import RemoteDocker from './RemoteDocker.js';
 
 /**
  * Owns desired-state reconciliation for the home lab: probes every reachable
@@ -64,7 +64,7 @@ export default class HomeLabReconcileService {
 
     const dockerCheck = HomeLabNetworkService.sshCapture(
       machine,
-      RemoteDocker.dockerInfoCheck()
+      DockerService.getDockerInfoCheckCommand()
     );
     const dockerOk = dockerCheck.output === 'ok';
     if (!dockerOk) {
@@ -80,7 +80,7 @@ export default class HomeLabReconcileService {
       HomeLabNetworkService.parseContainerNames(
         HomeLabNetworkService.sshCapture(
           machine,
-          RemoteDocker.runningContainers()
+          DockerService.getRunningContainersCommand()
         ).output
       )
     );
@@ -88,7 +88,7 @@ export default class HomeLabReconcileService {
       HomeLabNetworkService.parseContainerNames(
         HomeLabNetworkService.sshCapture(
           machine,
-          RemoteDocker.exitedContainers()
+          DockerService.getExitedContainersCommand()
         ).output
       )
     );

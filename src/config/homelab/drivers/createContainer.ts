@@ -1,5 +1,5 @@
+import DockerService from '../../../services/applications/DockerService.js';
 import HomeLabNetworkService from '../../../services/HomeLab/HomeLabNetworkService.js';
-import RemoteDocker from '../../../services/HomeLab/RemoteDocker.js';
 import {
   Deployable,
   DeployableKind,
@@ -60,27 +60,27 @@ export function createContainer({
     start: () =>
       void HomeLabNetworkService.sshRun(
         machine,
-        RemoteDocker.containerStart(name)
+        DockerService.getContainerStartCommand(name)
       ),
     stop: () =>
       void HomeLabNetworkService.sshRun(
         machine,
-        RemoteDocker.containerStop(name)
+        DockerService.getContainerStopCommand(name)
       ),
     restart: () =>
       void HomeLabNetworkService.sshRun(
         machine,
-        RemoteDocker.containerRestart(name)
+        DockerService.getContainerRestartCommand(name)
       ),
     status: () =>
       void HomeLabNetworkService.sshRun(
         machine,
-        RemoteDocker.containerStatus(name)
+        DockerService.getContainerStatusCommand(name)
       ),
     logs: () =>
       void HomeLabNetworkService.sshRun(
         machine,
-        RemoteDocker.containerLogs(name)
+        DockerService.getContainerLogsCommand(name)
       )
   };
 
