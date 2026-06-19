@@ -35,6 +35,7 @@ export function createDockerHostSetup({
     machine,
     commands: [
       'curl -fsSL https://get.docker.com | sudo sh',
+      // The below makes it so that any subsequent docker commands don't require sudo.
       `sudo usermod -aG docker ${user}`
     ],
     verify: (ctx, m) => !!ctx.machines[m].docker
