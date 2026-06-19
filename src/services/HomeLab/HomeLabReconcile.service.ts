@@ -221,7 +221,7 @@ export default class HomeLabReconcileService {
   }
 
   /**
-   * Prints a human-readable reconciliation report — the dry run that `audit`
+   * Prints a human-readable reconciliation report, the dry run that `audit`
    * shows. Lists each deployable's drift status, then the per-machine change
    * summary.
    *
@@ -239,7 +239,7 @@ export default class HomeLabReconcileService {
     }
 
     if (plan.actions.length === 0) {
-      DR.logger.info('\nNo changes needed — everything is converged.');
+      DR.logger.info('\nNo changes needed. Everything is converged.');
       return;
     }
 

@@ -39,7 +39,7 @@ function aggregatePlacements(childPlacements: Placement[]): Placement[] {
 /**
  * Builds a multi-container compose-stack {@link Deployable}. The default
  * `deploy` writes every `files` entry plus the config-derived `env` files, then
- * runs `docker compose up -d` — so a stack supplies data instead of
+ * runs `docker compose up -d`, so a stack supplies data instead of
  * reimplementing the op. Children are containers that inherit the stack's
  * machine. Self-detects by aggregating its children's observations.
  *
@@ -80,7 +80,7 @@ export function createDockerComposeStack({
   );
 
   // Every compose stack needs the Docker host installed first, so prepend the
-  // host setup for this machine (deduped) — stack configs only declare their
+  // host setup for this machine (deduped). Stack configs only declare their
   // additional prerequisites.
   const resolvedDependsOn = [
     ...new Set([dockerHostSetupName(machine), ...dependsOn])

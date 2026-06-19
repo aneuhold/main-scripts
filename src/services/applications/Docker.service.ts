@@ -6,7 +6,7 @@ import CLIService from '../CLI.service.js';
  * A service that provides functionality for interacting with the Docker
  * application, including builders for Docker CLI command strings (run locally
  * or piped to a remote host over SSH). The shell-sensitive `--format` strings
- * are preserved verbatim — do not reflow.
+ * are preserved verbatim, so do not reflow them.
  */
 export default class DockerService {
   /**

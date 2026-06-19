@@ -201,7 +201,7 @@ Sometimes it seems that permissions get messed up. The only solution seems to go
 
 ### Home Lab
 
-The `tb homelab` command reconciles a desired-state config for my home lab (various machine types) over SSH. The config layer is documented separately — see [`src/config/homelab/README.md`](src/config/homelab/README.md) for how deployables, drivers, and detectors fit together.
+The `tb homelab` command reconciles a desired-state config for my home lab (various machine types) over SSH. The config layer is documented separately. See [`src/config/homelab/README.md`](src/config/homelab/README.md) for how deployables, drivers, and detectors fit together.
 
 ### Build Process Description
 

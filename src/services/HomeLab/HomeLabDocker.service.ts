@@ -49,9 +49,9 @@ export default class HomeLabDockerService {
   }
 
   /**
-   * Runs a Docker command on the machine, but only when the daemon is available
-   * — otherwise prints a hint and skips, so a single-container op fails friendly
-   * instead of surfacing a raw "docker: command not found" error.
+   * Runs a Docker command on the machine, but only when the daemon is
+   * available. Otherwise prints a hint and skips, so a single-container op fails
+   * friendly instead of surfacing a raw "docker: command not found" error.
    *
    * @param machine the machine to run on
    * @param command the docker command to run, built via {@link DockerService}
@@ -62,8 +62,8 @@ export default class HomeLabDockerService {
   ): Promise<void> {
     if (!(await this.isAvailable(machine))) {
       DR.logger.info(
-        `Docker is not available on ${machine} — ` +
-          'run "tb homelab deploy" to set up the Docker host first.'
+        `Docker is not available on ${machine}. ` +
+          'Run "tb homelab deploy" to set up the Docker host first.'
       );
       return;
     }
@@ -72,7 +72,7 @@ export default class HomeLabDockerService {
 
   /**
    * Runs a compose command for a stack, but only when its project directory
-   * exists on the machine (i.e. it has been deployed) — otherwise prints a hint
+   * exists on the machine (i.e. it has been deployed). Otherwise prints a hint
    * and skips rather than surfacing a raw `cd` error.
    *
    * @param machine the machine to run on
@@ -86,8 +86,8 @@ export default class HomeLabDockerService {
   ): Promise<void> {
     if (!(await HomeLabNetworkService.remoteDirExists(machine, remoteDir))) {
       DR.logger.info(
-        `Compose project "${remoteDir}" is not deployed on ${machine} — ` +
-          'run "tb homelab deploy" first.'
+        `Compose project "${remoteDir}" is not deployed on ${machine}. ` +
+          'Run "tb homelab deploy" first.'
       );
       return;
     }

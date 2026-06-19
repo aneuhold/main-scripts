@@ -157,7 +157,7 @@ export default class HomeLabNetworkService {
   ): Promise<boolean> {
     // The path is left unquoted so the remote shell expands a leading `~`, the
     // same way every other remote path in the home lab is passed (e.g. `cd
-    // ~/dir`). Quoting it — single or double — would keep `~` literal and write
+    // ~/dir`). Quoting it, single or double, would keep `~` literal and write
     // into a directory named `~`.
     const result = spawnSync(
       'ssh',
