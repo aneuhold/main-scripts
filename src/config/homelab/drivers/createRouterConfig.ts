@@ -50,7 +50,10 @@ export function createRouterConfig({
       DR.logger.info(script);
       DR.logger.info('---');
 
-      const exitCode = HomeLabNetworkService.sshRunWithInput(machine, script);
+      const exitCode = await HomeLabNetworkService.sshRunWithInput(
+        machine,
+        script
+      );
       if (exitCode !== 0) {
         DR.logger.error(
           `Router SSH session exited with code ${exitCode}. ` +

@@ -67,7 +67,7 @@ export default class HomeLabDockerService {
       );
       return;
     }
-    HomeLabNetworkService.sshRun(machine, command);
+    await HomeLabNetworkService.sshRun(machine, command);
   }
 
   /**
@@ -91,7 +91,7 @@ export default class HomeLabDockerService {
       );
       return;
     }
-    HomeLabNetworkService.sshRun(machine, command);
+    await HomeLabNetworkService.sshRun(machine, command);
   }
 
   /**

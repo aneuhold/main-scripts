@@ -45,9 +45,9 @@ export function createHostSetup({
     ((ctx: DetectionContext, m: HomeLabMachine) => ctx.machines[m].reachable);
 
   const driverDefaults: DeployableOps = {
-    deploy: () => {
+    deploy: async () => {
       DR.logger.info(`Running host setup "${name}" on ${machine}...`);
-      const exitCode = HomeLabNetworkService.sshRun(
+      const exitCode = await HomeLabNetworkService.sshRun(
         machine,
         commands.join(' && ')
       );

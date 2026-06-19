@@ -45,7 +45,9 @@ describe('createDockerComposeStack driver', () => {
     const writeSpy = vi
       .spyOn(HomeLabNetworkService, 'writeRemoteFile')
       .mockReturnValue(true);
-    const runSpy = vi.spyOn(HomeLabNetworkService, 'sshRun').mockReturnValue(0);
+    const runSpy = vi
+      .spyOn(HomeLabNetworkService, 'sshRun')
+      .mockResolvedValue(0);
 
     const stack = createDockerComposeStack({
       name: 'monitoring',
@@ -84,7 +86,9 @@ describe('createDockerComposeStack driver', () => {
     const dirSpy = vi
       .spyOn(HomeLabNetworkService, 'remoteDirExists')
       .mockResolvedValue(false);
-    const runSpy = vi.spyOn(HomeLabNetworkService, 'sshRun').mockReturnValue(0);
+    const runSpy = vi
+      .spyOn(HomeLabNetworkService, 'sshRun')
+      .mockResolvedValue(0);
 
     const stack = createDockerComposeStack({
       name: 'monitoring',
@@ -102,7 +106,9 @@ describe('createDockerComposeStack driver', () => {
 
   it('status runs compose ps when the stack is deployed', async () => {
     vi.spyOn(HomeLabNetworkService, 'remoteDirExists').mockResolvedValue(true);
-    const runSpy = vi.spyOn(HomeLabNetworkService, 'sshRun').mockReturnValue(0);
+    const runSpy = vi
+      .spyOn(HomeLabNetworkService, 'sshRun')
+      .mockResolvedValue(0);
 
     const stack = createDockerComposeStack({
       name: 'monitoring',

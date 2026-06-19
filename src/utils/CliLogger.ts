@@ -11,16 +11,32 @@ const FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '
 const FRAME_INTERVAL_MS = 80;
 
 /**
- * The project's {@link ILogger}: it logs exactly like the default console logger
- * (same emoji-prefixed lines) but additionally owns a single live spinner for
- * signalling long-running work. Because the spinner lives in the logger, every
- * `info`/`warn`/etc. call automatically clears the spinner line, writes its
- * message, and redraws the spinner beneath it — so real-time output and the
- * loading indicator never corrupt one another.
+ * Handle to one live loading indicator. The handle is intentionally dumb. All
+ * spinner coordination lives inside {@link CliLogger}.
+ */
+type Spinner = {
+  /** Replaces the status text shown next to the spinner. */
+  update: (text: string) => void;
+  /** Signals activity: hides the spinner if shown and restarts any delay. */
+  poke: () => void;
+  /** Stops the spinner and prints a success line. */
+  succeed: (text?: string) => void;
+  /** Stops the spinner and prints a failure line. */
+  fail: (text?: string) => void;
+  /** Stops the spinner without printing a result line. */
+  stop: () => void;
+};
+
+/**
+ * The project's {@link ILogger}. Logs emoji-prefixed lines and additionally owns
+ * a single live spinner for signalling long-running work. Because the spinner
+ * lives in the logger, every `info`/`warn`/etc. call automatically clears the
+ * spinner line, writes its message, and redraws the spinner beneath it, so
+ * normal output and the loading indicator never corrupt one another.
  *
- * Register it once at startup via `DR.registerLogger(new CliLogger())`; drive
- * the spinner through the static `startSpinner`/`succeedSpinner`/... methods, or
- * the {@link withSpinner} wrapper, from anywhere.
+ * Register it once at startup via `DR.registerLogger(new CliLogger())`; create
+ * spinners through the static {@link spinner} factory, or the
+ * {@link withSpinner} wrapper, from anywhere.
  *
  * The animation only runs on an interactive TTY with verbose logging off; on a
  * non-TTY (piped output, CI) or in verbose mode it degrades to plain status
@@ -31,6 +47,7 @@ export default class CliLogger implements ILogger {
   private static spinnerText: string | undefined;
   private static spinnerFrame = 0;
   private static spinnerTimer: NodeJS.Timeout | undefined;
+  private static owner: symbol | undefined;
 
   private readonly logOnlyIfVerbose: boolean;
 
@@ -43,71 +60,78 @@ export default class CliLogger implements ILogger {
   }
 
   /**
-   * Starts the live spinner with the given status text, replacing any spinner
-   * already running.
+   * Creates a loading indicator and returns a handle to drive it. With no delay
+   * the spinner appears immediately; with `delayMs` it appears only once the
+   * operation has stayed silent that long, so quick operations never flash a
+   * spinner. Report activity with {@link Spinner.poke} and completion with
+   * `succeed`/`fail`/`stop`.
+   *
+   * Coordination is automatic: a delayed spinner stays suppressed while another
+   * spinner already owns the line or output is non-interactive, and each handle
+   * only ever touches the line it owns, so concurrent callers never collide.
    *
    * @param text the status text shown next to the spinner
+   * @param options spinner settings
+   * @param options.delayMs milliseconds of silence before the spinner appears;
+   * omit or pass 0 to show it immediately
    */
-  static startSpinner(text: string): void {
-    CliLogger.stopTimer();
-    CliLogger.spinnerText = text;
-    CliLogger.spinnerFrame = 0;
-    if (!CliLogger.canAnimate()) {
-      console.log(`… ${text}`);
-      return;
-    }
-    CliLogger.renderFrame();
-    CliLogger.spinnerTimer = setInterval(() => {
-      CliLogger.spinnerFrame = (CliLogger.spinnerFrame + 1) % FRAMES.length;
-      CliLogger.renderFrame();
-    }, FRAME_INTERVAL_MS);
-    // Never let a lingering spinner hold the process open on exit.
-    CliLogger.spinnerTimer.unref();
+  static spinner(text: string, options: { delayMs?: number } = {}): Spinner {
+    const id = Symbol(text);
+    const delayMs = options.delayMs ?? 0;
+    let label = text;
+    let delayTimer: NodeJS.Timeout | undefined;
+
+    const clearDelay = (): void => {
+      if (delayTimer) {
+        clearTimeout(delayTimer);
+        delayTimer = undefined;
+      }
+    };
+    const start = (): void => {
+      if (delayMs <= 0) {
+        CliLogger.claim(id, label);
+        return;
+      }
+      delayTimer = setTimeout(() => {
+        // Claim the line only when nothing else owns it.
+        if (CliLogger.owner === undefined && CliLogger.isInteractive()) {
+          CliLogger.claim(id, label);
+        }
+      }, delayMs);
+      delayTimer.unref();
+    };
+
+    start();
+
+    return {
+      update: (next: string): void => {
+        label = next;
+        CliLogger.redraw(id, label);
+      },
+      poke: (): void => {
+        clearDelay();
+        CliLogger.release(id);
+        start();
+      },
+      succeed: (next?: string): void => {
+        clearDelay();
+        CliLogger.finalize(id, '✓', next ?? label);
+      },
+      fail: (next?: string): void => {
+        clearDelay();
+        CliLogger.finalize(id, '✗', next ?? label);
+      },
+      stop: (): void => {
+        clearDelay();
+        CliLogger.release(id);
+      }
+    };
   }
 
   /**
-   * Updates the active spinner's status text without restarting it.
-   *
-   * @param text the new status text
-   */
-  static updateSpinner(text: string): void {
-    CliLogger.spinnerText = text;
-    if (CliLogger.spinnerTimer && CliLogger.canAnimate()) {
-      CliLogger.renderFrame();
-    }
-  }
-
-  /**
-   * Stops the active spinner and prints a success line.
-   *
-   * @param text optional final text; defaults to the current spinner text
-   */
-  static succeedSpinner(text?: string): void {
-    CliLogger.finalize('✓', text);
-  }
-
-  /**
-   * Stops the active spinner and prints a failure line.
-   *
-   * @param text optional final text; defaults to the current spinner text
-   */
-  static failSpinner(text?: string): void {
-    CliLogger.finalize('✗', text);
-  }
-
-  /**
-   * Stops the active spinner without printing a result line.
-   */
-  static stopSpinner(): void {
-    CliLogger.stopTimer();
-    if (CliLogger.canAnimate()) CliLogger.clearLine();
-    CliLogger.spinnerText = undefined;
-  }
-
-  /**
-   * Runs an async task with a spinner, resolving it to a success line when the
-   * task settles or a failure line when it throws. Returns the task's result
-   * (or re-throws its error) so call sites read naturally.
+   * Runs an async task with an immediate spinner, resolving it to a success line
+   * when the task settles or a failure line when it throws. Returns the task's
+   * result (or re-throws its error) so call sites read naturally.
    *
    * @param text the status text shown while the task runs
    * @param task the async work to await
@@ -116,13 +140,13 @@ export default class CliLogger implements ILogger {
     text: string,
     task: () => Promise<T>
   ): Promise<T> {
-    CliLogger.startSpinner(text);
+    const spinner = CliLogger.spinner(text);
     try {
       const result = await task();
-      CliLogger.succeedSpinner();
+      spinner.succeed();
       return result;
     } catch (err) {
-      CliLogger.failSpinner();
+      spinner.fail();
       throw err;
     }
   }
@@ -205,10 +229,10 @@ export default class CliLogger implements ILogger {
   }
 
   /**
-   * True only when output is an interactive TTY and verbose logging is off — the
-   * conditions under which animating (and rewriting) a line is safe.
+   * True when output is an interactive TTY and verbose logging is off: the
+   * conditions under which a spinner can safely animate and rewrite the line.
    */
-  private static canAnimate(): boolean {
+  private static isInteractive(): boolean {
     return process.stdout.isTTY && !CliLogger.verboseEnabled;
   }
 
@@ -223,24 +247,82 @@ export default class CliLogger implements ILogger {
    */
   private static aroundSpinner(write: () => void, redraw = true): void {
     const active =
-      CliLogger.spinnerText !== undefined && CliLogger.canAnimate();
+      CliLogger.spinnerText !== undefined && CliLogger.isInteractive();
     if (active) CliLogger.clearLine();
     write();
     if (active && redraw) CliLogger.renderFrame();
   }
 
   /**
-   * Stops the spinner and prints its final result line.
+   * Makes `id` the owner of the line and shows its spinner: animates on an
+   * interactive TTY, otherwise prints a single plain status line.
    *
-   * @param mark the leading status mark (e.g. `✓` or `✗`)
-   * @param text optional final text; defaults to the current spinner text
+   * @param id the owning handle's identity
+   * @param label the status text to show
    */
-  private static finalize(mark: string, text?: string): void {
-    const finalText = text ?? CliLogger.spinnerText ?? '';
+  private static claim(id: symbol, label: string): void {
     CliLogger.stopTimer();
-    if (CliLogger.canAnimate()) CliLogger.clearLine();
+    CliLogger.owner = id;
+    CliLogger.spinnerText = label;
+    CliLogger.spinnerFrame = 0;
+    if (!CliLogger.isInteractive()) {
+      console.log(`… ${label}`);
+      return;
+    }
+    CliLogger.renderFrame();
+    CliLogger.spinnerTimer = setInterval(() => {
+      CliLogger.spinnerFrame = (CliLogger.spinnerFrame + 1) % FRAMES.length;
+      CliLogger.renderFrame();
+    }, FRAME_INTERVAL_MS);
+    // Never let a lingering spinner hold the process open on exit.
+    CliLogger.spinnerTimer.unref();
+  }
+
+  /**
+   * Redraws the line with new text when `id` owns it.
+   *
+   * @param id the requesting handle's identity
+   * @param label the new status text
+   */
+  private static redraw(id: symbol, label: string): void {
+    if (CliLogger.owner !== id) return;
+    CliLogger.spinnerText = label;
+    if (CliLogger.spinnerTimer && CliLogger.isInteractive()) {
+      CliLogger.renderFrame();
+    }
+  }
+
+  /**
+   * Releases the line when `id` owns it, stopping the animation and clearing the
+   * rendered spinner. Only rewrites the line when a spinner is actually
+   * rendered, so it is safe to call between chunks of streamed output without
+   * erasing partial lines.
+   *
+   * @param id the releasing handle's identity
+   */
+  private static release(id: symbol): void {
+    if (CliLogger.owner !== id) return;
+    CliLogger.stopTimer();
+    if (CliLogger.spinnerText !== undefined && CliLogger.isInteractive()) {
+      CliLogger.clearLine();
+    }
     CliLogger.spinnerText = undefined;
-    console.log(`${mark} ${finalText}`);
+    CliLogger.owner = undefined;
+  }
+
+  /**
+   * Releases the line (if owned) and prints a final result line, coexisting with
+   * any other spinner still showing.
+   *
+   * @param id the finishing handle's identity
+   * @param mark the leading status mark (e.g. `✓` or `✗`)
+   * @param label the final text to print
+   */
+  private static finalize(id: symbol, mark: string, label: string): void {
+    CliLogger.release(id);
+    CliLogger.aroundSpinner(() => {
+      console.log(`${mark} ${label}`);
+    });
   }
 
   /**

@@ -29,23 +29,23 @@ export default class HomeLabReconcileService {
   /**
    * Detects every machine a single time into a shared {@link DetectionContext}:
    * reachability for all, plus whatever each applicable capability detector
-   * contributes (e.g. container sets for docker hosts). The machines are probed
-   * concurrently behind a spinner, so an unreachable host's connect timeout no
-   * longer serializes onto the others and the user sees live progress.
+   * contributes (e.g. container sets for docker hosts). Probes the machines
+   * concurrently behind a spinner so connect timeouts overlap and progress stays
+   * visible.
    */
   static async buildDetectionContext(): Promise<DetectionContext> {
     const machineList = Object.values(HomeLabMachine);
     let done = 0;
-    CliLogger.startSpinner(`Detecting machines (0/${machineList.length})...`);
+    const spinner = CliLogger.spinner(
+      `Detecting machines (0/${machineList.length})...`
+    );
 
     const detect = async (
       machine: HomeLabMachine
     ): Promise<MachineSnapshot> => {
       const snapshot = await this.detectMachine(machine);
       done += 1;
-      CliLogger.updateSpinner(
-        `Detecting machines (${done}/${machineList.length})...`
-      );
+      spinner.update(`Detecting machines (${done}/${machineList.length})...`);
       return snapshot;
     };
 
@@ -54,7 +54,7 @@ export default class HomeLabReconcileService {
       detect(HomeLabMachine.Pi2),
       detect(HomeLabMachine.Router)
     ]);
-    CliLogger.succeedSpinner(`Detected ${machineList.length} machines`);
+    spinner.succeed(`Detected ${machineList.length} machines`);
 
     const machines: Record<HomeLabMachine, MachineSnapshot> = {
       [HomeLabMachine.Pi1]: pi1,

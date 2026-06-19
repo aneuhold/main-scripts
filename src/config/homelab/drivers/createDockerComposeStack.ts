@@ -87,7 +87,7 @@ export function createDockerComposeStack({
   ];
 
   const driverDefaults: DeployableOps = {
-    deploy: (config: MainScriptsConfig) => {
+    deploy: async (config: MainScriptsConfig) => {
       const allFiles: RemoteFile[] = [...files, ...(env ? env(config) : [])];
 
       DR.logger.info(`Writing ${name} config files to ${machine}...`);
@@ -99,7 +99,7 @@ export function createDockerComposeStack({
       }
 
       DR.logger.info(`Starting ${name}...`);
-      const upCode = HomeLabNetworkService.sshRun(
+      const upCode = await HomeLabNetworkService.sshRun(
         machine,
         DockerService.getComposeUpCommand(remoteDir)
       );
