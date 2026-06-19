@@ -9,7 +9,7 @@ services:
     environment:
       TZ: "America/Los_Angeles"
       FTLCONF_LOCAL_IPV4: "0.0.0.0"
-      WEBPASSWORD: "${PIHOLE_WEBPASSWORD}"
+      FTLCONF_webserver_api_password: "${PIHOLE_WEBPASSWORD}"
     volumes:
       - pihole_data:/etc/pihole
       - pihole_dnsmasq:/etc/dnsmasq.d
