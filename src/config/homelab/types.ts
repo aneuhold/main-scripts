@@ -196,6 +196,11 @@ export type PlannedAction = {
 export type ConvergencePlan = {
   items: ReconcileItem[];
   actions: PlannedAction[];
+  /**
+   * The detection context the plan was computed against. Reused by apply to gate
+   * dependency deploys on observed state without detecting a second time.
+   */
+  ctx: DetectionContext;
 };
 
 /**
