@@ -45,15 +45,19 @@ async function selectTarget(op: DeployableOpKey): Promise<Deployable> {
   for (const deployable of DEPLOYABLES) {
     if (deployable.ops[op] === undefined) continue;
 
-    choices.push(new Separator(deployable.label));
-    choices.push({ name: deployable.label, value: deployable });
+    const supportedChildren =
+      op !== 'teardown'
+        ? deployable.children.filter((c) => c.ops[op] !== undefined)
+        : [];
 
-    if (op !== 'teardown') {
-      for (const child of deployable.children) {
-        if (child.ops[op] !== undefined) {
-          choices.push({ name: `  ${child.name}`, value: child });
-        }
-      }
+    // Only emit a group header when there are children to group beneath it;
+    // otherwise the separator just doubles the selectable entry's label.
+    if (supportedChildren.length > 0) {
+      choices.push(new Separator(deployable.label));
+    }
+    choices.push({ name: deployable.label, value: deployable });
+    for (const child of supportedChildren) {
+      choices.push({ name: `  ${child.name}`, value: child });
     }
   }
 
