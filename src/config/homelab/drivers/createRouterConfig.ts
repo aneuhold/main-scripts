@@ -60,9 +60,16 @@ export function createRouterConfig({
       DR.logger.info(script);
       DR.logger.info('---');
 
+      // EdgeOS config verbs (configure/set/delete/commit/save) are Vyatta shell
+      // functions loaded only for interactive logins. Piping the script into a
+      // non-interactive vbash session leaves them undefined, so source the CLI
+      // template first to define them. The displayed block above stays free of
+      // this so it can be pasted straight into an interactive `tb connect router`
+      // session.
+      const remoteScript = `source /opt/vyatta/etc/functions/script-template\n${script}`;
       const exitCode = await HomeLabNetworkService.sshRunWithInput(
         machine,
-        script
+        remoteScript
       );
       if (exitCode !== 0) {
         DR.logger.error(
