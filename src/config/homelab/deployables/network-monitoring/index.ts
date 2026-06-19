@@ -8,7 +8,6 @@ import {
   RemoteFile
 } from '../../drivers/createDockerComposeStack.js';
 import { HomeLabMachine } from '../../types.js';
-import { dockerHostSetup } from '../dockerHostSetup.js';
 import { routerNetflow } from '../routerNetflow.js';
 
 /**
@@ -22,8 +21,9 @@ const REMOTE_DIR = '~/monitoring';
 
 /**
  * The network-monitoring compose stack (Pi-hole, ntopng, Loki, Promtail,
- * Grafana). Depends on the docker-host install and the router NetFlow/syslog
- * export so Docker is present and flow/log data is flowing before deploy.
+ * Grafana). The docker-host install is depended on automatically by the compose
+ * driver; this adds the router NetFlow/syslog export so flow/log data is flowing
+ * before deploy.
  */
 export const networkMonitoring = createDockerComposeStack({
   name: 'network-monitoring',
@@ -31,7 +31,7 @@ export const networkMonitoring = createDockerComposeStack({
   machine: HomeLabMachine.Pi1,
   remoteDir: REMOTE_DIR,
   services: ['pihole', 'ntopng', 'loki', 'promtail', 'grafana'],
-  dependsOn: [dockerHostSetup.name, routerNetflow.name],
+  dependsOn: [routerNetflow.name],
   files: [
     [
       `${REMOTE_DIR}/docker-compose.yaml`,

@@ -1,5 +1,5 @@
 export * from './types.js';
-import { dockerHostSetup } from './deployables/dockerHostSetup.js';
+import { pi1DockerHost, pi2DockerHost } from './deployables/dockerHosts.js';
 import { networkMonitoring } from './deployables/network-monitoring/index.js';
 import { routerNetflow } from './deployables/routerNetflow.js';
 import { Deployable, DeployableKind, HomeLabMachine } from './types.js';
@@ -9,7 +9,8 @@ import { Deployable, DeployableKind, HomeLabMachine } from './types.js';
  */
 export const DEPLOYABLES: Deployable[] = [
   networkMonitoring,
-  dockerHostSetup,
+  pi1DockerHost,
+  pi2DockerHost,
   routerNetflow
 ];
 

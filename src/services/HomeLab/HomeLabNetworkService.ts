@@ -122,17 +122,4 @@ export default class HomeLabNetworkService {
     const result = this.sshCapture(machine, `test -d ${remotePath} && echo ok`);
     return result.output === 'ok';
   }
-
-  /**
-   * Parses a newline-delimited list of container names from `docker ps` output,
-   * ignoring empty lines.
-   *
-   * @param output raw stdout from a docker ps --format command
-   */
-  static parseContainerNames(output: string): string[] {
-    return output
-      .split('\n')
-      .map((l) => l.trim())
-      .filter(Boolean);
-  }
 }

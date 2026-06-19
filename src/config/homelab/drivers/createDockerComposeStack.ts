@@ -1,17 +1,19 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { MainScriptsConfig } from '../../../services/ConfigService.js';
 import DockerService from '../../../services/applications/DockerService.js';
+import HomeLabDockerService from '../../../services/HomeLab/HomeLabDockerService.js';
 import HomeLabNetworkService from '../../../services/HomeLab/HomeLabNetworkService.js';
 import {
   Deployable,
   DeployableKind,
   DeployableOps,
   DeployableState,
+  DetectionContext,
   HomeLabMachine,
-  Placement,
-  ProbeContext
+  Placement
 } from '../types.js';
-import { createContainer } from './createContainer.js';
+import { createDockerContainer } from './createDockerContainer.js';
+import { dockerHostSetupName } from './createDockerHostSetup.js';
 
 /**
  * A remote file to write during deploy: `[remotePath, content]`.
@@ -49,7 +51,7 @@ function aggregatePlacements(childPlacements: Placement[]): Placement[] {
  * @param params.files static config files written verbatim on deploy
  * @param params.env config-derived files (e.g. a generated `.env`) written on deploy
  * @param params.services container/service names that make up the stack
- * @param params.dependsOn names of deployables that must be satisfied before this one deploys
+ * @param params.dependsOn extra deployables that must be satisfied before this one deploys; the docker-host setup is always prepended (every compose stack needs Docker installed first), so callers only list additional prerequisites
  * @param params.opsOverride per-unit overrides shallow-merged over the driver defaults
  */
 export function createDockerComposeStack({
@@ -74,26 +76,15 @@ export function createDockerComposeStack({
   opsOverride?: DeployableOps;
 }): Deployable {
   const children = services.map((service) =>
-    createContainer({ name: service, machine })
+    createDockerContainer({ name: service, machine })
   );
 
-  /**
-   * Runs a compose command in the stack's remote directory, but only after
-   * confirming the stack has been deployed there. If the directory is missing,
-   * prints a hint and skips the command rather than surfacing a raw `cd` error.
-   *
-   * @param command the compose command to run
-   */
-  const runInRemoteDir = (command: string): void => {
-    if (!HomeLabNetworkService.remoteDirExists(machine, remoteDir)) {
-      DR.logger.info(
-        `${name} is not deployed on ${machine} — "${remoteDir}" does not exist. ` +
-          'Run "tb homelab deploy" first.'
-      );
-      return;
-    }
-    HomeLabNetworkService.sshRun(machine, command);
-  };
+  // Every compose stack needs the Docker host installed first, so prepend the
+  // host setup for this machine (deduped) — stack configs only declare their
+  // additional prerequisites.
+  const resolvedDependsOn = [
+    ...new Set([dockerHostSetupName(machine), ...dependsOn])
+  ];
 
   const driverDefaults: DeployableOps = {
     deploy: (config: MainScriptsConfig) => {
@@ -119,24 +110,46 @@ export function createDockerComposeStack({
       DR.logger.info(`${name} is up!`);
     },
     teardown: (removeVolumes) => {
-      runInRemoteDir(
+      HomeLabDockerService.runIfDeployed(
+        machine,
+        remoteDir,
         DockerService.getComposeDownCommand(remoteDir, removeVolumes)
       );
     },
     start: () => {
-      runInRemoteDir(DockerService.getComposeUpCommand(remoteDir));
+      HomeLabDockerService.runIfDeployed(
+        machine,
+        remoteDir,
+        DockerService.getComposeUpCommand(remoteDir)
+      );
     },
     stop: () => {
-      runInRemoteDir(DockerService.getComposeStopCommand(remoteDir));
+      HomeLabDockerService.runIfDeployed(
+        machine,
+        remoteDir,
+        DockerService.getComposeStopCommand(remoteDir)
+      );
     },
     restart: () => {
-      runInRemoteDir(DockerService.getComposeRestartCommand(remoteDir));
+      HomeLabDockerService.runIfDeployed(
+        machine,
+        remoteDir,
+        DockerService.getComposeRestartCommand(remoteDir)
+      );
     },
     status: () => {
-      runInRemoteDir(DockerService.getComposePsCommand(remoteDir));
+      HomeLabDockerService.runIfDeployed(
+        machine,
+        remoteDir,
+        DockerService.getComposePsCommand(remoteDir)
+      );
     },
     logs: (service) => {
-      runInRemoteDir(DockerService.getComposeLogsCommand(remoteDir, service));
+      HomeLabDockerService.runIfDeployed(
+        machine,
+        remoteDir,
+        DockerService.getComposeLogsCommand(remoteDir, service)
+      );
     }
   };
 
@@ -147,8 +160,8 @@ export function createDockerComposeStack({
     kind: DeployableKind.Compose,
     ops: { ...driverDefaults, ...opsOverride },
     children,
-    dependsOn,
-    observe: async (ctx: ProbeContext) => {
+    dependsOn: resolvedDependsOn,
+    observe: async (ctx: DetectionContext) => {
       const childObservations = await Promise.all(
         children.map((child) => child.observe(ctx))
       );
