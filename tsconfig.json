@@ -8,6 +8,6 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["**/*.ts", "eslint.config.js"],
-  "exclude": ["lib"]
+  "include": ["**/*.ts"],
+  "exclude": ["lib", "eslint.config.ts"]
 }

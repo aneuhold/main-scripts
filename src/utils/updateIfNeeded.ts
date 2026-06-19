@@ -1,9 +1,9 @@
 import {
   DateService,
   DR,
-  isPackageJson,
+  isPackageJsonWithoutVersion,
   JsonUtils,
-  PackageJson
+  PackageJsonWithoutVersion
 } from '@aneuhold/core-ts-lib';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -101,12 +101,12 @@ export async function updateIfNeeded(): Promise<void> {
 /**
  * Reads this package's own `package.json` from disk.
  */
-async function readPackageJson(): Promise<PackageJson> {
+async function readPackageJson(): Promise<PackageJsonWithoutVersion> {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
   const packageJsonPath = join(__dirname, '../package.json');
   return JsonUtils.parseWithGuard(
     await readFile(packageJsonPath, 'utf-8'),
-    isPackageJson
+    isPackageJsonWithoutVersion
   );
 }
