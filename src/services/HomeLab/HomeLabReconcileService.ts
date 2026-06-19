@@ -207,7 +207,7 @@ export default class HomeLabReconcileService {
    *
    * @param plan the plan whose actions to group
    */
-  static groupActionsByMachine(
+  private static groupActionsByMachine(
     plan: ConvergencePlan
   ): Map<HomeLabMachine, { adds: PlannedAction[]; removes: PlannedAction[] }> {
     const grouped = new Map<
@@ -224,7 +224,7 @@ export default class HomeLabReconcileService {
   }
 
   /**
-   * Prints a human-readable reconciliation report — the dry run that `audit`
+   * Prints a human-readable reconciliation report, the dry run that `audit`
    * shows. Lists each deployable's drift status, then the per-machine change
    * summary.
    *
@@ -242,7 +242,7 @@ export default class HomeLabReconcileService {
     }
 
     if (plan.actions.length === 0) {
-      DR.logger.info('\nNo changes needed — everything is converged.');
+      DR.logger.info('\nNo changes needed. Everything is converged.');
       return;
     }
 

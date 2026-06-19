@@ -29,7 +29,8 @@ enum HomelabSubcommand {
  * @param value the string to check
  */
 function isHomelabSubcommand(value: string): value is HomelabSubcommand {
-  return Object.values(HomelabSubcommand).includes(value as HomelabSubcommand);
+  const values: string[] = Object.values(HomelabSubcommand);
+  return values.includes(value);
 }
 
 /**
@@ -86,7 +87,7 @@ async function confirmPlan(plan: ConvergencePlan): Promise<boolean> {
       message: `Type the machine hostname to confirm teardown (${machine}):`
     });
     if (entered !== machineId) {
-      DR.logger.info('Aborted — hostname did not match.');
+      DR.logger.info('Aborted. Hostname did not match.');
       return false;
     }
   }
@@ -106,8 +107,8 @@ async function runSimpleOp(op: DeployableOpKey): Promise<void> {
 }
 
 /**
- * Reconciles the given targets into a plan, prints it, and — unless it is a
- * no-op or the user declines — applies it.
+ * Reconciles the given targets into a plan, prints it, and applies it unless it
+ * is a no-op or the user declines.
  *
  * @param targets deployables to reconcile and apply
  */
@@ -152,7 +153,7 @@ async function runTeardown(): Promise<void> {
     message: `Type the machine hostname to confirm (${target.machine}):`
   });
   if (entered !== machineId) {
-    DR.logger.info('Aborted — hostname did not match.');
+    DR.logger.info('Aborted. Hostname did not match.');
     return;
   }
 

@@ -13,7 +13,7 @@ import {
 /**
  * Builds a router-config {@link Deployable}. `deploy` awaits `buildCommands`,
  * prints them, then pipes them over a non-interactive SSH session to the router.
- * Only `deploy` is supported. Initial `observe` reports reachability only — real
+ * Only `deploy` is supported. Initial `observe` reports reachability only. Real
  * `show`-command verification slots in later as just another observe
  * implementation, with no reconciler change.
  *

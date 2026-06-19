@@ -15,7 +15,7 @@ import {
 /**
  * Detects the Docker daemon on a docker-host machine, returning the running and
  * stopped container name sets. Returns no docker state if the daemon is
- * unreachable or down — the single place that knows how to interrogate Docker
+ * unreachable or down. The single place that knows how to interrogate Docker
  * over SSH.
  *
  * @param machine the docker-host machine to inspect

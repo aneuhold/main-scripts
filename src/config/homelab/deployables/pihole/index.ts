@@ -48,8 +48,8 @@ export const pihole = createDockerComposeStack({
 
     if (!piholePassword) {
       DR.logger.info(
-        'homelab.pihole.webPassword not set in ~/.config/tb-main-scripts.json — ' +
-          'deploying with "changeme" as placeholder'
+        'homelab.pihole.webPassword not set in ~/.config/tb-main-scripts.json. ' +
+          'Deploying with "changeme" as placeholder'
       );
     }
 

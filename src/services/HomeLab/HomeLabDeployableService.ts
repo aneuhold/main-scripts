@@ -12,7 +12,7 @@ type ExtraArg = string | boolean | undefined;
 /**
  * Dispatches uniform lifecycle ops to a {@link Deployable}. Ops are pre-resolved
  * by the drivers (driver default + override), so there is no ops-first
- * branching here — `run` simply awaits the right op with the right argument.
+ * branching here. `run` simply awaits the right op with the right argument.
  * `deploy` additionally resolves `dependsOn` ordering first.
  */
 export default class HomeLabDeployableService {
@@ -90,7 +90,7 @@ export default class HomeLabDeployableService {
   /**
    * Recursively deploys a target's dependencies (deduped, cycle-guarded) before
    * the target itself. Deploys are idempotent, so re-visiting a satisfied
-   * dependency is harmless — the visited set merely avoids redundant work.
+   * dependency is harmless. The visited set merely avoids redundant work.
    *
    * @param target the deployable to deploy
    * @param config user config passed to each deploy op
@@ -108,7 +108,7 @@ export default class HomeLabDeployableService {
       const dependency = findDeployable(depName);
       if (!dependency) {
         DR.logger.error(
-          `Unknown dependency "${depName}" declared by ${target.name} — skipping.`
+          `Unknown dependency "${depName}" declared by ${target.name}. Skipping.`
         );
         continue;
       }
@@ -116,7 +116,7 @@ export default class HomeLabDeployableService {
     }
 
     if (!target.ops.deploy) {
-      DR.logger.error(`"${target.name}" has no deploy op — skipping.`);
+      DR.logger.error(`"${target.name}" has no deploy op. Skipping.`);
       return;
     }
     DR.logger.info(`Deploying ${target.name}...`);

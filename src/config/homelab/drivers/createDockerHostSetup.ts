@@ -5,7 +5,7 @@ import { createHostSetup } from './createHostSetup.js';
 /**
  * The registry name of the Docker host setup for a machine. A pure function so
  * the compose driver can derive its `dependsOn` from a machine without importing
- * the host-setup instance — keeping the dependency machine-correct (a Pi2 stack
+ * the host-setup instance, keeping the dependency machine-correct (a Pi2 stack
  * depends on the Pi2 host setup) and the coupling driver-to-driver.
  *
  * @param machine the machine the setup targets
@@ -29,7 +29,7 @@ const DOCKER_PACKAGES = [
 ];
 
 /**
- * Builds the Docker host setup for a machine: installs Docker (idempotent —
+ * Builds the Docker host setup for a machine: installs Docker (idempotent,
  * re-running `get.docker.com` is safe) and adds the machine's SSH login user to
  * the `docker` group, then verifies the daemon is up. A thin docker-specific
  * preset over {@link createHostSetup}, so multiple docker hosts are one line

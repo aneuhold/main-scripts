@@ -78,8 +78,8 @@ export const networkMonitoring = createDockerComposeStack({
 
     if (!grafanaPassword) {
       DR.logger.info(
-        'homelab.grafana.adminPassword not set in ~/.config/tb-main-scripts.json — ' +
-          'deploying with "changeme" as placeholder'
+        'homelab.grafana.adminPassword not set in ~/.config/tb-main-scripts.json. ' +
+          'Deploying with "changeme" as placeholder'
       );
     }
 

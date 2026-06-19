@@ -2,7 +2,7 @@ import { MainScriptsConfig } from '../../services/ConfigService.js';
 
 /**
  * Identifies a physical machine in the home lab. Use stable hardware
- * identifiers here — not roles like "primary" or "spare", which can change.
+ * identifiers here, not roles like "primary" or "spare", which can change.
  */
 export enum HomeLabMachine {
   Pi1 = 'pi3-bplus-1',
@@ -38,7 +38,7 @@ export type MachineInfo = {
  * Discriminator used by audit/selection to reason about a deployable
  * generically (e.g. "which containers should run on this machine") without
  * hand-maintained lists. Downstream code never branches on the driver that
- * produced a deployable — only on this breadcrumb when it must reason by kind.
+ * produced a deployable, only on this breadcrumb when it must reason by kind.
  */
 export enum DeployableKind {
   Compose = 'compose',
@@ -50,8 +50,8 @@ export enum DeployableKind {
 /**
  * The uniform lifecycle operations a deployable can expose. Each is optional: a
  * driver defines only the ops its kind supports (a container has no `deploy`, a
- * host-setup has only `deploy`), and a missing op simply means "not supported"
- * — selection hides it and the dispatcher skips it. Per-unit overrides
+ * host-setup has only `deploy`), and a missing op simply means "not supported".
+ * Selection hides it and the dispatcher skips it. Per-unit overrides
  * shallow-merge on top, so the dispatcher just calls `ops[op]?.(...)`.
  */
 export type DeployableOps = {
@@ -159,8 +159,8 @@ export type ReconcileItem = {
  * universal reachability, then runs every detector whose {@link appliesTo}
  * includes a machine's {@link MachineKind} to fill in capability-specific state
  * (e.g. Docker container sets) and to surface entities that match no registry
- * deployable. Keeps capability knowledge out of the generic reconcile core —
- * adding a capability means appending a detector, never editing the reconciler.
+ * deployable. Keeps capability knowledge out of the generic reconcile core.
+ * Adding a capability means appending a detector, never editing the reconciler.
  */
 export type MachineCapabilityDetector = {
   /** Machine kinds this detector applies to. */
@@ -201,7 +201,7 @@ export type ConvergencePlan = {
 /**
  * A composable unit of the home lab with a uniform lifecycle. A stack is a
  * `Deployable` that contains child `Deployable`s; a one-shot setup or
- * configuration step is a leaf `Deployable`. Built by driver factories —
+ * configuration step is a leaf `Deployable`. Built by driver factories, so
  * downstream code only ever sees this shape and never branches on the driver.
  */
 export type Deployable = {
@@ -223,8 +223,8 @@ export type Deployable = {
   children: Deployable[];
   /**
    * Names of other deployables that must be deployed/satisfied before this one
-   * can deploy, so prerequisites are in place first. Enforced at deploy time —
-   * see HomeLabDeployableService.
+   * can deploy, so prerequisites are in place first. Enforced at deploy time.
+   * See HomeLabDeployableService.
    */
   dependsOn: string[];
   /**
@@ -234,7 +234,7 @@ export type Deployable = {
   observe: (ctx: DetectionContext) => Promise<Observation>;
   /**
    * Re-binds this deployable to a different machine, returning an equivalent
-   * `Deployable` whose ops/observe target that machine — e.g. to act on it where
+   * `Deployable` whose ops/observe target that machine, e.g. to act on it where
    * it currently runs rather than where it is configured to run.
    */
   onMachine: (machine: HomeLabMachine) => Deployable;
