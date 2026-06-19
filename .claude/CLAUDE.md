@@ -1,1 +1,69 @@
-@../.github/copilot-instructions.md
+@../readme.md
+
+# Considerations for AI Agents
+
+### Configuration-Driven Projects
+
+- **`src/services/ConfigService.ts`**: Defines `MainScriptsConfigProject` with properties like `folderName`, `solutionFilePath`, `packageJsonPaths`, `nodemonArgs`, `setupConfig`. Projects are loaded entirely from the user's config file (see readme).
+- **`src/services/ProjectConfigService.ts`**: Resolves projects from user config and synthesizes a `setup` function from each project's `setupConfig` block.
+- Commands like `tb setup`, `tb dev`, `tb open` use `CurrentEnv.folderName()` to look up project config
+
+### Key Patterns
+
+- **Platform Detection**: Use `CurrentEnv.os` to branch logic for Windows/macOS/Linux
+- **OSA Script Builder**: `OsaScriptBuilder` in `src/utils/` constructs AppleScript commands for iTerm2 automation on macOS
+- **Application Services** (`src/services/applications/`): General, cross-OS services for interacting with applications that run on a machine (e.g. `DockerService`, `GitService`). They are shared building blocks. Other areas (e.g. `HomeLab`) should reuse and extend them rather than duplicating that logic. Keep these services focused on the application they cover as if running the service on the machine where the application is housed. Remote access services can thread the output from application services.
+
+### Language
+
+- Never use em-dash. Use normal english. Sentences, periods, commas, etc.
+- Never use past tense in comments, documentation, etc. For example never say "we do X now because it used to do Y". Past tense is completely useless, bloats the content, and is actually negative because it implies there's something else going on that needs to be understood to look at the current code. If we are avoiding a situation because of an existing bug, that should be linked.
+- Never directly tie a doc comment or documentation to an implementation. For example saying "Updates a date to X format (e.g. when we need to show a date to a user in the frontend form)". Not only does that extra detail not matter, it couples the comment to the other code. Making it brittle. But it also hides the true purpose of the function. It makes it sound like the function is only for that one thing and nothing else, which promotes duplication. A function is only created when it can stand on it's own. If you have to justify it's purpose by citing another piece of logic, then the function shouldn't be there. If you are trying to give an example of usage, then give an example of generic usage, DO NOT tie it to existing code.
+
+## Project-Specific Conventions
+
+### General
+
+- Avoid code duplication; reuse existing code when possible
+- Keep responses and code concise, focused, and clean
+- Always prefer to refactor rather than try to "preserve backwards compatibility". We control the consumers, so refactor as much as is helpful.
+- If you need to create something new, try to organize it among the existing items that are similar
+
+### Imports
+
+- Relative imports for same-package files: `import foo from './foo.js'`
+- Package imports for external deps: `import { DR } from '@aneuhold/core-ts-lib'`
+- **Always use `.js` extension** in imports, even for TypeScript files (required for ESM with `"type": "module"`)
+- Use named imports only (never `import * as`)
+- Import at file top (inline only when absolutely necessary)
+
+### Types and Enums
+
+- Inline types only for single properties; otherwise declare separate `type` with PascalCase
+- File names match primary exported type (e.g., `VideoSeriesInfo.ts` exports `VideoSeriesInfo`)
+- Use TypeScript `enum` (not `const enum` or union types) with PascalCase for names and values
+- NEVER use `any` type; prefer `unknown` but only if absolutely necessary. `unknown` is acceptable as a staging type before narrowing with a type guard, runtime schema, or an explicit cast at system boundaries (`JSON.parse`, file reads, wire responses).
+- Avoid using `as` type assertions; refactor code to ensure correct typing instead. Use generics where applicable.
+- NEVER use the `!` non-null assertion operator. Check for null / undefined properly if a value can be null.
+- Try to default to letting TypeScript infer types instead of explicit annotations on return types. Variables should have explicit types.
+
+### Code Style
+
+- Arrow functions preferred for brevity
+- JSDoc comments required for functions, methods, classes. Include `@param`, omit `@returns`
+- Class method order: public, protected, private. Put static methods before instance methods.
+- No underscore prefixes for private methods
+- `async`/`await` over `.then()`
+- NEVER use `['propertyName']` syntax to access properties; always use `.propertyName` unless the property name is dynamic (and even then, use a variable/constant rather than a string literal)
+- Use object destructuring when accessing multiple properties from an object
+- Prefer template literals over string concatenation
+
+### Tests
+
+- Test files use the `filename.spec.ts` naming convention (matching the source file name)
+- Never test private methods directly
+- Use `src/tests/utils/TestUtils.ts` for common test helpers
+
+## Before Considering a Task Complete
+
+1. Run + fix any issues that come up: `pnpm lint --fix`, `pnpm check`, and `pnpm test`

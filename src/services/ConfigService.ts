@@ -14,6 +14,7 @@ export type MainScriptsConfig = {
   worktreeBaseDir?: string;
   vsCodeAlternativeCommand?: string;
   img?: MainScriptsConfigImg;
+  homelab?: MainScriptsConfigHomelab;
 };
 
 /**
@@ -87,6 +88,29 @@ export type MainScriptsConfigProject = {
      */
     newTabVerticalSplitCommands?: string[];
   };
+};
+
+/**
+ * Home lab configuration stored in the user's config file. Keeps secrets
+ * (passwords) out of the repository and off the Pi.
+ *
+ * If updating, make sure to also update the main readme documentation.
+ */
+export type MainScriptsConfigHomelab = {
+  pihole?: {
+    /** Pi-hole web UI password. Written to the Pi's .env on deploy. */
+    webPassword?: string;
+  };
+  grafana?: {
+    /** Grafana admin password. Written to the Pi's .env on deploy. */
+    adminPassword?: string;
+  };
+  /**
+   * Per-machine SSH credential overrides, keyed by the machine identifier (the
+   * stable machine name). Any field set here overrides that machine's built-in
+   * default.
+   */
+  machineCreds?: Record<string, { user?: string }>;
 };
 
 /**

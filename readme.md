@@ -199,6 +199,10 @@ Sometimes it seems that permissions get messed up. The only solution seems to go
 - **Application Services** (`src/services/applications/`): Abstractions for Chrome, Git, Docker, file system operations
 - **`CurrentEnv`**: Detects OS, shell, terminal type, and folder name. Critical for cross-platform behavior
 
+### Home Lab
+
+The `tb homelab` command reconciles a desired-state config for my home lab (various machine types) over SSH. The config layer is documented separately. See [`src/config/homelab/README.md`](src/config/homelab/README.md) for how deployables, drivers, and detectors fit together.
+
 ### Build Process Description
 
 This consists of the following steps:

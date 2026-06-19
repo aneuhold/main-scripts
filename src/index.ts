@@ -3,6 +3,8 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import { program } from 'commander';
 import clean from './commands/clean.js';
+import connect from './commands/connect.js';
+import homelab from './commands/homelab.js';
 import config from './commands/config.js';
 import dev from './commands/dev.js';
 import downloadAndMergeVideos from './commands/downloadAndMergeVideos.js';
@@ -24,7 +26,13 @@ import {
   removeWorktree
 } from './commands/worktree.js';
 import calculateProbabilities from './utils/calculator.js';
+import CliLogger from './utils/CliLogger.js';
+import handleDefinedErrors from './utils/handleDefinedErrors.js';
 import { triggerUpdate } from './utils/updateIfNeeded.js';
+
+// Use our spinner-aware logger so long-running work can show a live loading
+// indicator that cooperates with normal log output.
+DR.registerLogger(new CliLogger());
 
 program.name('tb');
 
@@ -305,6 +313,25 @@ program
   });
 
 program
+  .command('connect')
+  .description('Opens an interactive connection to a home network target')
+  .argument('[target]', 'The target to connect to')
+  .action(async (target?: string) => {
+    await connect(target);
+  });
+
+program
+  .command('homelab')
+  .description('Manage home lab deployables')
+  .argument(
+    '[subcommand]',
+    'deploy | start | stop | restart | logs | status | teardown | audit'
+  )
+  .action(async (subcommand: string) => {
+    await homelab(subcommand);
+  });
+
+program
   .command('vscode')
   .description('Manage VS Code workspaces')
   .argument('[command]', 'The command to execute (workspace/ws)')
@@ -315,6 +342,10 @@ program
 
 // Run the thang
 void (async () => {
-  await program.parseAsync();
+  try {
+    await program.parseAsync();
+  } catch (error) {
+    handleDefinedErrors(error);
+  }
   process.exit();
 })();

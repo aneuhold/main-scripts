@@ -1,1 +1,1 @@
-Follow the instructions in .github/copilot-instructions.md
+Follow the instructions in .claude/CLAUDE.md
