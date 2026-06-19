@@ -54,10 +54,16 @@ export const createRouterNetflow = (piholeMachine: HomeLabMachine) =>
         // NetFlow v9 export of LAN traffic (switch0) to the Pi-hole host on
         // UDP port 2055.
         'set system flow-accounting interface switch0',
+        // https://docs.vyos.io/en/rolling/configuration/system/flow-accounting.html#netflow
         'set system flow-accounting netflow version 9',
+        // 2055 is the standard netflow port
         `set system flow-accounting netflow server ${piIp} port 2055`,
+        // At least every 60 seconds, report completed flows
         'set system flow-accounting netflow timeout expiry-interval 60',
+        // After 60 seconds of inactivity for a flow, it is considered complete
         'set system flow-accounting netflow timeout flow-generic 60',
+        // How long a flow can process before being flushed. A 3 hour download will still report
+        // once very 600 seconds.
         'set system flow-accounting netflow timeout max-active-life 600',
         // Forward all syslog facilities at info and above to the Pi-hole host.
         `set system syslog host ${piIp} facility all level info`,
