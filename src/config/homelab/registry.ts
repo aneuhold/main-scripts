@@ -4,16 +4,19 @@ import {
   networkMonitoring,
   routerNetflow
 } from './deployables/network-monitoring/index.js';
+import { pihole, routerDns } from './deployables/pihole/index.js';
 import { Deployable, DeployableKind, HomeLabMachine } from './types.js';
 
 /**
  * Top-level deployables, selectable as groups in the homelab command.
  */
 export const DEPLOYABLES: Deployable[] = [
+  pihole,
+  routerDns,
   networkMonitoring,
+  routerNetflow,
   pi1DockerHost,
-  pi2DockerHost,
-  routerNetflow
+  pi2DockerHost
 ];
 
 /**

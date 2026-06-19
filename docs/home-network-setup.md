@@ -9,7 +9,7 @@
 ## Addressing
 
 - One DHCP network: `shared-network-name LAN`, subnet `192.168.0.0/24`, pool `192.168.0.38`–`.243`, plus static mappings (cameras, Pis, etc.).
-- The router resolves DNS itself (dnsmasq on `switch0`) and hands its own `192.168.0.2` out as the DHCP DNS server by default. The NetFlow deployable repoints that at the Pi-hole host.
+- The router resolves DNS itself (dnsmasq on `switch0`) and hands its own `192.168.0.2` out as the DHCP DNS server by default. The `router-dns` deployable repoints that at the Pi-hole host.
 
 ## Hardware Inventory
 
