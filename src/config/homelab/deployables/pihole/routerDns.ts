@@ -7,25 +7,6 @@ import { HomeLabMachine } from '../../types.js';
 const LAN_SUBNET: string = '192.168.0.0/24';
 
 /**
- * Resolves the first LAN IP of the given machine over SSH. Returns null when the
- * machine is unreachable or reports no address.
- *
- * @param machine the machine whose primary LAN IP to discover
- */
-const discoverLanIp = async (
-  machine: HomeLabMachine
-): Promise<string | null> => {
-  const ipResult = await HomeLabNetworkService.sshCapture(
-    machine,
-    "hostname -I | awk '{print $1}'"
-  );
-  if (ipResult.exitCode !== 0 || !ipResult.output) {
-    return null;
-  }
-  return ipResult.output;
-};
-
-/**
  * Builds the EdgeRouter config that hands out the Pi-hole host as the sole DHCP
  * DNS server for the LAN. The host's LAN IP is discovered over SSH at deploy
  * time.
@@ -43,7 +24,7 @@ export const createRouterDns = (
     machine: HomeLabMachine.Router,
     dependsOn,
     verify: async () => {
-      const piIp = await discoverLanIp(piholeMachine);
+      const piIp = await HomeLabNetworkService.discoverLanIp(piholeMachine);
       if (!piIp) {
         return false;
       }
@@ -65,7 +46,7 @@ export const createRouterDns = (
     buildCommands: async () => {
       DR.logger.info(`Discovering IP of ${piholeMachine} (hosts Pi-hole)...`);
 
-      const piIp = await discoverLanIp(piholeMachine);
+      const piIp = await HomeLabNetworkService.discoverLanIp(piholeMachine);
       if (!piIp) {
         DR.logger.error(
           `Could not determine IP of ${piholeMachine}. Is it reachable?`

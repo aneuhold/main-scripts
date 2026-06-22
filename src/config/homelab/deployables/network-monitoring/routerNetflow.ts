@@ -24,23 +24,52 @@ export const createRouterNetflow = (monitoringMachine: HomeLabMachine) =>
     name: 'router-netflow',
     label: 'router NetFlow / syslog',
     machine: HomeLabMachine.Router,
+    verify: async () => {
+      const collectorIp =
+        await HomeLabNetworkService.discoverLanIp(monitoringMachine);
+      if (!collectorIp) {
+        return false;
+      }
+
+      // Read back the live config over SSH. `server` (NetFlow) and `host`
+      // (syslog) are EdgeOS tag nodes keyed by the collector IP, so
+      // listActiveNodes returns the configured IPs space-separated and
+      // single-quoted (e.g. `'192.168.0.50'`). Both must point at the current
+      // monitoring host, so the config landing on a stale collector IP (e.g.
+      // after the monitoring host's DHCP lease changes) correctly surfaces as
+      // drift.
+      const [netflowServer, syslogHost] = await Promise.all([
+        HomeLabNetworkService.sshCapture(
+          HomeLabMachine.Router,
+          'cli-shell-api listActiveNodes system flow-accounting netflow server'
+        ),
+        HomeLabNetworkService.sshCapture(
+          HomeLabMachine.Router,
+          'cli-shell-api listActiveNodes system syslog host'
+        )
+      ]);
+      if (netflowServer.exitCode !== 0 || syslogHost.exitCode !== 0) {
+        return false;
+      }
+      return (
+        netflowServer.output.includes(collectorIp) &&
+        syslogHost.output.includes(collectorIp)
+      );
+    },
     buildCommands: async () => {
       DR.logger.info(
         `Discovering IP of ${monitoringMachine} (hosts the collectors)...`
       );
 
-      const ipResult = await HomeLabNetworkService.sshCapture(
-        monitoringMachine,
-        "hostname -I | awk '{print $1}'"
-      );
-      if (ipResult.exitCode !== 0 || !ipResult.output) {
+      const collectorIp =
+        await HomeLabNetworkService.discoverLanIp(monitoringMachine);
+      if (!collectorIp) {
         DR.logger.error(
           `Could not determine IP of ${monitoringMachine}. Is it reachable?`
         );
         process.exit(1);
       }
 
-      const collectorIp = ipResult.output;
       DR.logger.info(`${monitoringMachine} LAN IP: ${collectorIp}`);
 
       // EdgeOS (Vyatta-based) CLI references for the command groups below:
