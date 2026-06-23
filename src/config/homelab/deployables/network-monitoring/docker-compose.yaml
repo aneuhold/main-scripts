@@ -1,54 +1,55 @@
 services:
-  ntopng:
-    image: ntop/ntopng:latest
-    container_name: ntopng
+  influxdb:
+    image: influxdb:2
+    container_name: influxdb
     ports:
-      - "3000:3000"
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: "${INFLUXDB_ADMIN_PASSWORD}"
+      DOCKER_INFLUXDB_INIT_ORG: "${INFLUX_ORG}"
+      DOCKER_INFLUXDB_INIT_BUCKET: "${INFLUX_BUCKET}"
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: "${INFLUX_TOKEN}"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    restart: unless-stopped
+
+  telegraf:
+    image: telegraf:latest
+    container_name: telegraf
+    # NetFlow v9 export from the router lands here on UDP 2055.
+    ports:
       - "2055:2055/udp"
+    environment:
+      INFLUX_TOKEN: "${INFLUX_TOKEN}"
+      INFLUX_ORG: "${INFLUX_ORG}"
+      INFLUX_BUCKET: "${INFLUX_BUCKET}"
     volumes:
-      - ntopng_data:/var/lib/ntopng
-    command: ["-i", ":2055", "-w", "3000", "--community"]
-    restart: unless-stopped
-
-  loki:
-    image: grafana/loki:latest
-    container_name: loki
-    ports:
-      - "3100:3100"
-    volumes:
-      - ./loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
-      - loki_data:/loki
-    command: -config.file=/etc/loki/local-config.yaml
-    restart: unless-stopped
-
-  promtail:
-    image: grafana/promtail:latest
-    container_name: promtail
-    ports:
-      - "514:514/udp"
-    volumes:
-      - ./promtail/promtail-config.yaml:/etc/promtail/config.yaml:ro
-    command: -config.file=/etc/promtail/config.yaml
-    restart: unless-stopped
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
     depends_on:
-      - loki
+      - influxdb
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
     ports:
       - "3001:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     environment:
       GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD}"
       GF_USERS_ALLOW_SIGN_UP: "false"
+      # Consumed by the provisioned InfluxDB datasource.
+      INFLUX_TOKEN: "${INFLUX_TOKEN}"
+      INFLUX_ORG: "${INFLUX_ORG}"
+      INFLUX_BUCKET: "${INFLUX_BUCKET}"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
-      - loki
+      - influxdb
     restart: unless-stopped
 
 volumes:
-  ntopng_data:
-  loki_data:
+  influxdb_data:
   grafana_data:

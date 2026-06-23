@@ -43,6 +43,26 @@ export const createRouterDns = (
       }
       return dnsResult.output.includes(piIp);
     },
+    teardownCommands: async () => {
+      // Drop the Pi-hole override so the router falls back to handing out its
+      // own IP as the DHCP DNS server. The delete is guarded by an existence
+      // check because `delete` of an absent node aborts the commit (existsActive
+      // exits 0 when the node is in the active config).
+      const commands = ['configure'];
+
+      const dnsExists = await HomeLabNetworkService.sshCapture(
+        HomeLabMachine.Router,
+        `cli-shell-api existsActive service dhcp-server shared-network-name LAN subnet ${LAN_SUBNET} dns-server`
+      );
+      if (dnsExists.exitCode === 0) {
+        commands.push(
+          `delete service dhcp-server shared-network-name LAN subnet ${LAN_SUBNET} dns-server`
+        );
+      }
+
+      commands.push('commit', 'save', 'exit');
+      return commands;
+    },
     buildCommands: async () => {
       DR.logger.info(`Discovering IP of ${piholeMachine} (hosts Pi-hole)...`);
 

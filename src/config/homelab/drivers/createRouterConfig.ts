@@ -23,6 +23,7 @@ import {
  * @param params.label display label for prompts (defaults to `name`)
  * @param params.machine router machine to configure
  * @param params.buildCommands produces the EdgeRouter CLI command list to apply; async because some commands embed values discovered from other machines (e.g. the Pi-hole IP)
+ * @param params.teardownCommands produces the EdgeRouter CLI command list that removes the config (e.g. `delete system flow-accounting`); async so it can guard deletes behind live-config existence checks. When omitted the config exposes no `teardown` op
  * @param params.verify decides whether the config's desired condition actually holds, e.g. by reading back the live router config over SSH; defaults to plain reachability. Only called when the router is reachable
  * @param params.dependsOn names of deployables that must be satisfied before this one deploys
  * @param params.opsOverride per-unit overrides shallow-merged over the driver defaults
@@ -32,6 +33,7 @@ export function createRouterConfig({
   label = name,
   machine,
   buildCommands,
+  teardownCommands,
   verify,
   dependsOn = [],
   opsOverride
@@ -40,6 +42,7 @@ export function createRouterConfig({
   label?: string;
   machine: HomeLabMachine;
   buildCommands: (config: MainScriptsConfig) => string[] | Promise<string[]>;
+  teardownCommands?: () => string[] | Promise<string[]>;
   verify?: (
     ctx: DetectionContext,
     machine: HomeLabMachine
@@ -50,36 +53,53 @@ export function createRouterConfig({
   const isConfigured =
     verify ??
     ((ctx: DetectionContext, m: HomeLabMachine) => ctx.machines[m].reachable);
+
+  // Pipes an EdgeRouter CLI command list to the router over a non-interactive
+  // SSH session. `verb`/`pastVerb` only adjust the surrounding log lines.
+  const applyCommands = async (
+    commands: string[],
+    verb: string,
+    pastVerb: string
+  ): Promise<void> => {
+    const script = commands.join('\n');
+
+    DR.logger.info(`${verb} router config "${name}" on ${machine}:`);
+    DR.logger.info('---');
+    DR.logger.info(script);
+    DR.logger.info('---');
+
+    // EdgeOS config verbs (configure/set/delete/commit/save) are Vyatta shell
+    // functions loaded only for interactive logins. Piping the script into a
+    // non-interactive vbash session leaves them undefined, so source the CLI
+    // template first to define them. The displayed block above stays free of
+    // this so it can be pasted straight into an interactive `tb connect router`
+    // session.
+    const remoteScript = `source /opt/vyatta/etc/functions/script-template\n${script}`;
+    const exitCode = await HomeLabNetworkService.sshRunWithInput(
+      machine,
+      remoteScript
+    );
+    if (exitCode !== 0) {
+      DR.logger.error(
+        `Router SSH session exited with code ${exitCode}. ` +
+          `Apply the commands above manually via: tb connect router`
+      );
+      process.exit(exitCode);
+    }
+    DR.logger.info(`Router config "${name}" ${pastVerb}.`);
+  };
+
   const driverDefaults: DeployableOps = {
     deploy: async (config: MainScriptsConfig) => {
       const commands = await buildCommands(config);
-      const script = commands.join('\n');
-
-      DR.logger.info(`Applying router config "${name}" to ${machine}:`);
-      DR.logger.info('---');
-      DR.logger.info(script);
-      DR.logger.info('---');
-
-      // EdgeOS config verbs (configure/set/delete/commit/save) are Vyatta shell
-      // functions loaded only for interactive logins. Piping the script into a
-      // non-interactive vbash session leaves them undefined, so source the CLI
-      // template first to define them. The displayed block above stays free of
-      // this so it can be pasted straight into an interactive `tb connect router`
-      // session.
-      const remoteScript = `source /opt/vyatta/etc/functions/script-template\n${script}`;
-      const exitCode = await HomeLabNetworkService.sshRunWithInput(
-        machine,
-        remoteScript
-      );
-      if (exitCode !== 0) {
-        DR.logger.error(
-          `Router SSH session exited with code ${exitCode}. ` +
-            `Apply the commands above manually via: tb connect router`
-        );
-        process.exit(exitCode);
+      await applyCommands(commands, 'Applying', 'applied');
+    },
+    ...(teardownCommands && {
+      teardown: async () => {
+        const commands = await teardownCommands();
+        await applyCommands(commands, 'Reverting', 'reverted');
       }
-      DR.logger.info(`Router config "${name}" applied.`);
-    }
+    })
   };
 
   return {
@@ -109,6 +129,7 @@ export function createRouterConfig({
         label,
         machine: m,
         buildCommands,
+        teardownCommands,
         verify,
         dependsOn,
         opsOverride

@@ -4,9 +4,8 @@ import { createRouterConfig } from '../../drivers/createRouterConfig.js';
 import { HomeLabMachine } from '../../types.js';
 
 /**
- * Builds the EdgeRouter config that exports NetFlow (v9) and syslog to the
- * monitoring host (the collectors). The host's LAN IP is discovered over SSH at
- * deploy time.
+ * Builds the EdgeRouter config that exports NetFlow (v9) to the monitoring host
+ * (the collector). The host's LAN IP is discovered over SSH at deploy time.
  *
  * NetFlow is captured on `switch0`, the LAN bridge, so flows carry pre-NAT
  * per-device source IPs. `eth0` is the WAN uplink; capturing it would only
@@ -17,12 +16,12 @@ import { HomeLabMachine } from '../../types.js';
  * forwarded traffic until offload is disabled, which is a throughput tradeoff
  * left to a deliberate change.
  *
- * @param monitoringMachine the machine that hosts the NetFlow/syslog collectors
+ * @param monitoringMachine the machine that hosts the NetFlow collector
  */
 export const createRouterNetflow = (monitoringMachine: HomeLabMachine) =>
   createRouterConfig({
     name: 'router-netflow',
-    label: 'router NetFlow / syslog',
+    label: 'router NetFlow export',
     machine: HomeLabMachine.Router,
     verify: async () => {
       const collectorIp =
@@ -31,34 +30,54 @@ export const createRouterNetflow = (monitoringMachine: HomeLabMachine) =>
         return false;
       }
 
-      // Read back the live config over SSH. `server` (NetFlow) and `host`
-      // (syslog) are EdgeOS tag nodes keyed by the collector IP, so
-      // listActiveNodes returns the configured IPs space-separated and
-      // single-quoted (e.g. `'192.168.0.50'`). Both must point at the current
-      // monitoring host, so the config landing on a stale collector IP (e.g.
-      // after the monitoring host's DHCP lease changes) correctly surfaces as
-      // drift.
-      const [netflowServer, syslogHost] = await Promise.all([
-        HomeLabNetworkService.sshCapture(
-          HomeLabMachine.Router,
-          'cli-shell-api listActiveNodes system flow-accounting netflow server'
-        ),
-        HomeLabNetworkService.sshCapture(
-          HomeLabMachine.Router,
-          'cli-shell-api listActiveNodes system syslog host'
-        )
-      ]);
-      if (netflowServer.exitCode !== 0 || syslogHost.exitCode !== 0) {
+      // Read back the live config over SSH. `server` is an EdgeOS tag node keyed
+      // by the collector IP, so listActiveNodes returns the configured IPs
+      // space-separated and single-quoted (e.g. `'192.168.0.50'`). The export
+      // must point at the current monitoring host, so the config landing on a
+      // stale collector IP (e.g. after the host's DHCP lease changes) correctly
+      // surfaces as drift.
+      const netflowServer = await HomeLabNetworkService.sshCapture(
+        HomeLabMachine.Router,
+        'cli-shell-api listActiveNodes system flow-accounting netflow server'
+      );
+      if (netflowServer.exitCode !== 0) {
         return false;
       }
-      return (
-        netflowServer.output.includes(collectorIp) &&
-        syslogHost.output.includes(collectorIp)
+      return netflowServer.output.includes(collectorIp);
+    },
+    teardownCommands: async () => {
+      // Each delete is guarded by an existence check because `delete` of an
+      // absent node aborts the commit (existsActive exits 0 when the node is in
+      // the active config). flow-accounting is the whole NetFlow export subtree;
+      // the syslog host is the legacy export earlier revisions also set.
+      const commands = ['configure'];
+
+      const flowExists = await HomeLabNetworkService.sshCapture(
+        HomeLabMachine.Router,
+        'cli-shell-api existsActive system flow-accounting'
       );
+      if (flowExists.exitCode === 0) {
+        commands.push('delete system flow-accounting');
+      }
+
+      const collectorIp =
+        await HomeLabNetworkService.discoverLanIp(monitoringMachine);
+      if (collectorIp) {
+        const syslogExists = await HomeLabNetworkService.sshCapture(
+          HomeLabMachine.Router,
+          `cli-shell-api existsActive system syslog host ${collectorIp}`
+        );
+        if (syslogExists.exitCode === 0) {
+          commands.push(`delete system syslog host ${collectorIp}`);
+        }
+      }
+
+      commands.push('commit', 'save', 'exit');
+      return commands;
     },
     buildCommands: async () => {
       DR.logger.info(
-        `Discovering IP of ${monitoringMachine} (hosts the collectors)...`
+        `Discovering IP of ${monitoringMachine} (hosts the collector)...`
       );
 
       const collectorIp =
@@ -72,10 +91,9 @@ export const createRouterNetflow = (monitoringMachine: HomeLabMachine) =>
 
       DR.logger.info(`${monitoringMachine} LAN IP: ${collectorIp}`);
 
-      // EdgeOS (Vyatta-based) CLI references for the command groups below:
-      // - flow-accounting / NetFlow: https://docs.vyos.io/en/latest/configuration/system/flow-accounting.html
-      //   and https://www.site24x7.com/help/netflow/configuring-flow-exports/ubiquiti-edgemax.html
-      // - syslog host: https://help.ui.com/hc/en-us/articles/204975904-EdgeRouter-Define-remote-syslog-server-for-system-logs
+      // EdgeOS (Vyatta-based) flow-accounting / NetFlow reference:
+      // https://docs.vyos.io/en/latest/configuration/system/flow-accounting.html
+      // https://www.site24x7.com/help/netflow/configuring-flow-exports/ubiquiti-edgemax.html
       return [
         'configure',
         // NetFlow v9 export of LAN traffic (switch0) to the monitoring host on
@@ -92,8 +110,6 @@ export const createRouterNetflow = (monitoringMachine: HomeLabMachine) =>
         // How long a flow can process before being flushed. A 3 hour download will still report
         // once very 600 seconds.
         'set system flow-accounting netflow timeout max-active-life 600',
-        // Forward all syslog facilities at info and above to the monitoring host.
-        `set system syslog host ${collectorIp} facility all level info`,
         'commit',
         'save',
         'exit'
