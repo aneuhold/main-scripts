@@ -175,6 +175,23 @@ export default class HomeLabNetworkService {
   }
 
   /**
+   * Resolves the first LAN IP reported by the given machine over SSH. Returns
+   * null when the machine is unreachable or reports no address.
+   *
+   * @param machine the machine whose primary LAN IP to discover
+   */
+  static async discoverLanIp(machine: HomeLabMachine): Promise<string | null> {
+    const ipResult = await this.sshCapture(
+      machine,
+      "hostname -I | awk '{print $1}'"
+    );
+    if (ipResult.exitCode !== 0 || !ipResult.output) {
+      return null;
+    }
+    return ipResult.output;
+  }
+
+  /**
    * Returns true if the given directory exists on the machine.
    *
    * @param machine the target machine

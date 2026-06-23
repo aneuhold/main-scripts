@@ -118,7 +118,7 @@ export default class HomeLabReconcileService {
 
     items.push(...this.#findUnmanaged(ctx));
 
-    return { items, actions };
+    return { items, actions, ctx };
   }
 
   /**
@@ -262,7 +262,9 @@ export default class HomeLabReconcileService {
 
   /**
    * Executes a plan's actions in order via {@link HomeLabDeployableService},
-   * respecting each deployable's `dependsOn` ordering during deploys.
+   * respecting each deployable's `dependsOn` ordering during deploys. Passes the
+   * plan's detection context to deploys so already-satisfied dependencies are
+   * skipped instead of redundantly re-run.
    *
    * @param plan the plan to apply
    * @param config user config passed to deploy ops
@@ -283,7 +285,9 @@ export default class HomeLabReconcileService {
         await HomeLabDeployableService.run(
           action.op,
           action.deployable,
-          config
+          config,
+          undefined,
+          plan.ctx
         );
       }
     }

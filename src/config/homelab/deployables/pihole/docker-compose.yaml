@@ -2,14 +2,19 @@ services:
   pihole:
     image: pihole/pihole:latest
     container_name: pihole
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "8080:80/tcp"
+    # Host networking puts the container directly on the LAN so Pi-hole's default
+    # LOCAL listening mode treats LAN clients as local (a bridge network would
+    # make 192.168.0.0/24 look foreign and FTL would drop every query), and the
+    # dashboard sees real per-client IPs instead of one Docker gateway address.
+    # Port mappings do not apply in host mode: 53 and the web port bind the host
+    # directly.
+    network_mode: host
     environment:
       TZ: "America/Los_Angeles"
-      FTLCONF_LOCAL_IPV4: "0.0.0.0"
-      WEBPASSWORD: "${PIHOLE_WEBPASSWORD}"
+      # Serve the web UI on 8080 to avoid colliding with anything on host port 80.
+      FTLCONF_webserver_port: "8080"
+      FTLCONF_dns_listeningMode: "local"
+      FTLCONF_webserver_api_password: "${PIHOLE_WEBPASSWORD}"
     volumes:
       - pihole_data:/etc/pihole
       - pihole_dnsmasq:/etc/dnsmasq.d

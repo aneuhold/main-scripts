@@ -105,6 +105,15 @@ export type MainScriptsConfigHomelab = {
     /** Grafana admin password. Written to the Pi's .env on deploy. */
     adminPassword?: string;
   };
+  influxdb?: {
+    /** InfluxDB admin UI password. Written to the Pi's .env on deploy. */
+    adminPassword?: string;
+    /**
+     * InfluxDB admin token, shared with Telegraf (writes) and Grafana (reads).
+     * Written to the Pi's .env on deploy.
+     */
+    adminToken?: string;
+  };
   /**
    * Per-machine SSH credential overrides, keyed by the machine identifier (the
    * stable machine name). Any field set here overrides that machine's built-in
