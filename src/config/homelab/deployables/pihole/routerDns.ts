@@ -3,8 +3,10 @@ import HomeLabNetworkService from '../../../../services/HomeLab/HomeLabNetwork.s
 import { createRouterConfig } from '../../drivers/createRouterConfig.js';
 import { HomeLabMachine } from '../../types.js';
 
-/** The single LAN subnet served by the router's DHCP shared-network. */
-const LAN_SUBNET: string = '192.168.0.0/24';
+/**
+ * The single LAN subnet served by the router's DHCP shared-network.
+ */
+export const LAN_SUBNET: string = '192.168.0.0/24';
 
 /**
  * Builds the EdgeRouter config that hands out the Pi-hole host as the sole DHCP

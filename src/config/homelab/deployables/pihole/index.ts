@@ -7,8 +7,9 @@ import {
   createDockerComposeStack,
   RemoteFile
 } from '../../drivers/createDockerComposeStack.js';
+import { MACHINES } from '../../machines.js';
 import { HomeLabMachine } from '../../types.js';
-import { createRouterDns } from './routerDns.js';
+import { createRouterDns, LAN_SUBNET } from './routerDns.js';
 
 /**
  * Directory holding this deployable's co-located yaml assets. `pnpm build`
@@ -24,6 +25,26 @@ const REMOTE_DIR = '~/pihole';
  * config so the DHCP server hands out the host Pi-hole actually runs on.
  */
 const PIHOLE_HOST = HomeLabMachine.Pi1;
+/**
+ * Currently this is the host. It is hard-configured to be a specific IP, so shouldn't be an issue
+ * at the moment.
+ */
+const ROUTER_LAN_IP = MACHINES[HomeLabMachine.Router].host;
+
+/**
+ * Local domain label applied to conditionally-forwarded client names. Link to docs:
+ * https://docs.pi-hole.net/ftldns/configfile/?h=revser#revservers
+ */
+const LAN_DOMAIN = 'lan';
+
+/**
+ * Pi-hole conditional-forwarding entry. Forwards reverse lookups for the LAN
+ * subnet to the router so the dashboard and query log show device names instead
+ * of bare IPs. Format is `<enabled>,<cidr>,<target>,<domain>`.
+ *
+ * Link to docs: https://docs.pi-hole.net/ftldns/configfile/?h=revser#revservers
+ */
+const PIHOLE_REVSERVERS = `true,${LAN_SUBNET},${ROUTER_LAN_IP},${LAN_DOMAIN}`;
 
 /**
  * The Pi-hole DNS / ad-blocking compose stack. Kept separate from the
@@ -56,7 +77,8 @@ export const pihole = createDockerComposeStack({
     const envContent =
       [
         'TZ=America/Los_Angeles',
-        `PIHOLE_WEBPASSWORD=${piholePassword ?? 'changeme'}`
+        `PIHOLE_WEBPASSWORD=${piholePassword ?? 'changeme'}`,
+        `PIHOLE_REVSERVERS=${PIHOLE_REVSERVERS}`
       ].join('\n') + '\n';
 
     return [[`${REMOTE_DIR}/.env`, envContent]];

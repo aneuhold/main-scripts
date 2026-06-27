@@ -99,6 +99,28 @@ export default class HomeLabNetworkService {
   }
 
   /**
+   * Runs several commands on the given machine in a single SSH session and
+   * returns each command's stdout, trimmed, in order.
+   *
+   * @param machine the target machine
+   * @param commands shell commands to run, in order, in one session
+   */
+  static async sshCaptureEach(
+    machine: HomeLabMachine,
+    commands: string[]
+  ): Promise<string[]> {
+    // A sentinel between commands lets one captured stream be split back into
+    // per-command output.
+    const separator = '::homelab-cmd-sep::';
+    const script = commands
+      .map((command) => `${command} 2>/dev/null; echo '${separator}'`)
+      .join('\n');
+    const { output } = await this.sshCapture(machine, script);
+    const sections = output.split(separator);
+    return commands.map((_, index) => (sections[index] ?? '').trim());
+  }
+
+  /**
    * Runs a command on the given machine via SSH with a pseudo-terminal allocated
    * (`-tt`) and the local terminal handed directly to ssh (`stdio: 'inherit'`),
    * so remote prompts like `sudo` reach the user and keystrokes flow back. Skips

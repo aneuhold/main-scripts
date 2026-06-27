@@ -15,6 +15,9 @@ services:
       FTLCONF_webserver_port: "8080"
       FTLCONF_dns_listeningMode: "local"
       FTLCONF_webserver_api_password: "${PIHOLE_WEBPASSWORD}"
+      # Conditional forwarding config so IP addresses have names
+      # See docs: https://docs.pi-hole.net/ftldns/configfile/?h=revser#revservers
+      FTLCONF_dns_revServers: "${PIHOLE_REVSERVERS}"
     volumes:
       - pihole_data:/etc/pihole
       - pihole_dnsmasq:/etc/dnsmasq.d

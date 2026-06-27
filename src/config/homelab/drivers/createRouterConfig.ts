@@ -11,6 +11,17 @@ import {
 } from '../types.js';
 
 /**
+ * Wraps `delete` of each EdgeOS config path in an inline existence check that
+ * runs on the router.
+ *
+ * @param paths EdgeOS config paths to delete if present (e.g. `system flow-accounting`)
+ */
+export const createRouterConfigGuardedDeletes = (paths: string[]): string[] =>
+  paths.map(
+    (path) => `if cli-shell-api existsActive ${path}; then delete ${path}; fi`
+  );
+
+/**
  * Builds a router-config {@link Deployable}. `deploy` awaits `buildCommands`,
  * prints them, then pipes them over a non-interactive SSH session to the router.
  * Only `deploy` is supported. `observe` reports the deployable configured when
