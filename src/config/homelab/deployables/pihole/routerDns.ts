@@ -26,7 +26,7 @@ export const createRouterDns = (
 ) =>
   createRouterConfig({
     name: 'router-dns',
-    label: 'router DHCP DNS',
+    label: 'router DNS for PiHole',
     machine: HomeLabMachine.Router,
     dependsOn,
     verify: async () => {
