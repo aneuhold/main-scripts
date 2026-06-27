@@ -49,9 +49,7 @@ export const createRouterNetflow = (monitoringMachine: HomeLabMachine) =>
       return netflowServer.output.includes(collectorIp);
     },
     teardownCommands: async () => {
-      // flow-accounting is the whole NetFlow export subtree; the syslog host is
-      // the legacy export earlier revisions also set, so it is removed only when
-      // the collector IP is known.
+      // syslog host is keyed by the collector IP, so include it only when known.
       const collectorIp =
         await HomeLabNetworkService.discoverLanIp(monitoringMachine);
       const paths = ['system flow-accounting'];
