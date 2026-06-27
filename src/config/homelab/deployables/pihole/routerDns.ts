@@ -4,12 +4,15 @@ import {
   createRouterConfig,
   createRouterConfigGuardedDeletes
 } from '../../drivers/createRouterConfig.js';
+import { MACHINES } from '../../machines.js';
 import { HomeLabMachine } from '../../types.js';
 
 /**
  * The single LAN subnet served by the router's DHCP shared-network.
  */
 export const LAN_SUBNET: string = '192.168.0.0/24';
+
+const ROUTER_LAN_IP = MACHINES[HomeLabMachine.Router].host;
 
 /**
  * Router side of Pi-hole client naming: advertise Pi-hole as the DNS server in
@@ -47,11 +50,14 @@ export const createRouterDns = (
     },
     teardownCommands: () => [
       'configure',
-      // Revert both: stop advertising Pi-hole as DNS, and go back to ISC dhcpd.
+      // Restore the baseline: router hands out itself as DNS again, and the DHCP
+      // backend reverts to ISC dhcpd. dns-server is multi-value, so clear before
+      // re-setting rather than appending.
       ...createRouterConfigGuardedDeletes([
-        `service dhcp-server shared-network-name LAN subnet ${LAN_SUBNET} dns-server`,
-        'service dhcp-server use-dnsmasq'
+        `service dhcp-server shared-network-name LAN subnet ${LAN_SUBNET} dns-server`
       ]),
+      `set service dhcp-server shared-network-name LAN subnet ${LAN_SUBNET} dns-server ${ROUTER_LAN_IP}`,
+      ...createRouterConfigGuardedDeletes(['service dhcp-server use-dnsmasq']),
       'commit',
       'save',
       'exit'
