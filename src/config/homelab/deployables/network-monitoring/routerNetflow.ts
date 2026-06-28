@@ -1,6 +1,9 @@
 import { DR } from '@aneuhold/core-ts-lib';
 import HomeLabNetworkService from '../../../../services/HomeLab/HomeLabNetwork.service.js';
-import { createRouterConfig } from '../../drivers/createRouterConfig.js';
+import {
+  createRouterConfig,
+  createRouterConfigGuardedDeletes
+} from '../../drivers/createRouterConfig.js';
 import { HomeLabMachine } from '../../types.js';
 
 /**
@@ -46,34 +49,21 @@ export const createRouterNetflow = (monitoringMachine: HomeLabMachine) =>
       return netflowServer.output.includes(collectorIp);
     },
     teardownCommands: async () => {
-      // Each delete is guarded by an existence check because `delete` of an
-      // absent node aborts the commit (existsActive exits 0 when the node is in
-      // the active config). flow-accounting is the whole NetFlow export subtree;
-      // the syslog host is the legacy export earlier revisions also set.
-      const commands = ['configure'];
-
-      const flowExists = await HomeLabNetworkService.sshCapture(
-        HomeLabMachine.Router,
-        'cli-shell-api existsActive system flow-accounting'
-      );
-      if (flowExists.exitCode === 0) {
-        commands.push('delete system flow-accounting');
-      }
-
+      // syslog host is keyed by the collector IP, so include it only when known.
       const collectorIp =
         await HomeLabNetworkService.discoverLanIp(monitoringMachine);
+      const paths = ['system flow-accounting'];
       if (collectorIp) {
-        const syslogExists = await HomeLabNetworkService.sshCapture(
-          HomeLabMachine.Router,
-          `cli-shell-api existsActive system syslog host ${collectorIp}`
-        );
-        if (syslogExists.exitCode === 0) {
-          commands.push(`delete system syslog host ${collectorIp}`);
-        }
+        paths.push(`system syslog host ${collectorIp}`);
       }
 
-      commands.push('commit', 'save', 'exit');
-      return commands;
+      return [
+        'configure',
+        ...createRouterConfigGuardedDeletes(paths),
+        'commit',
+        'save',
+        'exit'
+      ];
     },
     buildCommands: async () => {
       DR.logger.info(
