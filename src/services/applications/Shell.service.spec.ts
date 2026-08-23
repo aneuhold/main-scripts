@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import CurrentEnv, { OperatingSystemType } from '../../utils/CurrentEnv.js';
-import CLIService from '../CLI.service.js';
+import OSProcessService, {
+  ProcessDetail,
+  ProcessInfo
+} from '../OSProcess.service.js';
 import ShellService from './Shell.service.js';
 
 // Mock the logger to avoid console noise during tests
@@ -25,80 +27,153 @@ vi.mock('@aneuhold/core-ts-lib', async () => {
 });
 
 /**
- * Columns are pid, pgid, tty, and command. Process 1968 trails another process
- * group and 618 owns no terminal, so neither is a session of its own.
+ * Process 1968 trails another process group, 618 is not a shell, and 5000 owns
+ * a terminal but is not a shell either.
  */
-const PS_OUTPUT = [
-  ' 1766  1766 ttys000  -zsh',
-  ' 1968  1965 ttys000  -zsh',
-  ' 2128  2128 ttys003  -zsh',
-  ' 4199  4199 ttys025  /bin/zsh',
-  '  618   618 ??       WindowServer',
-  ' 5000  5000 ttys009  node'
-].join('\n');
-
-const LSOF_OUTPUT = [
-  'p1766',
-  'fcwd',
-  'n/Users/test/repo-a',
-  'p2128',
-  'fcwd',
-  'n/Users/test/repo-b',
-  'p4199',
-  'fcwd',
-  'n/Users/test/repo-a'
-].join('\n');
-
-const TOP_OUTPUT = [
-  'Processes: 681 total, 5 running, 676 sleeping',
-  'Load Avg: 3.56, 3.01, 2.65',
-  'MemRegions: 929566 total, 6113M resident',
-  '',
-  'PID   MEM',
-  '4199  8992K',
-  '2128  179M',
-  '1766  1.2G'
-].join('\n');
+const PROCESSES: ProcessInfo[] = [
+  {
+    pid: 1766,
+    commandName: 'zsh',
+    terminalId: 'ttys000',
+    leadsOwnGroup: true,
+    cwd: '/Users/test/repo-a',
+    memoryBytes: 1.2 * 1024 ** 3
+  },
+  {
+    pid: 1968,
+    commandName: 'zsh',
+    terminalId: 'ttys000',
+    leadsOwnGroup: false,
+    cwd: '/Users/test/repo-a',
+    memoryBytes: 5 * 1024 ** 2
+  },
+  {
+    pid: 2128,
+    commandName: 'zsh',
+    terminalId: 'ttys003',
+    leadsOwnGroup: true,
+    cwd: '/Users/test/repo-b',
+    memoryBytes: 179 * 1024 ** 2
+  },
+  {
+    pid: 4199,
+    commandName: 'zsh',
+    terminalId: 'ttys025',
+    leadsOwnGroup: true,
+    cwd: '/Users/test/repo-a',
+    memoryBytes: 8992 * 1024
+  },
+  {
+    pid: 6100,
+    commandName: 'pwsh',
+    terminalId: undefined,
+    leadsOwnGroup: true,
+    cwd: '/Users/test/repo-c',
+    memoryBytes: 12 * 1024 ** 2
+  },
+  {
+    pid: 618,
+    commandName: 'WindowServer',
+    terminalId: undefined,
+    leadsOwnGroup: true,
+    cwd: '/',
+    memoryBytes: 300 * 1024 ** 2
+  },
+  {
+    pid: 5000,
+    commandName: 'node',
+    terminalId: 'ttys009',
+    leadsOwnGroup: true,
+    cwd: '/Users/test/repo-b',
+    memoryBytes: 90 * 1024 ** 2
+  }
+];
 
 /**
- * Points each of the commands the service runs at its canned output.
+ * Answers each call out of the fixture the same way the service does, by
+ * filtering first and populating only the requested details.
+ *
+ * @param processes the processes the machine is standing in for
  */
-function mockCommandOutput(): void {
-  vi.spyOn(CLIService, 'execCmd').mockImplementation((cmd: string) => {
-    if (cmd.startsWith('ps ')) {
-      return Promise.resolve({ didComplete: true, output: PS_OUTPUT });
-    }
-    if (cmd.startsWith('lsof ')) {
-      return Promise.resolve({ didComplete: true, output: LSOF_OUTPUT });
-    }
-    if (cmd.startsWith('top ')) {
-      return Promise.resolve({ didComplete: true, output: TOP_OUTPUT });
-    }
-    return Promise.resolve({ didComplete: false, output: '' });
-  });
+function mockProcessInfo(processes: ProcessInfo[] = PROCESSES) {
+  return vi
+    .spyOn(OSProcessService, 'getProcessInfo')
+    .mockImplementation((options) => {
+      const { filter, requestedDetails = [] } = options ?? {};
+      const details = new Set(requestedDetails);
+
+      const survivors = processes.filter(({ pid, commandName }) =>
+        filter ? filter({ pid, commandName }) : true
+      );
+
+      return Promise.resolve(
+        survivors.map(
+          ({
+            pid,
+            commandName,
+            terminalId,
+            leadsOwnGroup,
+            cwd,
+            memoryBytes
+          }) => {
+            const populatedProcess: ProcessInfo = { pid, commandName };
+
+            if (details.has(ProcessDetail.TerminalId)) {
+              populatedProcess.terminalId = terminalId;
+            }
+            if (details.has(ProcessDetail.LeadsOwnGroup)) {
+              populatedProcess.leadsOwnGroup = leadsOwnGroup;
+            }
+            if (details.has(ProcessDetail.Cwd)) {
+              populatedProcess.cwd = cwd;
+            }
+            if (details.has(ProcessDetail.MemoryBytes)) {
+              populatedProcess.memoryBytes = memoryBytes;
+            }
+
+            return populatedProcess;
+          }
+        )
+      );
+    });
 }
 
 describe('ShellService', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    vi.spyOn(CurrentEnv, 'os', 'get').mockReturnValue(
-      OperatingSystemType.MacOSX
-    );
   });
 
-  describe('getInteractiveShells', () => {
+  describe('getInteractiveShellsProcessInfo', () => {
     it('should only return shells that lead a process group and own a terminal', async () => {
-      mockCommandOutput();
+      mockProcessInfo();
 
-      const sessions = await ShellService.getInteractiveShells();
+      const sessions = await ShellService.getInteractiveShellsProcessInfo();
 
       expect(sessions.map(({ pid }) => pid)).toEqual([1766, 2128, 4199]);
     });
 
-    it('should pair each session with its directory and memory', async () => {
-      mockCommandOutput();
+    it('should narrow on the command name before asking for any detail', async () => {
+      const getProcessInfo = mockProcessInfo();
 
-      const sessions = await ShellService.getInteractiveShells();
+      await ShellService.getInteractiveShellsProcessInfo();
+
+      const [firstCall] = getProcessInfo.mock.calls[0];
+      const survivingCommandNames = PROCESSES.filter(
+        ({ pid, commandName }) =>
+          firstCall?.filter?.({ pid, commandName }) === true
+      ).map(({ commandName }) => commandName);
+
+      expect(new Set(survivingCommandNames)).toEqual(new Set(['zsh', 'pwsh']));
+      expect(firstCall?.requestedDetails).toEqual([
+        ProcessDetail.TerminalId,
+        ProcessDetail.LeadsOwnGroup
+      ]);
+    });
+
+    it('should pair each session with its directory and memory', async () => {
+      mockProcessInfo();
+
+      const sessions = await ShellService.getInteractiveShellsProcessInfo();
 
       expect(sessions).toEqual([
         {
@@ -119,29 +194,24 @@ describe('ShellService', () => {
       ]);
     });
 
-    it('should return nothing when a session goes missing between lookups', async () => {
-      vi.spyOn(CLIService, 'execCmd').mockImplementation((cmd: string) => {
-        if (cmd.startsWith('ps ')) {
-          return Promise.resolve({ didComplete: true, output: PS_OUTPUT });
-        }
-        return Promise.resolve({ didComplete: false, output: '' });
-      });
-
-      const sessions = await ShellService.getInteractiveShells();
-
-      expect(sessions).toEqual([
-        { pid: 1766, cwd: '', memoryBytes: 0 },
-        { pid: 2128, cwd: '', memoryBytes: 0 },
-        { pid: 4199, cwd: '', memoryBytes: 0 }
-      ]);
-    });
-
-    it('should return an empty list on operating systems that are not covered', async () => {
-      vi.spyOn(CurrentEnv, 'os', 'get').mockReturnValue(
-        OperatingSystemType.Windows
+    it('should fall back to empty values when a detail is missing', async () => {
+      mockProcessInfo(
+        PROCESSES.map((process) =>
+          process.pid === 2128
+            ? { ...process, cwd: undefined, memoryBytes: undefined }
+            : process
+        )
       );
 
-      const sessions = await ShellService.getInteractiveShells();
+      const sessions = await ShellService.getInteractiveShellsProcessInfo();
+
+      expect(sessions).toContainEqual({ pid: 2128, cwd: '', memoryBytes: 0 });
+    });
+
+    it('should return an empty list when no process is a shell', async () => {
+      mockProcessInfo([]);
+
+      const sessions = await ShellService.getInteractiveShellsProcessInfo();
 
       expect(sessions).toEqual([]);
     });
