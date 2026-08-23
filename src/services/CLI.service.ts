@@ -197,17 +197,21 @@ export default class CLIService {
    *
    * @param options the list of options to present to the user
    * @param message the prompt message to display; defaults to a generic prompt
+   * @param alwaysPrompt if set to true, a lone option is presented instead of
+   * being returned outright. Use this where the list itself is what the user
+   * came to see.
    */
   static async selectFromList(
     options: string[],
-    message = 'Select an option'
+    message = 'Select an option',
+    alwaysPrompt = false
   ): Promise<string> {
     if (options.length === 0) throw new Error('No options provided');
-    if (options.length === 1) return options[0];
+    if (options.length === 1 && !alwaysPrompt) return options[0];
 
     const answer = await select({
       message,
-      choices: options.map((option) => ({ title: option, value: option }))
+      choices: options.map((option) => ({ name: option, value: option }))
     });
 
     return answer;

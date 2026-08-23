@@ -30,7 +30,8 @@ export default async function show(target?: string): Promise<void> {
     target ??
     (await CLIService.selectFromList(
       Object.values(ShowTarget),
-      'Select what to show'
+      'Select what to show',
+      true
     ));
 
   if (!isShowTarget(selected)) {
