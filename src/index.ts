@@ -16,6 +16,7 @@ import mergeVideos from './commands/mergeVideos.js';
 import open from './commands/open.js';
 import pkg, { PackageOptions } from './commands/pkg.js';
 import setup from './commands/setup.js';
+import show from './commands/show.js';
 import startup from './commands/startup.js';
 import sub from './commands/sub.js';
 import unsub from './commands/unsub.js';
@@ -108,6 +109,18 @@ program
   )
   .action(async (target: string) => {
     await clean(target);
+  });
+
+program
+  .command('show')
+  .description('Shows information about the provided target')
+  .argument(
+    '[target]',
+    'The target to show. To see options, run this' +
+      ' command without arguments.'
+  )
+  .action(async (target: string) => {
+    await show(target);
   });
 
 program

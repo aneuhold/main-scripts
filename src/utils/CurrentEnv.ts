@@ -6,14 +6,17 @@ import CLIService from '../services/CLI.service.js';
 
 /**
  * The type of shell that the current environment is running.
+ *
+ * The actual string is the command used to start that shell.
  */
 export enum ShellType {
-  PowerShellCore,
-  PowerShellDesktop,
-  Bash,
-  Zsh,
-  CommandPrompt,
-  Unknown
+  PowerShellCore = 'pwsh',
+  PowerShellDesktop = 'powershell',
+  Bash = 'bash',
+  Fish = 'fish',
+  Zsh = 'zsh',
+  CommandPrompt = 'cmd',
+  Unknown = 'unknown'
 }
 
 export enum OperatingSystemType {
