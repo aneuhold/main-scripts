@@ -2,7 +2,7 @@
   "name": "@aneuhold/main-scripts",
   "author": "Anton G. Neuhold Jr.",
   "license": "MIT",
-  "version": "2.11.0",
+  "version": "2.11.1",
   "description": "Main scripts for use personally on any platform",
   "packageManager": "pnpm@10.20.0",
   "type": "module",
@@ -56,6 +56,7 @@
   },
   "devDependencies": {
     "@aneuhold/eslint-config": "^3.0.1",
+    "@aneuhold/robot-instructions": "^0.1.2",
     "@types/better-sqlite3": "^7.6.13",
     "@types/fluent-ffmpeg": "^2.1.28",
     "@types/fs-extra": "^11.0.4",
