@@ -18,16 +18,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
+      - name: Configure the npm registry
+        # Writes the .npmrc that `npm publish` reads, which npm requires for
+        # OIDC: https://docs.npmjs.com/trusted-publishers. No node-version is
+        # given because pnpm/setup below installs the runtime.
+        uses: actions/setup-node@v6
         with:
-          node-version: 'lts/*'
-          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
 
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup pnpm, Node.js, and install dependencies
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@lts
+          cache: true
 
       - name: Run build
         run: pnpm build

@@ -1,0 +1,9 @@
+# pnpm reads its settings from this file rather than the `pnpm` field of
+# `package.json`.
+
+# `better-sqlite3` is a native module this package loads at runtime, so it has
+# to compile. `esbuild` resolves its platform binary through its optional
+# dependencies and does not need its install script.
+allowBuilds:
+  better-sqlite3: true
+  esbuild: false

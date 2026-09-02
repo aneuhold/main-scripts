@@ -2,9 +2,9 @@
   "name": "@aneuhold/main-scripts",
   "author": "Anton G. Neuhold Jr.",
   "license": "MIT",
-  "version": "2.11.1",
+  "version": "2.11.2",
   "description": "Main scripts for use personally on any platform",
-  "packageManager": "pnpm@10.20.0",
+  "packageManager": "pnpm@12.2.1",
   "type": "module",
   "scripts": {
     "refresh": "pnpm build && npm uninstall -g @aneuhold/main-scripts && npm i -g",
@@ -43,7 +43,7 @@
     "Node.js"
   ],
   "dependencies": {
-    "@aneuhold/core-ts-lib": "^2.4.5",
+    "@aneuhold/core-ts-lib": "^2.4.8",
     "@aws-sdk/client-s3": "^3.1028.0",
     "@inquirer/prompts": "^8.2.1",
     "better-sqlite3": "^12.6.2",
@@ -55,8 +55,8 @@
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "@aneuhold/eslint-config": "^3.0.1",
-    "@aneuhold/robot-instructions": "^0.1.2",
+    "@aneuhold/eslint-config": "^3.0.3",
+    "@aneuhold/robot-instructions": "^0.1.4",
     "@types/better-sqlite3": "^7.6.13",
     "@types/fluent-ffmpeg": "^2.1.28",
     "@types/fs-extra": "^11.0.4",
@@ -70,10 +70,5 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "better-sqlite3"
-    ]
   }
 }
