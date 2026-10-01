@@ -96,8 +96,10 @@ Each command starts with `tb`. That stands for Tiny Box but that isn't really im
 - `tb open` Will open the current directory in either VS Code, or Rider depending on how the project is configured in your user config.
   - `tb open r` Will open the associated repo for the current directory
 - `tb clean [target]` Cleans up the provided target (e.g., branches). Run without arguments to see available options.
+  - `tb clean claude-storage` Lists most of what claude stores on your machine and allows you to delete parts of it.
 - `tb show [target]` Shows information about the provided target. Run without arguments to pick from the available targets.
   - `tb show shell-mem-usage` Lists how much memory the interactive shell sessions hold, grouped by the directory each session sits in.
+  - `tb show claude-storage` Shows how much disk space Claude Code holds, totaled per kind and grouped by project.
 - `tb worktree` or `tb wt` Manage git worktrees with project-aware configuration.
   - `tb worktree add [branchName]` - Create a new worktree
     - `-s, --setup` - Run `tb setup` after creating the worktree, even when `worktreeConfig.autoSetup` is not set

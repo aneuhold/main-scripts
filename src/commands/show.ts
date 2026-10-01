@@ -1,13 +1,18 @@
 import { DR } from '@aneuhold/core-ts-lib';
-import CLIService from '../services/CLI.service.js';
+import ClaudeCodeService, {
+  ClaudeStorageKind
+} from '../services/applications/ClaudeCode.service.js';
 import ShellService from '../services/applications/Shell.service.js';
+import CLIService from '../services/CLI.service.js';
+import TextFormattingService from '../services/TextFormatting.service.js';
 import CurrentEnv from '../utils/CurrentEnv.js';
 
 /**
  * Different things that can be shown.
  */
 enum ShowTarget {
-  ShellMemUsage = 'shell-mem-usage'
+  ShellMemUsage = 'shell-mem-usage',
+  ClaudeStorage = 'claude-storage'
 }
 
 /**
@@ -43,10 +48,11 @@ export default async function show(target?: string): Promise<void> {
   }
 
   switch (selected) {
-    // Disabled for now so it is easy to expand in the future.
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     case ShowTarget.ShellMemUsage:
       await showShellMemUsage();
+      break;
+    case ShowTarget.ClaudeStorage:
+      await showClaudeStorage();
       break;
   }
 }
@@ -73,44 +79,75 @@ async function showShellMemUsage(): Promise<void> {
     groupShellProcessesByDirectory(sessions).map(
       ({ directory, memoryBytes, shellCount }) => ({
         Directory: directory,
-        Memory: formatBytes(memoryBytes),
+        Memory: TextFormattingService.formatBytes(memoryBytes),
         Shells: shellCount
       })
     )
   );
   DR.logger.info(
-    `${sessions.length} shell sessions holding ${formatBytes(totalBytes)}.`
+    `${sessions.length} shell sessions holding ${TextFormattingService.formatBytes(totalBytes)}.`
   );
 }
 
 /**
- * Formats a number of bytes into a human readable string.
- *
- * @param bytes the number of bytes to format
+ * Prints how much disk space Claude Code holds, totaled per kind and then
+ * grouped by project and kind.
  */
-function formatBytes(bytes: number): string {
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  let value = bytes;
-  let unitIndex = 0;
+async function showClaudeStorage(): Promise<void> {
+  const items = await ClaudeCodeService.listStorage();
 
-  while (value >= 1024 && unitIndex < units.length - 1) {
-    value /= 1024;
-    unitIndex += 1;
+  if (items.length === 0) {
+    DR.logger.info('No Claude Code storage was found.');
+    return;
   }
 
-  return `${value.toFixed(1)} ${units[unitIndex]}`;
-}
+  const totalsByGroup = new Map<
+    string,
+    {
+      projectKey: string;
+      kind: ClaudeStorageKind;
+      count: number;
+      sizeBytes: number;
+    }
+  >();
+  for (const { projectKey, kind, sizeBytes } of items) {
+    const groupKey = `${projectKey}/${kind}`;
+    const existingTotal = totalsByGroup.get(groupKey);
+    if (existingTotal) {
+      existingTotal.count += 1;
+      existingTotal.sizeBytes += sizeBytes;
+    } else {
+      totalsByGroup.set(groupKey, { projectKey, kind, count: 1, sizeBytes });
+    }
+  }
+  const groupTotals = [...totalsByGroup.values()].sort(
+    (a, b) => b.sizeBytes - a.sizeBytes
+  );
 
-/**
- * Replaces the home directory portion of the given path with `~`.
- *
- * @param directory the directory to shorten
- */
-function shortenPath(directory: string): string {
-  const homeDir = CurrentEnv.homeDir();
-  return directory.startsWith(homeDir)
-    ? `~${directory.slice(homeDir.length)}`
-    : directory;
+  console.log('\n');
+  console.table(
+    Object.values(ClaudeStorageKind).map((kind) => {
+      const kindItems = items.filter((item) => item.kind === kind);
+      return {
+        Kind: kind,
+        Items: kindItems.length,
+        Size: ClaudeCodeService.formatTotalSizeOfStorageItems(kindItems)
+      };
+    })
+  );
+  console.table(
+    groupTotals.map(({ projectKey, kind, count, sizeBytes }) => ({
+      Project: projectKey
+        ? ClaudeCodeService.formatProjectKey(projectKey)
+        : '-',
+      Kind: kind,
+      Items: count,
+      Size: TextFormattingService.formatBytes(sizeBytes)
+    }))
+  );
+  DR.logger.info(
+    `${items.length} Claude Code storage items holding ${ClaudeCodeService.formatTotalSizeOfStorageItems(items)}.`
+  );
 }
 
 /**
@@ -131,7 +168,9 @@ function groupShellProcessesByDirectory(
   >();
 
   for (const { cwd, memoryBytes } of shellProcesses) {
-    const directory = cwd ? shortenPath(cwd) : '(unknown)';
+    const directory = cwd
+      ? CurrentEnv.shortenPathWithHomeDirectory(cwd)
+      : '(unknown)';
     const existingUsage = usageByDirectory.get(directory);
     if (existingUsage) {
       existingUsage.memoryBytes += memoryBytes;

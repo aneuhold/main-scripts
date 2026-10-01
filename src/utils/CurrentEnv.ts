@@ -157,6 +157,18 @@ export default class CurrentEnv {
   }
 
   /**
+   * Replaces the home directory portion of the given path with `~`.
+   *
+   * @param directory the directory to shorten
+   */
+  public static shortenPathWithHomeDirectory(directory: string): string {
+    const homeDir = CurrentEnv.homeDir();
+    return directory.startsWith(homeDir)
+      ? `~${directory.slice(homeDir.length)}`
+      : directory;
+  }
+
+  /**
    * Gets the command that should be used to open .sln files on the current system.
    *
    * @returns A promise that resolves to the command string to use, or null if no
