@@ -51,8 +51,10 @@ export type MainScriptsConfigProject = {
   nodemonArgs?: { [relativeFolderPath: string]: string[] };
   worktreeConfig?: {
     /**
-     * Extra files to copy into new worktrees that would normally be ignored. This can be a glob
-     * pattern or file names directly. For example `[".env", "environments/*"]`.
+     * Extra files and folders to copy into new worktrees that would normally be ignored. Each
+     * entry can be a glob pattern, or a path pointing directly to a file or folder. A path that
+     * points directly to a folder copies the entire folder recursively. For example
+     * `[".env", "environments", "config/*"]`.
      *
      * These are copied after the worktree is created, but before any post-create commands are run.
      */

@@ -81,7 +81,7 @@ Each project configuration supports the following properties:
 - `vsCodeAlternativeCommand` (optional): Command to use instead of `code` when opening VS Code for this specific project. Overrides the global setting. See global configuration for workspace storage behavior.
 - `nodemonArgs` (optional): Object mapping relative paths to nodemon argument arrays for `tb dev` command
 - `worktreeConfig` (optional): Configuration for git worktree behavior
-  - `extraFilesToCopy` (optional): Array of file patterns to copy into new worktrees (e.g., `[".env", "environments/*"]`)
+  - `extraFilesToCopy` (optional): Array of file or folder paths, or glob patterns, to copy into new worktrees (e.g., `[".env", "environments", "config/*"]`). A path pointing directly to a folder copies the entire folder recursively.
   - `postCreateCommands` (optional): Array of commands to run after creating a worktree
   - `autoSetup` (optional): Boolean to automatically run project setup after creating a worktree
 - `setupConfig` (optional): Configuration for the `tb setup` command.

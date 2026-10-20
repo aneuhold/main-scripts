@@ -5,7 +5,7 @@ import {
   GlobMatchingService
 } from '@aneuhold/core-ts-lib';
 import { select } from '@inquirer/prompts';
-import { copy } from 'fs-extra';
+import { copy, pathExists } from 'fs-extra';
 import path from 'path';
 import GitService from '../services/applications/Git.service.js';
 import VSCodeService from '../services/applications/VSCode.service.js';
@@ -177,9 +177,14 @@ async function getSmartDefaultBranch(): Promise<string> {
 }
 
 /**
- * Copies extra files from the main project directory to the worktree.
+ * Copies extra files and folders from the main project directory to the
+ * worktree.
  *
- * @param patterns File names or glob patterns to copy
+ * A pattern that resolves directly to an existing file or folder is copied
+ * as-is, with folders copied recursively. Any remaining patterns are treated
+ * as glob patterns and matched against the files in the main worktree.
+ *
+ * @param patterns File names, folder names, or glob patterns to copy
  */
 async function copyExtraFiles(patterns: string[]): Promise<void> {
   try {
@@ -188,37 +193,57 @@ async function copyExtraFiles(patterns: string[]): Promise<void> {
 
     DR.logger.info('Copying extra files...');
 
-    // Get all files from main worktree
-    const allFiles = await FileSystemService.getAllFilePaths(mainWorktreePath);
+    // Split the patterns into those that point directly to an existing file or
+    // folder and those that need to be resolved as glob patterns.
+    const sourcePaths: string[] = [];
+    const globPatterns: string[] = [];
+    for (const pattern of patterns) {
+      const resolvedPath = path.join(mainWorktreePath, pattern);
+      if (await pathExists(resolvedPath)) {
+        sourcePaths.push(resolvedPath);
+      } else {
+        globPatterns.push(pattern);
+      }
+    }
 
-    // Get matching files using GlobMatchingService
-    const matchingFiles = GlobMatchingService.getMatchingFiles(
-      allFiles,
-      mainWorktreePath,
-      patterns,
-      []
-    );
+    // Resolve any glob patterns against the full list of files in the main
+    // worktree.
+    if (globPatterns.length > 0) {
+      const allFiles =
+        await FileSystemService.getAllFilePaths(mainWorktreePath);
+      const matchingFiles = GlobMatchingService.getMatchingFiles(
+        allFiles,
+        mainWorktreePath,
+        globPatterns,
+        []
+      );
+      sourcePaths.push(...matchingFiles);
+    }
 
-    if (matchingFiles.length === 0) {
-      DR.logger.verbose.info('No files matched the provided patterns');
+    if (sourcePaths.length === 0) {
+      DR.logger.verbose.info(
+        'No files or folders matched the provided patterns'
+      );
       return;
     }
 
-    for (const sourcePath of matchingFiles) {
+    let copiedCount = 0;
+    for (const sourcePath of sourcePaths) {
       try {
         const relativePath = path.relative(mainWorktreePath, sourcePath);
         const destPath = path.join(currentPath, relativePath);
 
         DR.logger.verbose.info(`Copying ${relativePath}...`);
         await copy(sourcePath, destPath, { overwrite: true });
+        copiedCount++;
       } catch (fileError) {
         DR.logger.verbose.error(
-          `Error copying file: ${ErrorUtils.getErrorString(fileError)}`
+          `Error copying: ${ErrorUtils.getErrorString(fileError)}`
         );
       }
     }
 
-    DR.logger.success(`Copied ${matchingFiles.length} files`);
+    DR.logger.success(`Copied ${copiedCount} items`);
   } catch (error) {
     DR.logger.error(
       `Failed to copy extra files: ${ErrorUtils.getErrorString(error)}`
