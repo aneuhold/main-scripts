@@ -16,14 +16,26 @@ import {
 } from './routerMonitoringLogin.js';
 
 /**
- * Directory holding this deployable's co-located assets (yaml config and the
- * traffic collector script). `pnpm build` copies them from the
+ * Directory holding this deployable's co-located assets (yaml config, the
+ * Grafana dashboard, and the traffic collector script). `pnpm build` copies them from the
  * `src/config/homelab` tree, so this runtime path resolves
  * against the compiled module's own directory.
  */
 const CONFIG_DIR = dirname(fileURLToPath(import.meta.url));
 
 const REMOTE_DIR = '~/monitoring';
+
+/**
+ * Builds a remote file from a co-located asset, written under {@link REMOTE_DIR}
+ * at the same relative path unless `remotePath` is given.
+ *
+ * @param localPath path of the asset relative to this deployable's folder
+ * @param remotePath path to write it to, relative to {@link REMOTE_DIR}
+ */
+const asset = (localPath: string, remotePath = localPath): RemoteFile => [
+  `${REMOTE_DIR}/${remotePath}`,
+  readFileSync(join(CONFIG_DIR, localPath), 'utf8')
+];
 
 /**
  * Machine that hosts the monitoring stack.
@@ -50,31 +62,15 @@ export const networkMonitoring = createDockerComposeStack({
   services: ['influxdb', 'traffic-collector', 'grafana'],
   dependsOn: [routerMonitoringLogin.name],
   files: [
-    [
-      `${REMOTE_DIR}/docker-compose.yaml`,
-      readFileSync(join(CONFIG_DIR, 'docker-compose.yaml'), 'utf8')
-    ],
-    [
-      // Shipped as .mts so Node runs it as ESM without a package.json.
-      `${REMOTE_DIR}/traffic-collector/trafficCollector.mts`,
-      readFileSync(
-        join(CONFIG_DIR, 'traffic-collector', 'trafficCollector.remote.ts'),
-        'utf8'
-      )
-    ],
-    [
-      `${REMOTE_DIR}/grafana/provisioning/datasources/datasources.yaml`,
-      readFileSync(
-        join(
-          CONFIG_DIR,
-          'grafana',
-          'provisioning',
-          'datasources',
-          'datasources.yaml'
-        ),
-        'utf8'
-      )
-    ]
+    asset('docker-compose.yaml'),
+    // Shipped as .mts so Node runs it as ESM without a package.json.
+    asset(
+      'traffic-collector/trafficCollector.remote.ts',
+      'traffic-collector/trafficCollector.mts'
+    ),
+    asset('grafana/provisioning/datasources/datasources.yaml'),
+    asset('grafana/provisioning/dashboards/dashboards.yaml'),
+    asset('grafana/provisioning/dashboards/home-network-traffic.json')
   ],
   env: (config: MainScriptsConfig): RemoteFile[] => {
     const grafanaPassword = config.homelab?.grafana?.adminPassword;

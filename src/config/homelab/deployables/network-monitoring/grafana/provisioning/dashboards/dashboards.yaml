@@ -1,0 +1,13 @@
+apiVersion: 1
+
+# Loads every dashboard JSON file in this folder. The files in the repo are the
+# source of truth, so saving from the Grafana UI is disabled: export the edited
+# dashboard's JSON from the UI and replace the file here instead.
+# https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
+providers:
+  - name: homelab
+    folder: Home lab
+    type: file
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/provisioning/dashboards
