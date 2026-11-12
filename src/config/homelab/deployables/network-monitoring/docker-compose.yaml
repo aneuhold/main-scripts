@@ -15,18 +15,24 @@ services:
       - influxdb_data:/var/lib/influxdb2
     restart: unless-stopped
 
-  telegraf:
-    image: telegraf:latest
-    container_name: telegraf
-    # NetFlow v9 export from the router lands here on UDP 2055.
-    ports:
-      - "2055:2055/udp"
+  traffic-collector:
+    image: node:24-alpine
+    container_name: traffic-collector
+    # Node runs the TypeScript source directly (type stripping). The .mts
+    # extension pins it to ESM without a package.json.
+    command: ["node", "/app/trafficCollector.mts"]
     environment:
+      ROUTER_HOST: "${ROUTER_HOST}"
+      ROUTER_USER: "${ROUTER_USER}"
+      ROUTER_PASSWORD: "${ROUTER_PASSWORD}"
+      # The router's web UI serves a self-signed certificate.
+      NODE_TLS_REJECT_UNAUTHORIZED: "0"
+      INFLUX_URL: "http://influxdb:8086"
       INFLUX_TOKEN: "${INFLUX_TOKEN}"
       INFLUX_ORG: "${INFLUX_ORG}"
       INFLUX_BUCKET: "${INFLUX_BUCKET}"
     volumes:
-      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - ./traffic-collector/trafficCollector.mts:/app/trafficCollector.mts:ro
     depends_on:
       - influxdb
     restart: unless-stopped

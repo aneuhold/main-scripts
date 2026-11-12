@@ -109,10 +109,18 @@ export type MainScriptsConfigHomelab = {
     /** InfluxDB admin UI password. Written to the Pi's .env on deploy. */
     adminPassword?: string;
     /**
-     * InfluxDB admin token, shared with Telegraf (writes) and Grafana (reads).
-     * Written to the Pi's .env on deploy.
+     * InfluxDB admin token, shared with the traffic collector (writes) and
+     * Grafana (reads). Written to the Pi's .env on deploy.
      */
     adminToken?: string;
+  };
+  networkMonitoring?: {
+    /**
+     * Password for the operator-level `monitoring` router login the traffic
+     * collector reads Traffic Analysis stats with. Set on the router and written
+     * to the Pi's .env on deploy.
+     */
+    routerPassword?: string;
   };
   /**
    * Per-machine SSH credential overrides, keyed by the machine identifier (the

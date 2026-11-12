@@ -14,7 +14,7 @@ import {
  * Wraps `delete` of each EdgeOS config path in an inline existence check that
  * runs on the router.
  *
- * @param paths EdgeOS config paths to delete if present (e.g. `system flow-accounting`)
+ * @param paths EdgeOS config paths to delete if present (e.g. `system login user <name>`)
  */
 export const createRouterConfigGuardedDeletes = (paths: string[]): string[] =>
   paths.map(
@@ -34,7 +34,7 @@ export const createRouterConfigGuardedDeletes = (paths: string[]): string[] =>
  * @param params.label display label for prompts (defaults to `name`)
  * @param params.machine router machine to configure
  * @param params.buildCommands produces the EdgeRouter CLI command list to apply; async because some commands embed values discovered from other machines (e.g. the Pi-hole IP)
- * @param params.teardownCommands produces the EdgeRouter CLI command list that removes the config (e.g. `delete system flow-accounting`); async so it can guard deletes behind live-config existence checks. When omitted the config exposes no `teardown` op
+ * @param params.teardownCommands produces the EdgeRouter CLI command list that removes the config async so it can guard deletes behind live-config existence checks. When omitted the config exposes no `teardown` op
  * @param params.verify decides whether the config's desired condition actually holds, e.g. by reading back the live router config over SSH; defaults to plain reachability. Only called when the router is reachable
  * @param params.dependsOn names of deployables that must be satisfied before this one deploys
  * @param params.opsOverride per-unit overrides shallow-merged over the driver defaults

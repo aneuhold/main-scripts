@@ -2,7 +2,7 @@
 
 ## Network Equipment
 
-- **Router:** Ubiquiti EdgeRouter X (ER-X, model `ER-e50`) on EdgeOS v3.0.1. `eth0` is the firewalled WAN uplink (DHCP from the ISP); `eth1`–`eth4` are switch ports bridged into `switch0`, which holds the LAN gateway at `192.168.0.2/24`. Hardware offload (`system offload hwnat`) is on, so flow-accounting undercounts forwarded traffic until it is disabled.
+- **Router:** Ubiquiti EdgeRouter X (ER-X, model `ER-e50`) on EdgeOS v3.0.1. `eth0` is the firewalled WAN uplink (DHCP from the ISP); `eth1`–`eth4` are switch ports bridged into `switch0`, which holds the LAN gateway at `192.168.0.2/24`. Hardware offload (`system offload hwnat`) is on and must stay on: without it the ER-X routes in software and tops out near 300 Mbps.
 - **Access Points:** TP-Link APs managed via Omada controller (runs in a container when needed). IoT devices are isolated here at the SSID level, not by a router subnet or VLAN. The router runs a single flat LAN (`vlan-aware disable`).
 - **Rack:** Half-depth 3U wall-mounted rack, ~1/3 occupied by patch panel and pis.
 
@@ -27,5 +27,6 @@
 
 ### Network Monitoring
 
-- Telegraf, not ntopng: ntopng cannot collect raw NetFlow on its own. It relies on nProbe, which is commercial (the unlicensed demo is flow- and time-limited). The ntopng Docker image is also amd64 only, so it does not run on the arm64 Pi. Telegraf's `inputs.netflow` plugin collects NetFlow v9 directly, is free, and ships for arm64.
+- Router Traffic Analysis, not NetFlow: on the ER-X, NetFlow cannot be hardware offloaded, so accurate flow counts require turning `hwnat` off, which cut LAN throughput to about a third. Traffic Analysis can be offloaded ([Ubiquiti: EdgeRouter Hardware Offloading](https://help.uisp.com/hc/en-us/articles/22591077433879-EdgeRouter-Hardware-Offloading)), so it stays on in whichever mode the router UI sets ("Hosts only" for per-device byte counters, "Enabled" to add per-app breakdowns). A small collector container logs in as the operator-level `monitoring` user and streams those counters from the router's web UI stats socket into InfluxDB.
+- Per-site detail comes from Pi-hole instead: its query database keeps 91 days of per-device DNS lookups.
 - InfluxDB 2.x, not 3.x: InfluxDB 3 Core (the free 3.x line) is built for recent data and caps a single query near 72 hours, since the compaction that lifts the cap is Enterprise only. Traffic history wants days and weeks, so 2.x is the fit, and it is lighter on 1GB of RAM. The image is pinned to `influxdb:2` because the `latest` tag switches to 3 Core on 2026-09-15.
