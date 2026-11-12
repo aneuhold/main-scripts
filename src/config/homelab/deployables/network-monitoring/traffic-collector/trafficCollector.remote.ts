@@ -22,15 +22,20 @@
  * 2. Open `wss://<router>/ws/stats`. Every message in both directions is framed
  *    as `<length>\n<json>`, and the session ID travels inside each JSON message.
  * 3. Subscribe to the `export` stream. Pushed frames map each LAN IP to
- *    cumulative counters per `<category>|<app>` key, e.g.
+ *    cumulative counters per `<app>|<category>` key (the UI's
+ *    `importTrafficAnalysisUser` splits it in that order), e.g.
  *    `{"export":{"192.168.0.85":{"Other|Other":{"tx_bytes":"63424","rx_bytes":"57496",...}}}}`.
  *    "Hosts only" mode reports a single `Other|Other` key per host; "Enabled"
  *    mode (DPI) reports one key per identified app. With Traffic Analysis off,
  *    no counters arrive and nothing is written.
  *
+ * Device names come from reverse DNS. In the container that resolves through
+ * Pi-hole, which forwards LAN lookups to the router's DHCP leases.
+ *
  * The router serves a self-signed certificate, so the container sets
  * `NODE_TLS_REJECT_UNAUTHORIZED=0`.
  */
+import { reverse } from 'node:dns/promises';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 
@@ -43,6 +48,14 @@ export type TrafficCounters = {
   app: string;
   txBytes: number;
   rxBytes: number;
+};
+
+/**
+ * {@link TrafficCounters} labeled with the host's device name.
+ */
+export type NamedTrafficCounters = TrafficCounters & {
+  /** Reverse DNS name of the host, or its IP when it has none. */
+  name: string;
 };
 
 /**
@@ -91,6 +104,42 @@ export class StatsFrameReader {
   }
 }
 
+/**
+ * Resolves host IPs to device names via reverse DNS, caching each result
+ * (including misses, which fall back to the IP) so a write does not trigger a
+ * lookup per host.
+ */
+class DeviceNameResolver {
+  /** How long a resolved name is reused before it is looked up again. */
+  static readonly #TTL_MS = 60 * 60_000;
+
+  #cache = new Map<string, { name: string; expiresAt: number }>();
+
+  /**
+   * Returns the device name for an IP, or the IP itself when it has none.
+   *
+   * @param ip the host IP
+   */
+  async resolve(ip: string): Promise<string> {
+    const cached = this.#cache.get(ip);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.name;
+    }
+    let name = ip;
+    try {
+      // Resolves with at least one name, or rejects (e.g. ENOTFOUND).
+      [name] = await reverse(ip);
+    } catch {
+      // No PTR record: keep the IP as the name.
+    }
+    this.#cache.set(ip, {
+      name,
+      expiresAt: Date.now() + DeviceNameResolver.#TTL_MS
+    });
+    return name;
+  }
+}
+
 /** Keepalive interval; matches the router web UI's own ping. */
 const PING_INTERVAL_MS = 30_000;
 /** How often the latest counter snapshot is written to InfluxDB. */
@@ -128,7 +177,7 @@ export const parseExportFrame = (frame: string): TrafficCounters[] | null => {
     if (!isRecord(apps)) continue;
     for (const [key, stats] of Object.entries(apps)) {
       if (!isRecord(stats)) continue;
-      const [category = 'Other', app = 'Other'] = key.split('|');
+      const [app = 'Other', category = 'Other'] = key.split('|');
       counters.push({
         ip,
         category,
@@ -159,13 +208,13 @@ const escapeTag = (value: string): string => value.replace(/[ ,=\\]/g, '\\$&');
  * @param timestampSeconds point timestamp, in seconds since the epoch
  */
 export const toLineProtocol = (
-  counters: TrafficCounters[],
+  counters: NamedTrafficCounters[],
   timestampSeconds: number
 ): string =>
   counters
     .map(
-      ({ ip, category, app, txBytes, rxBytes }) =>
-        `traffic,ip=${escapeTag(ip)},category=${escapeTag(category)},app=${escapeTag(app)} ` +
+      ({ ip, name, category, app, txBytes, rxBytes }) =>
+        `traffic,ip=${escapeTag(ip)},name=${escapeTag(name)},category=${escapeTag(category)},app=${escapeTag(app)} ` +
         `tx_bytes=${txBytes}i,rx_bytes=${rxBytes}i ${timestampSeconds}`
     )
     .join('\n');
@@ -209,16 +258,26 @@ const login = async (env: CollectorEnv): Promise<string> => {
 };
 
 /**
- * Writes counters to InfluxDB. Skips the request when there is nothing to write.
+ * Labels counters with device names and writes them to InfluxDB. Skips the
+ * request when there is nothing to write.
  *
  * @param env connection settings
+ * @param names resolver for device names
  * @param counters the counters to write
  */
 const writeCounters = async (
   env: CollectorEnv,
+  names: DeviceNameResolver,
   counters: TrafficCounters[]
 ) => {
   if (counters.length === 0) return;
+
+  const named = await Promise.all(
+    counters.map(async (counter) => ({
+      ...counter,
+      name: await names.resolve(counter.ip)
+    }))
+  );
 
   const url = new URL('/api/v2/write', env.influxUrl);
   url.searchParams.set('org', env.influxOrg);
@@ -227,7 +286,7 @@ const writeCounters = async (
   const response = await fetch(url, {
     method: 'POST',
     headers: { Authorization: `Token ${env.influxToken}` },
-    body: toLineProtocol(counters, Math.floor(Date.now() / 1000))
+    body: toLineProtocol(named, Math.floor(Date.now() / 1000))
   });
   if (!response.ok) {
     throw new Error(
@@ -245,8 +304,10 @@ const writeCounters = async (
  * closes.
  *
  * @param env connection settings
+ * @param names resolver for device names, shared across sessions so its cache
+ *   survives reconnects
  */
-const runSession = async (env: CollectorEnv) => {
+const runSession = async (env: CollectorEnv, names: DeviceNameResolver) => {
   const sessionId = await login(env);
   const socket = new WebSocket(`wss://${env.routerHost}/ws/stats`);
   const reader = new StatsFrameReader();
@@ -276,7 +337,7 @@ const runSession = async (env: CollectorEnv) => {
     if (!latest) return;
     const snapshot = latest;
     latest = null;
-    writeCounters(env, snapshot).catch((error: unknown) => {
+    writeCounters(env, names, snapshot).catch((error: unknown) => {
       console.error(error);
     });
   }, WRITE_INTERVAL_MS);
@@ -305,9 +366,10 @@ const main = async () => {
     influxOrg: readEnv('INFLUX_ORG'),
     influxBucket: readEnv('INFLUX_BUCKET')
   };
+  const names = new DeviceNameResolver();
   for (;;) {
     try {
-      await runSession(env);
+      await runSession(env, names);
       console.warn('Router stats socket closed');
     } catch (error) {
       console.error(error);

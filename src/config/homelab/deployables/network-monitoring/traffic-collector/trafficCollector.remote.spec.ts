@@ -72,11 +72,11 @@ describe('parseExportFrame', () => {
     const dpiExport = JSON.stringify({
       export: {
         '192.168.0.51': {
-          'Media streaming services|YouTube': {
+          'YouTube|Media streaming services': {
             tx_bytes: '10',
             rx_bytes: '2000'
           },
-          'Web|HTTPS': { tx_bytes: '5', rx_bytes: '50' }
+          'HTTPS|Web': { tx_bytes: '5', rx_bytes: '50' }
         }
       }
     });
@@ -115,6 +115,7 @@ describe('toLineProtocol', () => {
         [
           {
             ip: '192.168.0.51',
+            name: 'BIG RED',
             category: 'Media streaming services',
             app: 'YouTube',
             txBytes: 10,
@@ -124,7 +125,7 @@ describe('toLineProtocol', () => {
         1700000000
       )
     ).toBe(
-      'traffic,ip=192.168.0.51,category=Media\\ streaming\\ services,app=YouTube tx_bytes=10i,rx_bytes=2000i 1700000000'
+      'traffic,ip=192.168.0.51,name=BIG\\ RED,category=Media\\ streaming\\ services,app=YouTube tx_bytes=10i,rx_bytes=2000i 1700000000'
     );
   });
 });
