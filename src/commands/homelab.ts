@@ -3,9 +3,9 @@ import { confirm, input, select, Separator } from '@inquirer/prompts';
 import {
   ConvergencePlan,
   Deployable,
+  DeployableKind,
   DeployableOpKey,
-  DEPLOYABLES,
-  getExpectedContainers
+  DEPLOYABLES
 } from '../config/homelab/registry.js';
 import CLIService from '../services/CLI.service.js';
 import { ConfigService } from '../services/Config.service.js';
@@ -135,7 +135,9 @@ async function runTeardown(): Promise<void> {
   DR.logger.info(
     `\nAbout to tear down "${target.label}" on ${target.machine}:`
   );
-  const containers = getExpectedContainers(target.machine);
+  const containers = [target, ...target.children]
+    .filter((d) => d.kind === DeployableKind.Container)
+    .map((d) => d.name);
   if (containers.length > 0) {
     DR.logger.info(`  Containers: ${containers.join(', ')}\n`);
   }

@@ -4,7 +4,7 @@ import { networkMonitoring } from './deployables/network-monitoring/index.js';
 import { routerMonitoringLogin } from './deployables/network-monitoring/routerMonitoringLogin.js';
 import { pihole, routerDns } from './deployables/pihole/index.js';
 import { whoami } from './deployables/whoami/index.js';
-import { Deployable, DeployableKind, HomeLabMachine } from './types.js';
+import { Deployable } from './types.js';
 
 /**
  * Top-level deployables, selectable as groups in the homelab command.
@@ -26,18 +26,6 @@ export const ALL_DEPLOYABLES: Deployable[] = DEPLOYABLES.flatMap((d) => [
   d,
   ...d.children
 ]);
-
-/**
- * Returns the container names expected to run on the given machine, derived from
- * the registry (no stored list to keep in sync).
- *
- * @param machine the machine to look up
- */
-export function getExpectedContainers(machine: HomeLabMachine): string[] {
-  return ALL_DEPLOYABLES.filter(
-    (d) => d.kind === DeployableKind.Container && d.machine === machine
-  ).map((d) => d.name);
-}
 
 /**
  * Looks up a deployable by name across the flattened registry. Used to resolve
