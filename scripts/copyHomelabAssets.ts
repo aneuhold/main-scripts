@@ -1,11 +1,9 @@
 import { cpSync, statSync } from 'fs';
 
 /**
- * File extensions of the home lab config assets that are read at runtime (the
- * co-located service config files). `tsc` only emits the `.ts` modules, so these
- * static assets need a separate copy step to ship in the published package.
+ * File extensions of the home lab config assets that are read at runtime.
  */
-const ASSET_EXTENSIONS = ['.yaml', '.conf'];
+const ASSET_EXTENSIONS = ['.yaml', '.json', '.remote.ts'];
 
 /**
  * Copies the home lab config assets from the source tree into the compiled `lib`

@@ -7,12 +7,18 @@ import {
   createDockerComposeStack,
   RemoteFile
 } from '../../drivers/createDockerComposeStack.js';
+import { MACHINES } from '../../machines.js';
 import { HomeLabMachine } from '../../types.js';
-import { createRouterNetflow } from './routerNetflow.js';
+import {
+  getMonitoringRouterPassword,
+  MONITORING_ROUTER_USER,
+  routerMonitoringLogin
+} from './routerMonitoringLogin.js';
 
 /**
- * Directory holding this deployable's co-located yaml assets. `pnpm build`
- * copies the whole `src/config/homelab` tree, so this runtime path resolves
+ * Directory holding this deployable's co-located assets (yaml config, the
+ * Grafana dashboard, and the traffic collector script). `pnpm build` copies them from the
+ * `src/config/homelab` tree, so this runtime path resolves
  * against the compiled module's own directory.
  */
 const CONFIG_DIR = dirname(fileURLToPath(import.meta.url));
@@ -20,62 +26,51 @@ const CONFIG_DIR = dirname(fileURLToPath(import.meta.url));
 const REMOTE_DIR = '~/monitoring';
 
 /**
- * Machine that hosts the monitoring stack (the NetFlow/syslog collectors).
- * Shared by the compose stack and the router NetFlow export so both target the
- * same host.
+ * Builds a remote file from a co-located asset, written under {@link REMOTE_DIR}
+ * at the same relative path unless `remotePath` is given.
+ *
+ * @param localPath path of the asset relative to this deployable's folder
+ * @param remotePath path to write it to, relative to {@link REMOTE_DIR}
+ */
+const asset = (localPath: string, remotePath = localPath): RemoteFile => [
+  `${REMOTE_DIR}/${remotePath}`,
+  readFileSync(join(CONFIG_DIR, localPath), 'utf8')
+];
+
+/**
+ * Machine that hosts the monitoring stack.
  */
 const MONITORING_HOST = HomeLabMachine.Pi1;
 
 /**
- * Router NetFlow/syslog export feeding this monitoring stack. Built here so it
- * inherits the stack's host machine, and depended on by the stack so the export
- * is in place before deploy.
- */
-export const routerNetflow = createRouterNetflow(MONITORING_HOST);
-
-/**
- * InfluxDB organization and bucket the flow data lands in. Not secrets, so they
- * live here rather than in the user config. Shared by InfluxDB (init), Telegraf
- * (writes), and Grafana (reads) via the stack's .env.
+ * InfluxDB organization and bucket the traffic data lands in. Not secrets, so
+ * they live here rather than in the user config. Shared by InfluxDB (init), the
+ * traffic collector (writes), and Grafana (reads) via the stack's .env.
  */
 const INFLUX_ORG = 'homelab';
-const INFLUX_BUCKET = 'netflow';
+const INFLUX_BUCKET = 'traffic';
 
 /**
- * The network-monitoring compose stack: Telegraf collects the router's NetFlow
- * v9 export into InfluxDB, which Grafana queries. The docker-host install is
- * depended on automatically by the compose driver; this adds the router NetFlow
- * export so flow data is flowing before deploy.
+ * The network-monitoring compose stack: the traffic collector streams the
+ * router's Traffic Analysis counters into InfluxDB, which Grafana queries.
  */
 export const networkMonitoring = createDockerComposeStack({
   name: 'network-monitoring',
   label: 'network monitoring',
   machine: MONITORING_HOST,
   remoteDir: REMOTE_DIR,
-  services: ['influxdb', 'telegraf', 'grafana'],
-  dependsOn: [routerNetflow.name],
+  services: ['influxdb', 'traffic-collector', 'grafana'],
+  dependsOn: [routerMonitoringLogin.name],
   files: [
-    [
-      `${REMOTE_DIR}/docker-compose.yaml`,
-      readFileSync(join(CONFIG_DIR, 'docker-compose.yaml'), 'utf8')
-    ],
-    [
-      `${REMOTE_DIR}/telegraf/telegraf.conf`,
-      readFileSync(join(CONFIG_DIR, 'telegraf', 'telegraf.conf'), 'utf8')
-    ],
-    [
-      `${REMOTE_DIR}/grafana/provisioning/datasources/datasources.yaml`,
-      readFileSync(
-        join(
-          CONFIG_DIR,
-          'grafana',
-          'provisioning',
-          'datasources',
-          'datasources.yaml'
-        ),
-        'utf8'
-      )
-    ]
+    asset('docker-compose.yaml'),
+    // Shipped as .mts so Node runs it as ESM without a package.json.
+    asset(
+      'traffic-collector/trafficCollector.remote.ts',
+      'traffic-collector/trafficCollector.mts'
+    ),
+    asset('grafana/provisioning/datasources/datasources.yaml'),
+    asset('grafana/provisioning/dashboards/dashboards.yaml'),
+    asset('grafana/provisioning/dashboards/home-network-traffic.json')
   ],
   env: (config: MainScriptsConfig): RemoteFile[] => {
     const grafanaPassword = config.homelab?.grafana?.adminPassword;
@@ -102,7 +97,10 @@ export const networkMonitoring = createDockerComposeStack({
         `INFLUXDB_ADMIN_PASSWORD=${influxPassword ?? 'changeme'}`,
         `INFLUX_TOKEN=${influxToken ?? 'changeme'}`,
         `INFLUX_ORG=${INFLUX_ORG}`,
-        `INFLUX_BUCKET=${INFLUX_BUCKET}`
+        `INFLUX_BUCKET=${INFLUX_BUCKET}`,
+        `ROUTER_HOST=${MACHINES[HomeLabMachine.Router].host}`,
+        `ROUTER_USER=${MONITORING_ROUTER_USER}`,
+        `ROUTER_PASSWORD=${getMonitoringRouterPassword(config)}`
       ].join('\n') + '\n';
 
     return [[`${REMOTE_DIR}/.env`, envContent]];
