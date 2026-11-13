@@ -25,6 +25,19 @@ const REMOTE_DIR = '~/pihole';
  * config so the DHCP server hands out the host Pi-hole actually runs on.
  */
 const PIHOLE_HOST = HomeLabMachine.Pi1;
+
+/**
+ * Port Pi-hole's web UI and API listen on. Pi-hole uses host networking, so
+ * this binds the host directly.
+ */
+const PIHOLE_WEB_PORT = 8080;
+
+/**
+ * Base URL of Pi-hole's API for clients that resolve DNS through Pi-hole.
+ * Pi-hole answers `pi.hole` with its own host's address, so the URL follows
+ * Pi-hole to whichever machine runs it.
+ */
+export const PIHOLE_API_URL = `http://pi.hole:${PIHOLE_WEB_PORT}`;
 /**
  * Currently this is the host. It is hard-configured to be a specific IP, so shouldn't be an issue
  * at the moment.
@@ -47,6 +60,24 @@ const LAN_DOMAIN = 'lan';
 const PIHOLE_REVSERVERS = `true,${LAN_SUBNET},${ROUTER_LAN_IP},${LAN_DOMAIN}`;
 
 /**
+ * Returns Pi-hole's web password from the user config, or a "changeme"
+ * placeholder (with a notice) when it is unset. The same password logs in to
+ * the web UI and the API.
+ *
+ * @param config the loaded user config
+ */
+export const getPiholeWebPassword = (config: MainScriptsConfig): string => {
+  const password = config.homelab?.pihole?.webPassword;
+  if (!password) {
+    DR.logger.info(
+      'homelab.pihole.webPassword not set in ~/.config/tb-main-scripts.json. ' +
+        'Deploying with "changeme" as placeholder'
+    );
+  }
+  return password ?? 'changeme';
+};
+
+/**
  * The Pi-hole DNS / ad-blocking compose stack. Kept separate from the
  * observability stack: it shares no containers, volumes, or networks with the
  * monitoring services, DNS is load-bearing for the LAN, and it can fail over to
@@ -65,19 +96,11 @@ export const pihole = createDockerComposeStack({
     ]
   ],
   env: (config: MainScriptsConfig): RemoteFile[] => {
-    const piholePassword = config.homelab?.pihole?.webPassword;
-
-    if (!piholePassword) {
-      DR.logger.info(
-        'homelab.pihole.webPassword not set in ~/.config/tb-main-scripts.json. ' +
-          'Deploying with "changeme" as placeholder'
-      );
-    }
-
     const envContent =
       [
         'TZ=America/Los_Angeles',
-        `PIHOLE_WEBPASSWORD=${piholePassword ?? 'changeme'}`,
+        `PIHOLE_WEBPASSWORD=${getPiholeWebPassword(config)}`,
+        `PIHOLE_WEB_PORT=${PIHOLE_WEB_PORT}`,
         `PIHOLE_REVSERVERS=${PIHOLE_REVSERVERS}`
       ].join('\n') + '\n';
 

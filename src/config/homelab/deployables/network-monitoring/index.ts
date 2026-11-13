@@ -7,19 +7,18 @@ import {
   createDockerComposeStack,
   RemoteFile
 } from '../../drivers/createDockerComposeStack.js';
-import { MACHINES } from '../../machines.js';
 import { HomeLabMachine } from '../../types.js';
 import {
-  getMonitoringRouterPassword,
-  MONITORING_ROUTER_USER,
-  routerMonitoringLogin
-} from './routerMonitoringLogin.js';
+  getPiholeWebPassword,
+  pihole,
+  PIHOLE_API_URL
+} from '../pihole/index.js';
 
 /**
  * Directory holding this deployable's co-located assets (yaml config, the
- * Grafana dashboard, and the traffic collector script). `pnpm build` copies them from the
- * `src/config/homelab` tree, so this runtime path resolves
- * against the compiled module's own directory.
+ * Grafana dashboard, and the Pi-hole collector script). `pnpm build` copies them
+ * from the `src/config/homelab` tree, so this runtime path resolves against the
+ * compiled module's own directory.
  */
 const CONFIG_DIR = dirname(fileURLToPath(import.meta.url));
 
@@ -43,34 +42,41 @@ const asset = (localPath: string, remotePath = localPath): RemoteFile => [
 const MONITORING_HOST = HomeLabMachine.Pi1;
 
 /**
- * InfluxDB organization and bucket the traffic data lands in. Not secrets, so
- * they live here rather than in the user config. Shared by InfluxDB (init), the
- * traffic collector (writes), and Grafana (reads) via the stack's .env.
+ * InfluxDB organization and bucket the DNS activity data lands in. Not secrets,
+ * so they live here rather than in the user config. Shared by InfluxDB (init),
+ * the Pi-hole collector (writes), and Grafana (reads) via the stack's .env.
  */
 const INFLUX_ORG = 'homelab';
-const INFLUX_BUCKET = 'traffic';
+const INFLUX_BUCKET = 'dns';
 
 /**
- * The network-monitoring compose stack: the traffic collector streams the
- * router's Traffic Analysis counters into InfluxDB, which Grafana queries.
+ * How long InfluxDB keeps the bucket's data. Longer than Pi-hole's own 91 days
+ * of query history, since per-minute counts are small.
+ */
+const INFLUX_RETENTION = '365d';
+
+/**
+ * The network-monitoring compose stack: the Pi-hole collector copies Pi-hole's
+ * query log into InfluxDB as per-minute lookup counts per device and site,
+ * which Grafana queries.
  */
 export const networkMonitoring = createDockerComposeStack({
   name: 'network-monitoring',
   label: 'network monitoring',
   machine: MONITORING_HOST,
   remoteDir: REMOTE_DIR,
-  services: ['influxdb', 'traffic-collector', 'grafana'],
-  dependsOn: [routerMonitoringLogin.name],
+  services: ['influxdb', 'pihole-collector', 'grafana'],
+  dependsOn: [pihole.name],
   files: [
     asset('docker-compose.yaml'),
     // Shipped as .mts so Node runs it as ESM without a package.json.
     asset(
-      'traffic-collector/trafficCollector.remote.ts',
-      'traffic-collector/trafficCollector.mts'
+      'pihole-collector/piholeCollector.remote.ts',
+      'pihole-collector/piholeCollector.mts'
     ),
     asset('grafana/provisioning/datasources/datasources.yaml'),
     asset('grafana/provisioning/dashboards/dashboards.yaml'),
-    asset('grafana/provisioning/dashboards/home-network-traffic.json')
+    asset('grafana/provisioning/dashboards/home-network-activity.json')
   ],
   env: (config: MainScriptsConfig): RemoteFile[] => {
     const grafanaPassword = config.homelab?.grafana?.adminPassword;
@@ -98,9 +104,9 @@ export const networkMonitoring = createDockerComposeStack({
         `INFLUX_TOKEN=${influxToken ?? 'changeme'}`,
         `INFLUX_ORG=${INFLUX_ORG}`,
         `INFLUX_BUCKET=${INFLUX_BUCKET}`,
-        `ROUTER_HOST=${MACHINES[HomeLabMachine.Router].host}`,
-        `ROUTER_USER=${MONITORING_ROUTER_USER}`,
-        `ROUTER_PASSWORD=${getMonitoringRouterPassword(config)}`
+        `INFLUX_RETENTION=${INFLUX_RETENTION}`,
+        `PIHOLE_URL=${PIHOLE_API_URL}`,
+        `PIHOLE_PASSWORD=${getPiholeWebPassword(config)}`
       ].join('\n') + '\n';
 
     return [[`${REMOTE_DIR}/.env`, envContent]];

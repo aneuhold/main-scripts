@@ -10,29 +10,27 @@ services:
       DOCKER_INFLUXDB_INIT_PASSWORD: "${INFLUXDB_ADMIN_PASSWORD}"
       DOCKER_INFLUXDB_INIT_ORG: "${INFLUX_ORG}"
       DOCKER_INFLUXDB_INIT_BUCKET: "${INFLUX_BUCKET}"
+      DOCKER_INFLUXDB_INIT_RETENTION: "${INFLUX_RETENTION}"
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: "${INFLUX_TOKEN}"
     volumes:
       - influxdb_data:/var/lib/influxdb2
     restart: unless-stopped
 
-  traffic-collector:
+  pihole-collector:
     image: node:24-alpine
-    container_name: traffic-collector
+    container_name: pihole-collector
     # Node runs the TypeScript source directly (type stripping). The .mts
     # extension pins it to ESM without a package.json.
-    command: ["node", "/app/trafficCollector.mts"]
+    command: ["node", "/app/piholeCollector.mts"]
     environment:
-      ROUTER_HOST: "${ROUTER_HOST}"
-      ROUTER_USER: "${ROUTER_USER}"
-      ROUTER_PASSWORD: "${ROUTER_PASSWORD}"
-      # The router's web UI serves a self-signed certificate.
-      NODE_TLS_REJECT_UNAUTHORIZED: "0"
+      PIHOLE_URL: "${PIHOLE_URL}"
+      PIHOLE_PASSWORD: "${PIHOLE_PASSWORD}"
       INFLUX_URL: "http://influxdb:8086"
       INFLUX_TOKEN: "${INFLUX_TOKEN}"
       INFLUX_ORG: "${INFLUX_ORG}"
       INFLUX_BUCKET: "${INFLUX_BUCKET}"
     volumes:
-      - ./traffic-collector/trafficCollector.mts:/app/trafficCollector.mts:ro
+      - ./pihole-collector/piholeCollector.mts:/app/piholeCollector.mts:ro
     depends_on:
       - influxdb
     restart: unless-stopped

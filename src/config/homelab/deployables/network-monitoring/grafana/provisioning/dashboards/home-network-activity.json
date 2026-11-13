@@ -1,0 +1,863 @@
+{
+  "uid": "home-network-activity",
+  "title": "Home network activity",
+  "description": "Per-device activity from Pi-hole's DNS lookups. Shows when devices were active and which sites they looked up; it does not measure data volume.",
+  "tags": [
+    "homelab",
+    "pihole"
+  ],
+  "timezone": "browser",
+  "refresh": "1m",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "graphTooltip": 1,
+  "schemaVersion": 39,
+  "templating": {
+    "list": [
+      {
+        "name": "device",
+        "label": "Device",
+        "type": "query",
+        "datasource": {
+          "type": "influxdb",
+          "uid": "influxdb"
+        },
+        "query": "import \"influxdata/influxdb/schema\"\nschema.tagValues(bucket: \"dns\", tag: \"name\", start: v.timeRangeStart, stop: v.timeRangeStop)",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "refresh": 2,
+        "sort": 5
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "DNS lookups",
+      "type": "stat",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 5
+      },
+      "description": "Lookups the selected devices sent to Pi-hole. Counts lookups, not data volume.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group()\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "sum"
+          ],
+          "fields": ""
+        },
+        "colorMode": "none",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
+          }
+        },
+        "overrides": []
+      },
+      "interval": "5m",
+      "maxDataPoints": 120
+    },
+    {
+      "id": 2,
+      "title": "Devices seen",
+      "type": "stat",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 5
+      },
+      "description": "Devices that made at least one lookup in the selected range.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group(columns: [\"ip\"])\n  |> count()\n  |> group()\n  |> count()"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "Blocked",
+      "type": "stat",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 5
+      },
+      "description": "Share of lookups Pi-hole blocked (ad lists and special domains).",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group(columns: [\"_field\"])\n  |> sum()\n  |> group()\n  |> pivot(rowKey: [\"_start\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({share: if r.queries > 0 then float(v: r.blocked) / float(v: r.queries) else 0.0}))"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^share$/"
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#d95926"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "title": "Most looked-up site",
+      "type": "stat",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 5
+      },
+      "description": "Site with the most lookups across the selected devices.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns_domain\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group(columns: [\"site\"])\n  |> sum()\n  |> group()\n  |> top(n: 1)\n  |> keep(columns: [\"site\"])"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^site$/"
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "title": "When each device was active",
+      "type": "state-timeline",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 27
+      },
+      "description": "One row per device. A block is drawn for every time slot with lookups; brighter means more lookups relative to that device's own busiest slot. Phones and smart-home devices look things up on their own, so steady low-level activity is usually background chatter.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group(columns: [\"name\", \"ip\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: true)\n  // Runs on the aggregated slots, not raw points. Devices without a hostname are named by IP.\n  |> map(fn: (r) => ({r with device: if r.name == r.ip then r.ip else r.name + \"  ·  \" + r.ip}))\n  |> group(columns: [\"device\"])\n  |> keep(columns: [\"_time\", \"_value\", \"device\"])"
+        }
+      ],
+      "options": {
+        "mergeValues": false,
+        "showValue": "never",
+        "alignValue": "left",
+        "rowHeight": 0.85,
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "displayName": "${__field.labels.device}",
+          "unit": "short",
+          "fieldMinMax": true,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "#184f95",
+                "value": null
+              },
+              {
+                "color": "#256abf",
+                "value": 20
+              },
+              {
+                "color": "#3987e5",
+                "value": 45
+              },
+              {
+                "color": "#6da7ec",
+                "value": 70
+              },
+              {
+                "color": "#9ec5f4",
+                "value": 90
+              }
+            ]
+          },
+          "custom": {
+            "fillOpacity": 90,
+            "lineWidth": 0
+          }
+        },
+        "overrides": []
+      },
+      "interval": "5m",
+      "maxDataPoints": 300
+    },
+    {
+      "id": 6,
+      "title": "Lookups over time",
+      "type": "timeseries",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 24,
+        "h": 8
+      },
+      "description": "All lookups and blocked lookups per time slot for the selected devices.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group()\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: true)"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\" and r._field == \"blocked\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group()\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: true)"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "gradientMode": "opacity",
+            "lineInterpolation": "smooth",
+            "showPoints": "never",
+            "spanNulls": false,
+            "axisSoftMin": 0
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Lookups"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3987e5"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Blocked"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#d95926"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "interval": "5m",
+      "maxDataPoints": 400
+    },
+    {
+      "id": 7,
+      "title": "Devices",
+      "type": "table",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 14,
+        "h": 13
+      },
+      "description": "Every device that used Pi-hole in the selected range. Active time counts the minutes with at least one lookup.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "data = from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\nsums = data\n  |> group(columns: [\"ip\", \"name\", \"_field\"])\n  |> sum()\nactive = data\n  |> filter(fn: (r) => r._field == \"queries\")\n  |> group(columns: [\"ip\", \"name\"])\n  |> count()\n  |> set(key: \"_field\", value: \"active_minutes\")\nseen = data\n  |> filter(fn: (r) => r._field == \"queries\")\n  |> group(columns: [\"ip\", \"name\"])\n  |> last()\n  |> map(fn: (r) => ({r with _value: int(v: r._time) / 1000000, _field: \"last_seen\"}))\nunion(tables: [sums, active, seen])\n  |> group()\n  |> pivot(rowKey: [\"ip\", \"name\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({r with blocked_share: if r.queries > 0 then float(v: r.blocked) / float(v: r.queries) else 0.0}))\n  |> keep(columns: [\"name\", \"ip\", \"last_seen\", \"active_minutes\", \"queries\", \"blocked_share\"])\n  |> sort(columns: [\"active_minutes\"], desc: true)"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Active time",
+            "desc": true
+          }
+        ]
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Device"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ip"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "IP"
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "last_seen"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Last lookup"
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "active_minutes"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Active time"
+              },
+              {
+                "id": "unit",
+                "value": "m"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "fieldMinMax",
+                "value": true
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3987e5"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "queries"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Lookups"
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blocked_share"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Blocked"
+              },
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "name": 0,
+              "ip": 1,
+              "active_minutes": 2,
+              "last_seen": 3,
+              "queries": 4,
+              "blocked_share": 5
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Top sites",
+      "type": "bargauge",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "gridPos": {
+        "x": 14,
+        "y": 40,
+        "w": 10,
+        "h": 13
+      },
+      "description": "Sites by the minutes in which any selected device looked them up. A site is the last two parts of the domain (e.g. meet.google.com counts toward google.com).",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns_domain\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group(columns: [\"site\"])\n  // One window per minute with lookups, so a minute counts once however many devices were active.\n  |> aggregateWindow(every: 1m, fn: count, createEmpty: false)\n  |> count()\n  |> group()\n  |> top(n: 20)\n  |> keep(columns: [\"site\", \"_value\"])"
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "basic",
+        "valueMode": "text",
+        "namePlacement": "left",
+        "showUnfilled": true,
+        "sizing": "manual",
+        "minVizHeight": 16,
+        "maxVizHeight": 22,
+        "reduceOptions": {
+          "values": true,
+          "calcs": [],
+          "fields": "/^_value$/"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m",
+          "min": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 9,
+      "title": "Sites by device",
+      "type": "table",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 53,
+        "w": 24,
+        "h": 14
+      },
+      "description": "What each device looked up. Active time counts the minutes in which the device looked up the site. Pick devices with the Device filter, or filter any column from its header.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "data = from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns_domain\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group(columns: [\"ip\", \"name\", \"site\"])\nunion(tables: [\n  data |> sum() |> set(key: \"_field\", value: \"queries\"),\n  data |> count() |> set(key: \"_field\", value: \"active_minutes\")\n])\n  |> group()\n  |> pivot(rowKey: [\"ip\", \"name\", \"site\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> sort(columns: [\"active_minutes\"], desc: true)\n  |> limit(n: 500)\n  |> keep(columns: [\"name\", \"ip\", \"site\", \"active_minutes\", \"queries\"])"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Active time",
+            "desc": true
+          }
+        ]
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Device"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ip"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "IP"
+              },
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "site"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Site"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "active_minutes"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Active time"
+              },
+              {
+                "id": "unit",
+                "value": "m"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "fieldMinMax",
+                "value": true
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3987e5"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "queries"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Lookups"
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "name": 0,
+              "ip": 1,
+              "site": 2,
+              "active_minutes": 3,
+              "queries": 4
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

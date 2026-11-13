@@ -11,8 +11,9 @@ services:
     network_mode: host
     environment:
       TZ: "America/Los_Angeles"
-      # Serve the web UI on 8080 to avoid colliding with anything on host port 80.
-      FTLCONF_webserver_port: "8080"
+      # Serve the web UI and API off host port 80 to avoid colliding with
+      # anything there.
+      FTLCONF_webserver_port: "${PIHOLE_WEB_PORT}"
       FTLCONF_dns_listeningMode: "local"
       FTLCONF_webserver_api_password: "${PIHOLE_WEBPASSWORD}"
       # Conditional forwarding config so IP addresses have names
