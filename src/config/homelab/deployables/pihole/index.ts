@@ -89,13 +89,7 @@ export const pihole = createDockerComposeStack({
   machine: PIHOLE_HOST,
   remoteDir: REMOTE_DIR,
   services: ['pihole'],
-  files: [
-    [
-      `${REMOTE_DIR}/docker-compose.yaml`,
-      readFileSync(join(CONFIG_DIR, 'docker-compose.yaml'), 'utf8')
-    ]
-  ],
-  env: (config: MainScriptsConfig): RemoteFile[] => {
+  files: (config: MainScriptsConfig): RemoteFile[] => {
     const envContent =
       [
         'TZ=America/Los_Angeles',
@@ -104,7 +98,13 @@ export const pihole = createDockerComposeStack({
         `PIHOLE_REVSERVERS=${PIHOLE_REVSERVERS}`
       ].join('\n') + '\n';
 
-    return [[`${REMOTE_DIR}/.env`, envContent]];
+    return [
+      [
+        `${REMOTE_DIR}/docker-compose.yaml`,
+        readFileSync(join(CONFIG_DIR, 'docker-compose.yaml'), 'utf8')
+      ],
+      [`${REMOTE_DIR}/.env`, envContent]
+    ];
   }
 });
 

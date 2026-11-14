@@ -11,12 +11,6 @@ import PiholeCollectorTypeGuardService from './PiholeCollectorTypeGuard.service.
  */
 export default class PiholeCollectorConfigService {
   /**
-   * Name of the device names file, which sits in the collector's folder. Holds
-   * a JSON object of MAC address to name.
-   */
-  static readonly DEVICE_NAMES_FILE = 'device-names.json';
-
-  /**
    * Reads Pi-hole's connection settings.
    */
   static getPiholeSettings(): PiholeApiSettings {
@@ -39,13 +33,11 @@ export default class PiholeCollectorConfigService {
   }
 
   /**
-   * Reads and validates a device names file.
-   *
-   * @param path path of the file
+   * Reads and validates the device names file named by `DEVICE_NAMES_PATH`: a
+   * JSON object of MAC address to name.
    */
-  static async loadDeviceNames(
-    path: string
-  ): Promise<PiholeCollectorDeviceNames> {
+  static async loadDeviceNames(): Promise<PiholeCollectorDeviceNames> {
+    const path = this.#readEnv('DEVICE_NAMES_PATH');
     const parsed: unknown = JSON.parse(await readFile(path, 'utf8'));
     if (!PiholeCollectorTypeGuardService.isRecord(parsed)) {
       throw new Error(`${path} must be a JSON object of MAC address to name`);

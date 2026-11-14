@@ -16,24 +16,27 @@ import {
 
 /**
  * Directory holding this deployable's co-located assets (yaml config, the
- * Grafana dashboard, and the Pi-hole collector script). `pnpm build` copies them
- * from the `src/config/homelab` tree, so this runtime path resolves against the
- * compiled module's own directory.
+ * Grafana dashboard, and the bundled Pi-hole collector). `pnpm build` copies
+ * the yaml and json from the `src/config/homelab` tree and bundles the
+ * collector alongside, so this runtime path resolves against the compiled
+ * module's own directory.
  */
 const CONFIG_DIR = dirname(fileURLToPath(import.meta.url));
 
 const REMOTE_DIR = '~/monitoring';
 
+/** Folder of the Pi-hole collector, locally and under {@link REMOTE_DIR}. */
+const COLLECTOR_DIR = 'pihole-collector';
+
 /**
  * Builds a remote file from a co-located asset, written under {@link REMOTE_DIR}
- * at the same relative path unless `remotePath` is given.
+ * at the same relative path.
  *
- * @param localPath path of the asset relative to this deployable's folder
- * @param remotePath path to write it to, relative to {@link REMOTE_DIR}
+ * @param path path of the asset relative to this deployable's folder
  */
-const asset = (localPath: string, remotePath = localPath): RemoteFile => [
-  `${REMOTE_DIR}/${remotePath}`,
-  readFileSync(join(CONFIG_DIR, localPath), 'utf8')
+const asset = (path: string): RemoteFile => [
+  `${REMOTE_DIR}/${path}`,
+  readFileSync(join(CONFIG_DIR, path), 'utf8')
 ];
 
 /**
@@ -67,18 +70,7 @@ export const networkMonitoring = createDockerComposeStack({
   remoteDir: REMOTE_DIR,
   services: ['influxdb', 'pihole-collector', 'grafana'],
   dependsOn: [pihole.name],
-  files: [
-    asset('docker-compose.yaml'),
-    // Shipped as .mts so Node runs it as ESM without a package.json.
-    asset(
-      'pihole-collector/piholeCollector.remote.ts',
-      'pihole-collector/piholeCollector.mts'
-    ),
-    asset('grafana/provisioning/datasources/datasources.yaml'),
-    asset('grafana/provisioning/dashboards/dashboards.yaml'),
-    asset('grafana/provisioning/dashboards/home-network-activity.json')
-  ],
-  env: (config: MainScriptsConfig): RemoteFile[] => {
+  files: (config: MainScriptsConfig): RemoteFile[] => {
     const grafanaPassword = config.homelab?.grafana?.adminPassword;
     const influxPassword = config.homelab?.influxdb?.adminPassword;
     const influxToken = config.homelab?.influxdb?.adminToken;
@@ -108,7 +100,19 @@ export const networkMonitoring = createDockerComposeStack({
         `PIHOLE_URL=${PIHOLE_API_URL}`,
         `PIHOLE_PASSWORD=${getPiholeWebPassword(config)}`
       ].join('\n') + '\n';
+    const deviceNames = config.homelab?.networkMonitoring?.deviceNames ?? {};
 
-    return [[`${REMOTE_DIR}/.env`, envContent]];
+    return [
+      asset('docker-compose.yaml'),
+      asset(`${COLLECTOR_DIR}/piholeCollector.remote.mjs`),
+      asset('grafana/provisioning/datasources/datasources.yaml'),
+      asset('grafana/provisioning/dashboards/dashboards.yaml'),
+      asset('grafana/provisioning/dashboards/home-network-activity.json'),
+      [`${REMOTE_DIR}/.env`, envContent],
+      [
+        `${REMOTE_DIR}/${COLLECTOR_DIR}/device-names.json`,
+        `${JSON.stringify(deviceNames, null, 2)}\n`
+      ]
+    ];
   }
 });

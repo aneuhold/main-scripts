@@ -32,7 +32,7 @@ export const whoami = createDockerComposeStack({
   machine: WHOAMI_HOST,
   remoteDir: REMOTE_DIR,
   services: ['whoami'],
-  files: [
+  files: () => [
     [
       `${REMOTE_DIR}/docker-compose.yaml`,
       readFileSync(join(CONFIG_DIR, 'docker-compose.yaml'), 'utf8')

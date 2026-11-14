@@ -11,12 +11,11 @@
  * when written, so writing a minute again overwrites it with the same values.
  * That makes resuming after a restart safe.
  *
- * The compiled files run on the monitoring host in a plain `node` container
- * without `node_modules`, so this folder imports only Node built-ins and its
- * own files.
+ * `pnpm build` bundles this file and everything it imports into one
+ * `piholeCollector.remote.mjs`, which runs on the monitoring host in a plain `node`
+ * container.
  */
 import { setTimeout } from 'node:timers/promises';
-import { fileURLToPath } from 'node:url';
 import PiholeCollectorConfigService from './services/PiholeCollectorConfig.service.js';
 import { PiholeCollectorDeviceDirectory } from './PiholeCollectorDeviceDirectory.js';
 import PiholeCollectorInfluxDbService from './services/PiholeCollectorInfluxDb.service.js';
@@ -29,10 +28,6 @@ const CHUNK_SECONDS = 60 * 60;
 /** Pause after each minute boundary before counting the minute that ended. */
 const SETTLE_MS = 5_000;
 const DAY_MS = 24 * 60 * 60 * 1000;
-/** The device names file, beside this module. */
-const DEVICE_NAMES_PATH = fileURLToPath(
-  new URL(PiholeCollectorConfigService.DEVICE_NAMES_FILE, import.meta.url)
-);
 
 /**
  * Returns where counting starts: the latest minute already written, or the
@@ -68,7 +63,7 @@ const main = async () => {
       cursor ??= await getStartMinute();
       const directory = new PiholeCollectorDeviceDirectory(
         await PiholeApiService.getDevices(),
-        await PiholeCollectorConfigService.loadDeviceNames(DEVICE_NAMES_PATH)
+        await PiholeCollectorConfigService.loadDeviceNames()
       );
       // One point per device per day, overwritten on every pass that day.
       const today = Math.floor(Date.now() / DAY_MS) * (DAY_MS / 1000);

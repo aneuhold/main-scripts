@@ -38,8 +38,8 @@ function aggregatePlacements(childPlacements: Placement[]): Placement[] {
 
 /**
  * Builds a multi-container compose-stack {@link Deployable}. The default
- * `deploy` writes every `files` entry plus the config-derived `env` files, then
- * runs `docker compose up -d`, so a stack supplies data instead of
+ * `deploy` writes every file `files` returns, then runs `docker compose up -d`,
+ * so a stack supplies data instead of
  * reimplementing the op. Children are containers that inherit the stack's
  * machine. Self-detects by aggregating its children's observations.
  *
@@ -48,8 +48,7 @@ function aggregatePlacements(childPlacements: Placement[]): Placement[] {
  * @param params.label display label for prompts (defaults to `name`)
  * @param params.machine machine that hosts the stack
  * @param params.remoteDir remote directory holding the compose file and config files
- * @param params.files static config files written verbatim on deploy
- * @param params.env config-derived files (e.g. a generated `.env`) written on deploy
+ * @param params.files builds the files written on deploy, from local assets or the user config (e.g. a generated `.env`); called only when deploying, so assets are read then
  * @param params.services container/service names that make up the stack
  * @param params.dependsOn extra deployables that must be satisfied before this one deploys; the docker-host setup is always prepended (every compose stack needs Docker installed first), so callers only list additional prerequisites
  * @param params.opsOverride per-unit overrides shallow-merged over the driver defaults
@@ -60,7 +59,6 @@ export function createDockerComposeStack({
   machine,
   remoteDir,
   files,
-  env,
   services,
   dependsOn = [],
   opsOverride
@@ -69,8 +67,7 @@ export function createDockerComposeStack({
   label?: string;
   machine: HomeLabMachine;
   remoteDir: string;
-  files: RemoteFile[];
-  env?: (config: MainScriptsConfig) => RemoteFile[];
+  files: (config: MainScriptsConfig) => RemoteFile[];
   services: string[];
   dependsOn?: string[];
   opsOverride?: DeployableOps;
@@ -88,10 +85,8 @@ export function createDockerComposeStack({
 
   const driverDefaults: DeployableOps = {
     deploy: async (config: MainScriptsConfig) => {
-      const allFiles: RemoteFile[] = [...files, ...(env ? env(config) : [])];
-
       DR.logger.info(`Writing ${name} config files to ${machine}...`);
-      for (const [path, content] of allFiles) {
+      for (const [path, content] of files(config)) {
         DR.logger.info(`  Writing ${path}`);
         if (
           !(await HomeLabNetworkService.writeRemoteFile(machine, path, content))
@@ -173,7 +168,6 @@ export function createDockerComposeStack({
         machine: m,
         remoteDir,
         files,
-        env,
         services,
         dependsOn,
         opsOverride
