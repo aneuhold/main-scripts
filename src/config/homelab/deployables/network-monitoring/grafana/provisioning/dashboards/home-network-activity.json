@@ -24,7 +24,7 @@
           "type": "influxdb",
           "uid": "influxdb"
         },
-        "query": "import \"influxdata/influxdb/schema\"\nschema.tagValues(bucket: \"dns\", tag: \"name\", start: v.timeRangeStart, stop: v.timeRangeStop)",
+        "query": "import \"array\"\nimport \"dict\"\nimport \"generate\"\nimport \"regexp\"\nimport \"strings\"\nimport \"influxdata/influxdb/schema\"\n\n// Latest name and maker of every device the collector knows.\ninfo = from(bucket: \"dns\")\n  |> range(start: 0)\n  |> filter(fn: (r) => r._measurement == \"device_info\")\n  |> last()\n  |> group()\n  |> pivot(rowKey: [\"device\"], columnKey: [\"_field\"], valueColumn: \"_value\")\ninfoDevices = info |> findColumn(fn: (key) => true, column: \"device\")\n// Flux has no zip, so columns are paired up by index.\ninfoIndexes = generate.from(count: length(arr: infoDevices), fn: (n) => n, start: 2000-01-01T00:00:00Z, stop: 2000-01-01T00:00:01Z)\n  |> findColumn(fn: (key) => true, column: \"_value\")\ntoDict = (column) => {\n    values = info |> fill(column: column, value: \"\") |> findColumn(fn: (key) => true, column: column)\n\n    return dict.fromList(pairs: array.map(arr: infoIndexes, fn: (x) => ({key: infoDevices[x], value: values[x]})))\n}\nnameOf = toDict(column: \"name\")\n// Device keys in the time range, labeled by name. A device without a name\n// keeps its key (an IP).\nrangeDevices = schema.tagValues(bucket: \"dns\", tag: \"device\", start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> findColumn(fn: (key) => true, column: \"_value\")\nlabel = (device) => dict.get(dict: nameOf, key: device, default: device)\n\narray.from(rows: array.map(arr: rangeDevices, fn: (x) => ({_value: label(device: x)})))\n  |> sort()",
         "multi": true,
         "includeAll": true,
         "allValue": ".*",
@@ -65,7 +65,7 @@
             "type": "influxdb",
             "uid": "influxdb"
           },
-          "query": "from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group()\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)"
+          "query": "import \"array\"\nimport \"dict\"\nimport \"generate\"\nimport \"regexp\"\nimport \"strings\"\nimport \"influxdata/influxdb/schema\"\n\n// Latest name and maker of every device the collector knows.\ninfo = from(bucket: \"dns\")\n  |> range(start: 0)\n  |> filter(fn: (r) => r._measurement == \"device_info\")\n  |> last()\n  |> group()\n  |> pivot(rowKey: [\"device\"], columnKey: [\"_field\"], valueColumn: \"_value\")\ninfoDevices = info |> findColumn(fn: (key) => true, column: \"device\")\n// Flux has no zip, so columns are paired up by index.\ninfoIndexes = generate.from(count: length(arr: infoDevices), fn: (n) => n, start: 2000-01-01T00:00:00Z, stop: 2000-01-01T00:00:01Z)\n  |> findColumn(fn: (key) => true, column: \"_value\")\ntoDict = (column) => {\n    values = info |> fill(column: column, value: \"\") |> findColumn(fn: (key) => true, column: column)\n\n    return dict.fromList(pairs: array.map(arr: infoIndexes, fn: (x) => ({key: infoDevices[x], value: values[x]})))\n}\nnameOf = toDict(column: \"name\")\n// Device keys in the time range, labeled by name. A device without a name\n// keeps its key (an IP).\nrangeDevices = schema.tagValues(bucket: \"dns\", tag: \"device\", start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> findColumn(fn: (key) => true, column: \"_value\")\nlabel = (device) => dict.get(dict: nameOf, key: device, default: device)\nselected = array.filter(arr: rangeDevices, fn: (x) => label(device: x) =~ /^${device:regex}$/)\nselectedDevices = regexp.compile(v: \"^(\" + strings.joinStr(arr: array.map(arr: selected, fn: (x) => regexp.quoteMeta(v: x)), v: \"|\") + \")$\")\n\nfrom(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.device =~ selectedDevices)\n  |> group()\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)"
         }
       ],
       "options": {
@@ -120,7 +120,7 @@
             "type": "influxdb",
             "uid": "influxdb"
           },
-          "query": "from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group(columns: [\"ip\"])\n  |> count()\n  |> group()\n  |> count()"
+          "query": "import \"array\"\nimport \"dict\"\nimport \"generate\"\nimport \"regexp\"\nimport \"strings\"\nimport \"influxdata/influxdb/schema\"\n\n// Latest name and maker of every device the collector knows.\ninfo = from(bucket: \"dns\")\n  |> range(start: 0)\n  |> filter(fn: (r) => r._measurement == \"device_info\")\n  |> last()\n  |> group()\n  |> pivot(rowKey: [\"device\"], columnKey: [\"_field\"], valueColumn: \"_value\")\ninfoDevices = info |> findColumn(fn: (key) => true, column: \"device\")\n// Flux has no zip, so columns are paired up by index.\ninfoIndexes = generate.from(count: length(arr: infoDevices), fn: (n) => n, start: 2000-01-01T00:00:00Z, stop: 2000-01-01T00:00:01Z)\n  |> findColumn(fn: (key) => true, column: \"_value\")\ntoDict = (column) => {\n    values = info |> fill(column: column, value: \"\") |> findColumn(fn: (key) => true, column: column)\n\n    return dict.fromList(pairs: array.map(arr: infoIndexes, fn: (x) => ({key: infoDevices[x], value: values[x]})))\n}\nnameOf = toDict(column: \"name\")\n// Device keys in the time range, labeled by name. A device without a name\n// keeps its key (an IP).\nrangeDevices = schema.tagValues(bucket: \"dns\", tag: \"device\", start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> findColumn(fn: (key) => true, column: \"_value\")\nlabel = (device) => dict.get(dict: nameOf, key: device, default: device)\nselected = array.filter(arr: rangeDevices, fn: (x) => label(device: x) =~ /^${device:regex}$/)\nselectedDevices = regexp.compile(v: \"^(\" + strings.joinStr(arr: array.map(arr: selected, fn: (x) => regexp.quoteMeta(v: x)), v: \"|\") + \")$\")\n\nfrom(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.device =~ selectedDevices)\n  |> group(columns: [\"device\"])\n  |> count()\n  |> group()\n  |> count()"
         }
       ],
       "options": {
@@ -173,7 +173,7 @@
             "type": "influxdb",
             "uid": "influxdb"
           },
-          "query": "from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group(columns: [\"_field\"])\n  |> sum()\n  |> group()\n  |> pivot(rowKey: [\"_start\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({share: if r.queries > 0 then float(v: r.blocked) / float(v: r.queries) else 0.0}))"
+          "query": "import \"array\"\nimport \"dict\"\nimport \"generate\"\nimport \"regexp\"\nimport \"strings\"\nimport \"influxdata/influxdb/schema\"\n\n// Latest name and maker of every device the collector knows.\ninfo = from(bucket: \"dns\")\n  |> range(start: 0)\n  |> filter(fn: (r) => r._measurement == \"device_info\")\n  |> last()\n  |> group()\n  |> pivot(rowKey: [\"device\"], columnKey: [\"_field\"], valueColumn: \"_value\")\ninfoDevices = info |> findColumn(fn: (key) => true, column: \"device\")\n// Flux has no zip, so columns are paired up by index.\ninfoIndexes = generate.from(count: length(arr: infoDevices), fn: (n) => n, start: 2000-01-01T00:00:00Z, stop: 2000-01-01T00:00:01Z)\n  |> findColumn(fn: (key) => true, column: \"_value\")\ntoDict = (column) => {\n    values = info |> fill(column: column, value: \"\") |> findColumn(fn: (key) => true, column: column)\n\n    return dict.fromList(pairs: array.map(arr: infoIndexes, fn: (x) => ({key: infoDevices[x], value: values[x]})))\n}\nnameOf = toDict(column: \"name\")\n// Device keys in the time range, labeled by name. A device without a name\n// keeps its key (an IP).\nrangeDevices = schema.tagValues(bucket: \"dns\", tag: \"device\", start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> findColumn(fn: (key) => true, column: \"_value\")\nlabel = (device) => dict.get(dict: nameOf, key: device, default: device)\nselected = array.filter(arr: rangeDevices, fn: (x) => label(device: x) =~ /^${device:regex}$/)\nselectedDevices = regexp.compile(v: \"^(\" + strings.joinStr(arr: array.map(arr: selected, fn: (x) => regexp.quoteMeta(v: x)), v: \"|\") + \")$\")\n\nfrom(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\")\n  |> filter(fn: (r) => r.device =~ selectedDevices)\n  |> group(columns: [\"_field\"])\n  |> sum()\n  |> group()\n  |> pivot(rowKey: [\"_start\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({share: if r.queries > 0 then float(v: r.blocked) / float(v: r.queries) else 0.0}))"
         }
       ],
       "options": {
@@ -226,7 +226,7 @@
             "type": "influxdb",
             "uid": "influxdb"
           },
-          "query": "from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns_domain\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group(columns: [\"site\"])\n  |> sum()\n  |> group()\n  |> top(n: 1)\n  |> keep(columns: [\"site\"])"
+          "query": "import \"array\"\nimport \"dict\"\nimport \"generate\"\nimport \"regexp\"\nimport \"strings\"\nimport \"influxdata/influxdb/schema\"\n\n// Latest name and maker of every device the collector knows.\ninfo = from(bucket: \"dns\")\n  |> range(start: 0)\n  |> filter(fn: (r) => r._measurement == \"device_info\")\n  |> last()\n  |> group()\n  |> pivot(rowKey: [\"device\"], columnKey: [\"_field\"], valueColumn: \"_value\")\ninfoDevices = info |> findColumn(fn: (key) => true, column: \"device\")\n// Flux has no zip, so columns are paired up by index.\ninfoIndexes = generate.from(count: length(arr: infoDevices), fn: (n) => n, start: 2000-01-01T00:00:00Z, stop: 2000-01-01T00:00:01Z)\n  |> findColumn(fn: (key) => true, column: \"_value\")\ntoDict = (column) => {\n    values = info |> fill(column: column, value: \"\") |> findColumn(fn: (key) => true, column: column)\n\n    return dict.fromList(pairs: array.map(arr: infoIndexes, fn: (x) => ({key: infoDevices[x], value: values[x]})))\n}\nnameOf = toDict(column: \"name\")\n// Device keys in the time range, labeled by name. A device without a name\n// keeps its key (an IP).\nrangeDevices = schema.tagValues(bucket: \"dns\", tag: \"device\", start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> findColumn(fn: (key) => true, column: \"_value\")\nlabel = (device) => dict.get(dict: nameOf, key: device, default: device)\nselected = array.filter(arr: rangeDevices, fn: (x) => label(device: x) =~ /^${device:regex}$/)\nselectedDevices = regexp.compile(v: \"^(\" + strings.joinStr(arr: array.map(arr: selected, fn: (x) => regexp.quoteMeta(v: x)), v: \"|\") + \")$\")\n\nfrom(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns_domain\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.device =~ selectedDevices)\n  |> group(columns: [\"site\"])\n  |> sum()\n  |> group()\n  |> top(n: 1)\n  |> keep(columns: [\"site\"])"
         }
       ],
       "options": {
@@ -277,7 +277,7 @@
             "type": "influxdb",
             "uid": "influxdb"
           },
-          "query": "from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group(columns: [\"name\", \"ip\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: true)\n  // Runs on the aggregated slots, not raw points. Devices without a hostname are named by IP.\n  |> map(fn: (r) => ({r with device: if r.name == r.ip then r.ip else r.name + \"  ·  \" + r.ip}))\n  |> group(columns: [\"device\"])\n  |> keep(columns: [\"_time\", \"_value\", \"device\"])"
+          "query": "import \"array\"\nimport \"dict\"\nimport \"generate\"\nimport \"regexp\"\nimport \"strings\"\nimport \"influxdata/influxdb/schema\"\n\n// Latest name and maker of every device the collector knows.\ninfo = from(bucket: \"dns\")\n  |> range(start: 0)\n  |> filter(fn: (r) => r._measurement == \"device_info\")\n  |> last()\n  |> group()\n  |> pivot(rowKey: [\"device\"], columnKey: [\"_field\"], valueColumn: \"_value\")\ninfoDevices = info |> findColumn(fn: (key) => true, column: \"device\")\n// Flux has no zip, so columns are paired up by index.\ninfoIndexes = generate.from(count: length(arr: infoDevices), fn: (n) => n, start: 2000-01-01T00:00:00Z, stop: 2000-01-01T00:00:01Z)\n  |> findColumn(fn: (key) => true, column: \"_value\")\ntoDict = (column) => {\n    values = info |> fill(column: column, value: \"\") |> findColumn(fn: (key) => true, column: column)\n\n    return dict.fromList(pairs: array.map(arr: infoIndexes, fn: (x) => ({key: infoDevices[x], value: values[x]})))\n}\nnameOf = toDict(column: \"name\")\n// Device keys in the time range, labeled by name. A device without a name\n// keeps its key (an IP).\nrangeDevices = schema.tagValues(bucket: \"dns\", tag: \"device\", start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> findColumn(fn: (key) => true, column: \"_value\")\nlabel = (device) => dict.get(dict: nameOf, key: device, default: device)\nselected = array.filter(arr: rangeDevices, fn: (x) => label(device: x) =~ /^${device:regex}$/)\nselectedDevices = regexp.compile(v: \"^(\" + strings.joinStr(arr: array.map(arr: selected, fn: (x) => regexp.quoteMeta(v: x)), v: \"|\") + \")$\")\n\nfrom(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.device =~ selectedDevices)\n  |> group(columns: [\"device\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: true)\n  |> keep(columns: [\"_time\", \"_value\", \"device\"])\n  // One column per device, renamed to its name. Renaming columns is far\n  // cheaper on the Pi than labeling every row.\n  |> group()\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"device\"], valueColumn: \"_value\")\n  |> rename(fn: (column) => label(device: column))"
         }
       ],
       "options": {
@@ -295,7 +295,6 @@
       },
       "fieldConfig": {
         "defaults": {
-          "displayName": "${__field.labels.device}",
           "unit": "short",
           "fieldMinMax": true,
           "color": {
@@ -333,6 +332,20 @@
         },
         "overrides": []
       },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "orderByMode": "auto",
+            "orderBy": [
+              {
+                "type": "name",
+                "desc": false
+              }
+            ]
+          }
+        }
+      ],
       "interval": "5m",
       "maxDataPoints": 300
     },
@@ -358,7 +371,7 @@
             "type": "influxdb",
             "uid": "influxdb"
           },
-          "query": "from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group()\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: true)"
+          "query": "import \"array\"\nimport \"dict\"\nimport \"generate\"\nimport \"regexp\"\nimport \"strings\"\nimport \"influxdata/influxdb/schema\"\n\n// Latest name and maker of every device the collector knows.\ninfo = from(bucket: \"dns\")\n  |> range(start: 0)\n  |> filter(fn: (r) => r._measurement == \"device_info\")\n  |> last()\n  |> group()\n  |> pivot(rowKey: [\"device\"], columnKey: [\"_field\"], valueColumn: \"_value\")\ninfoDevices = info |> findColumn(fn: (key) => true, column: \"device\")\n// Flux has no zip, so columns are paired up by index.\ninfoIndexes = generate.from(count: length(arr: infoDevices), fn: (n) => n, start: 2000-01-01T00:00:00Z, stop: 2000-01-01T00:00:01Z)\n  |> findColumn(fn: (key) => true, column: \"_value\")\ntoDict = (column) => {\n    values = info |> fill(column: column, value: \"\") |> findColumn(fn: (key) => true, column: column)\n\n    return dict.fromList(pairs: array.map(arr: infoIndexes, fn: (x) => ({key: infoDevices[x], value: values[x]})))\n}\nnameOf = toDict(column: \"name\")\n// Device keys in the time range, labeled by name. A device without a name\n// keeps its key (an IP).\nrangeDevices = schema.tagValues(bucket: \"dns\", tag: \"device\", start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> findColumn(fn: (key) => true, column: \"_value\")\nlabel = (device) => dict.get(dict: nameOf, key: device, default: device)\nselected = array.filter(arr: rangeDevices, fn: (x) => label(device: x) =~ /^${device:regex}$/)\nselectedDevices = regexp.compile(v: \"^(\" + strings.joinStr(arr: array.map(arr: selected, fn: (x) => regexp.quoteMeta(v: x)), v: \"|\") + \")$\")\n\nfrom(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.device =~ selectedDevices)\n  |> group()\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: true)"
         },
         {
           "refId": "B",
@@ -366,7 +379,7 @@
             "type": "influxdb",
             "uid": "influxdb"
           },
-          "query": "from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\" and r._field == \"blocked\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group()\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: true)"
+          "query": "import \"array\"\nimport \"dict\"\nimport \"generate\"\nimport \"regexp\"\nimport \"strings\"\nimport \"influxdata/influxdb/schema\"\n\n// Latest name and maker of every device the collector knows.\ninfo = from(bucket: \"dns\")\n  |> range(start: 0)\n  |> filter(fn: (r) => r._measurement == \"device_info\")\n  |> last()\n  |> group()\n  |> pivot(rowKey: [\"device\"], columnKey: [\"_field\"], valueColumn: \"_value\")\ninfoDevices = info |> findColumn(fn: (key) => true, column: \"device\")\n// Flux has no zip, so columns are paired up by index.\ninfoIndexes = generate.from(count: length(arr: infoDevices), fn: (n) => n, start: 2000-01-01T00:00:00Z, stop: 2000-01-01T00:00:01Z)\n  |> findColumn(fn: (key) => true, column: \"_value\")\ntoDict = (column) => {\n    values = info |> fill(column: column, value: \"\") |> findColumn(fn: (key) => true, column: column)\n\n    return dict.fromList(pairs: array.map(arr: infoIndexes, fn: (x) => ({key: infoDevices[x], value: values[x]})))\n}\nnameOf = toDict(column: \"name\")\n// Device keys in the time range, labeled by name. A device without a name\n// keeps its key (an IP).\nrangeDevices = schema.tagValues(bucket: \"dns\", tag: \"device\", start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> findColumn(fn: (key) => true, column: \"_value\")\nlabel = (device) => dict.get(dict: nameOf, key: device, default: device)\nselected = array.filter(arr: rangeDevices, fn: (x) => label(device: x) =~ /^${device:regex}$/)\nselectedDevices = regexp.compile(v: \"^(\" + strings.joinStr(arr: array.map(arr: selected, fn: (x) => regexp.quoteMeta(v: x)), v: \"|\") + \")$\")\n\nfrom(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\" and r._field == \"blocked\")\n  |> filter(fn: (r) => r.device =~ selectedDevices)\n  |> group()\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: true)"
         }
       ],
       "options": {
@@ -462,7 +475,7 @@
             "type": "influxdb",
             "uid": "influxdb"
           },
-          "query": "data = from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\nsums = data\n  |> group(columns: [\"ip\", \"name\", \"_field\"])\n  |> sum()\nactive = data\n  |> filter(fn: (r) => r._field == \"queries\")\n  |> group(columns: [\"ip\", \"name\"])\n  |> count()\n  |> set(key: \"_field\", value: \"active_minutes\")\nseen = data\n  |> filter(fn: (r) => r._field == \"queries\")\n  |> group(columns: [\"ip\", \"name\"])\n  |> last()\n  |> map(fn: (r) => ({r with _value: int(v: r._time) / 1000000, _field: \"last_seen\"}))\nunion(tables: [sums, active, seen])\n  |> group()\n  |> pivot(rowKey: [\"ip\", \"name\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({r with blocked_share: if r.queries > 0 then float(v: r.blocked) / float(v: r.queries) else 0.0}))\n  |> keep(columns: [\"name\", \"ip\", \"last_seen\", \"active_minutes\", \"queries\", \"blocked_share\"])\n  |> sort(columns: [\"active_minutes\"], desc: true)"
+          "query": "import \"array\"\nimport \"dict\"\nimport \"generate\"\nimport \"regexp\"\nimport \"strings\"\nimport \"influxdata/influxdb/schema\"\n\n// Latest name and maker of every device the collector knows.\ninfo = from(bucket: \"dns\")\n  |> range(start: 0)\n  |> filter(fn: (r) => r._measurement == \"device_info\")\n  |> last()\n  |> group()\n  |> pivot(rowKey: [\"device\"], columnKey: [\"_field\"], valueColumn: \"_value\")\ninfoDevices = info |> findColumn(fn: (key) => true, column: \"device\")\n// Flux has no zip, so columns are paired up by index.\ninfoIndexes = generate.from(count: length(arr: infoDevices), fn: (n) => n, start: 2000-01-01T00:00:00Z, stop: 2000-01-01T00:00:01Z)\n  |> findColumn(fn: (key) => true, column: \"_value\")\ntoDict = (column) => {\n    values = info |> fill(column: column, value: \"\") |> findColumn(fn: (key) => true, column: column)\n\n    return dict.fromList(pairs: array.map(arr: infoIndexes, fn: (x) => ({key: infoDevices[x], value: values[x]})))\n}\nnameOf = toDict(column: \"name\")\n// Device keys in the time range, labeled by name. A device without a name\n// keeps its key (an IP).\nrangeDevices = schema.tagValues(bucket: \"dns\", tag: \"device\", start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> findColumn(fn: (key) => true, column: \"_value\")\nlabel = (device) => dict.get(dict: nameOf, key: device, default: device)\nselected = array.filter(arr: rangeDevices, fn: (x) => label(device: x) =~ /^${device:regex}$/)\nselectedDevices = regexp.compile(v: \"^(\" + strings.joinStr(arr: array.map(arr: selected, fn: (x) => regexp.quoteMeta(v: x)), v: \"|\") + \")$\")\n\ndata = from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns\")\n  |> filter(fn: (r) => r.device =~ selectedDevices)\nsums = data\n  |> group(columns: [\"device\", \"_field\"])\n  |> sum()\nactive = data\n  |> filter(fn: (r) => r._field == \"queries\")\n  |> group(columns: [\"device\"])\n  |> count()\n  |> set(key: \"_field\", value: \"active_minutes\")\nseen = data\n  |> filter(fn: (r) => r._field == \"queries\")\n  |> group(columns: [\"device\"])\n  |> last()\n  |> map(fn: (r) => ({r with _value: int(v: r._time) / 1000000, _field: \"last_seen\"}))\nvendorOf = toDict(column: \"vendor\")\nunion(tables: [sums, active, seen])\n  |> group()\n  |> pivot(rowKey: [\"device\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({r with\n      name: label(device: r.device),\n      vendor: dict.get(dict: vendorOf, key: r.device, default: \"\"),\n      blocked_share: if r.queries > 0 then float(v: r.blocked) / float(v: r.queries) else 0.0,\n  }))\n  |> keep(columns: [\"name\", \"vendor\", \"last_seen\", \"active_minutes\", \"queries\", \"blocked_share\"])\n  |> sort(columns: [\"active_minutes\"], desc: true)"
         }
       ],
       "options": {
@@ -508,16 +521,12 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "ip"
+              "options": "vendor"
             },
             "properties": [
               {
                 "id": "displayName",
-                "value": "IP"
-              },
-              {
-                "id": "custom.width",
-                "value": 130
+                "value": "Maker"
               }
             ]
           },
@@ -632,7 +641,7 @@
           "options": {
             "indexByName": {
               "name": 0,
-              "ip": 1,
+              "vendor": 1,
               "active_minutes": 2,
               "last_seen": 3,
               "queries": 4,
@@ -664,7 +673,7 @@
             "type": "influxdb",
             "uid": "influxdb"
           },
-          "query": "from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns_domain\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group(columns: [\"site\"])\n  // One window per minute with lookups, so a minute counts once however many devices were active.\n  |> aggregateWindow(every: 1m, fn: count, createEmpty: false)\n  |> count()\n  |> group()\n  |> top(n: 20)\n  |> keep(columns: [\"site\", \"_value\"])"
+          "query": "import \"array\"\nimport \"dict\"\nimport \"generate\"\nimport \"regexp\"\nimport \"strings\"\nimport \"influxdata/influxdb/schema\"\n\n// Latest name and maker of every device the collector knows.\ninfo = from(bucket: \"dns\")\n  |> range(start: 0)\n  |> filter(fn: (r) => r._measurement == \"device_info\")\n  |> last()\n  |> group()\n  |> pivot(rowKey: [\"device\"], columnKey: [\"_field\"], valueColumn: \"_value\")\ninfoDevices = info |> findColumn(fn: (key) => true, column: \"device\")\n// Flux has no zip, so columns are paired up by index.\ninfoIndexes = generate.from(count: length(arr: infoDevices), fn: (n) => n, start: 2000-01-01T00:00:00Z, stop: 2000-01-01T00:00:01Z)\n  |> findColumn(fn: (key) => true, column: \"_value\")\ntoDict = (column) => {\n    values = info |> fill(column: column, value: \"\") |> findColumn(fn: (key) => true, column: column)\n\n    return dict.fromList(pairs: array.map(arr: infoIndexes, fn: (x) => ({key: infoDevices[x], value: values[x]})))\n}\nnameOf = toDict(column: \"name\")\n// Device keys in the time range, labeled by name. A device without a name\n// keeps its key (an IP).\nrangeDevices = schema.tagValues(bucket: \"dns\", tag: \"device\", start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> findColumn(fn: (key) => true, column: \"_value\")\nlabel = (device) => dict.get(dict: nameOf, key: device, default: device)\nselected = array.filter(arr: rangeDevices, fn: (x) => label(device: x) =~ /^${device:regex}$/)\nselectedDevices = regexp.compile(v: \"^(\" + strings.joinStr(arr: array.map(arr: selected, fn: (x) => regexp.quoteMeta(v: x)), v: \"|\") + \")$\")\n\nfrom(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns_domain\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.device =~ selectedDevices)\n  |> group(columns: [\"site\"])\n  // One window per minute with lookups, so a minute counts once however many devices were active.\n  |> aggregateWindow(every: 1m, fn: count, createEmpty: false)\n  |> count()\n  |> group()\n  |> top(n: 20)\n  |> keep(columns: [\"site\", \"_value\"])"
         }
       ],
       "options": {
@@ -716,7 +725,7 @@
             "type": "influxdb",
             "uid": "influxdb"
           },
-          "query": "data = from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns_domain\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.name =~ /^${device:regex}$/)\n  |> group(columns: [\"ip\", \"name\", \"site\"])\nunion(tables: [\n  data |> sum() |> set(key: \"_field\", value: \"queries\"),\n  data |> count() |> set(key: \"_field\", value: \"active_minutes\")\n])\n  |> group()\n  |> pivot(rowKey: [\"ip\", \"name\", \"site\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> sort(columns: [\"active_minutes\"], desc: true)\n  |> limit(n: 500)\n  |> keep(columns: [\"name\", \"ip\", \"site\", \"active_minutes\", \"queries\"])"
+          "query": "import \"array\"\nimport \"dict\"\nimport \"generate\"\nimport \"regexp\"\nimport \"strings\"\nimport \"influxdata/influxdb/schema\"\n\n// Latest name and maker of every device the collector knows.\ninfo = from(bucket: \"dns\")\n  |> range(start: 0)\n  |> filter(fn: (r) => r._measurement == \"device_info\")\n  |> last()\n  |> group()\n  |> pivot(rowKey: [\"device\"], columnKey: [\"_field\"], valueColumn: \"_value\")\ninfoDevices = info |> findColumn(fn: (key) => true, column: \"device\")\n// Flux has no zip, so columns are paired up by index.\ninfoIndexes = generate.from(count: length(arr: infoDevices), fn: (n) => n, start: 2000-01-01T00:00:00Z, stop: 2000-01-01T00:00:01Z)\n  |> findColumn(fn: (key) => true, column: \"_value\")\ntoDict = (column) => {\n    values = info |> fill(column: column, value: \"\") |> findColumn(fn: (key) => true, column: column)\n\n    return dict.fromList(pairs: array.map(arr: infoIndexes, fn: (x) => ({key: infoDevices[x], value: values[x]})))\n}\nnameOf = toDict(column: \"name\")\n// Device keys in the time range, labeled by name. A device without a name\n// keeps its key (an IP).\nrangeDevices = schema.tagValues(bucket: \"dns\", tag: \"device\", start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> findColumn(fn: (key) => true, column: \"_value\")\nlabel = (device) => dict.get(dict: nameOf, key: device, default: device)\nselected = array.filter(arr: rangeDevices, fn: (x) => label(device: x) =~ /^${device:regex}$/)\nselectedDevices = regexp.compile(v: \"^(\" + strings.joinStr(arr: array.map(arr: selected, fn: (x) => regexp.quoteMeta(v: x)), v: \"|\") + \")$\")\n\ndata = from(bucket: \"dns\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"dns_domain\" and r._field == \"queries\")\n  |> filter(fn: (r) => r.device =~ selectedDevices)\n  |> group(columns: [\"device\", \"site\"])\nunion(tables: [\n  data |> sum() |> set(key: \"_field\", value: \"queries\"),\n  data |> count() |> set(key: \"_field\", value: \"active_minutes\")\n])\n  |> group()\n  |> pivot(rowKey: [\"device\", \"site\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> sort(columns: [\"active_minutes\"], desc: true)\n  |> limit(n: 500)\n  |> map(fn: (r) => ({r with name: label(device: r.device)}))\n  |> keep(columns: [\"name\", \"site\", \"active_minutes\", \"queries\"])"
         }
       ],
       "options": {
@@ -752,22 +761,6 @@
               {
                 "id": "displayName",
                 "value": "Device"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "ip"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "IP"
-              },
-              {
-                "id": "custom.width",
-                "value": 130
               }
             ]
           },
@@ -850,10 +843,9 @@
           "options": {
             "indexByName": {
               "name": 0,
-              "ip": 1,
-              "site": 2,
-              "active_minutes": 3,
-              "queries": 4
+              "site": 1,
+              "active_minutes": 2,
+              "queries": 3
             }
           }
         }

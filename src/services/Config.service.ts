@@ -104,6 +104,14 @@ export type MainScriptsConfigHomelab = {
      */
     webPassword?: string;
   };
+  networkMonitoring?: {
+    /**
+     * Names for network devices, keyed by MAC address (e.g.
+     * `"d4:ad:fc:56:83:14": "Govee Hex Lights"`). Override the names Pi-hole
+     * learns from the router.
+     */
+    deviceNames?: Record<string, string>;
+  };
   grafana?: {
     /** Grafana admin password. Written to the Pi's .env on deploy. */
     adminPassword?: string;
