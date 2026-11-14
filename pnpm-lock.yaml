@@ -161,6 +161,9 @@ importers:
       '@types/node-fetch':
         specifier: ^2.6.13
         version: 2.6.13
+      esbuild:
+        specifier: ^0.28.2
+        version: 0.28.2
       eslint:
         specifier: ^10.0.0
         version: 10.14.0(jiti@2.7.0)(supports-color@5.5.0)

@@ -22,7 +22,7 @@ of any single service's concepts (e.g. Docker).
 
 - `drivers/`: `createDockerContainer`, `createDockerComposeStack`, `createHostSetup`, `createRouterConfig`
 - `detectors/`: per-capability machine probers, assembled in `detectors/index.ts`
-- `deployables/`: the actual configured units (single-file, or a folder when they ship co-located assets)
+- `deployables/`: the actual configured units (single-file, or a folder when they ship co-located assets). Code that runs on a home lab machine has a `*.remote.ts` entry point, which `pnpm build` bundles with everything it imports into one `*.remote.mjs` beside the compiled deployable (see `scripts/buildHomelabAssets.ts`).
 - `machines.ts`: machine inventory (SSH host + `MachineKind`)
 - `registry.ts`: top-level + flattened deployable lists
 - `types.ts`: the shared vocabulary

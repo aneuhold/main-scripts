@@ -56,7 +56,7 @@ describe('HomeLabReconcileService', () => {
     name: 'test-stack',
     machine: HomeLabMachine.Pi2,
     remoteDir: '~/test',
-    files: [],
+    files: () => [],
     services: ['svc-a', 'svc-b']
   });
 

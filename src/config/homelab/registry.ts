@@ -1,7 +1,6 @@
 export * from './types.js';
 import { pi1DockerHost, pi2DockerHost } from './deployables/dockerHosts.js';
 import { networkMonitoring } from './deployables/network-monitoring/index.js';
-import { routerMonitoringLogin } from './deployables/network-monitoring/routerMonitoringLogin.js';
 import { pihole, routerDns } from './deployables/pihole/index.js';
 import { whoami } from './deployables/whoami/index.js';
 import { Deployable } from './types.js';
@@ -13,7 +12,6 @@ export const DEPLOYABLES: Deployable[] = [
   pihole,
   routerDns,
   networkMonitoring,
-  routerMonitoringLogin,
   pi1DockerHost,
   pi2DockerHost,
   whoami

@@ -31,7 +31,7 @@ describe('createDockerComposeStack driver', () => {
       name: 'monitoring',
       machine: HomeLabMachine.Pi2,
       remoteDir: '~/monitoring',
-      files: [],
+      files: () => [],
       services: ['pihole', 'grafana']
     });
 
@@ -53,8 +53,10 @@ describe('createDockerComposeStack driver', () => {
       name: 'monitoring',
       machine: HomeLabMachine.Pi1,
       remoteDir: '~/monitoring',
-      files: [['~/monitoring/docker-compose.yaml', 'compose-content']],
-      env: () => [['~/monitoring/.env', 'env-content']],
+      files: () => [
+        ['~/monitoring/docker-compose.yaml', 'compose-content'],
+        ['~/monitoring/.env', 'env-content']
+      ],
       services: ['pihole']
     });
 
@@ -94,7 +96,7 @@ describe('createDockerComposeStack driver', () => {
       name: 'monitoring',
       machine: HomeLabMachine.Pi1,
       remoteDir: '~/monitoring',
-      files: [],
+      files: () => [],
       services: ['pihole']
     });
 
@@ -114,7 +116,7 @@ describe('createDockerComposeStack driver', () => {
       name: 'monitoring',
       machine: HomeLabMachine.Pi1,
       remoteDir: '~/monitoring',
-      files: [],
+      files: () => [],
       services: ['pihole']
     });
 

@@ -98,8 +98,19 @@ export type MainScriptsConfigProject = {
  */
 export type MainScriptsConfigHomelab = {
   pihole?: {
-    /** Pi-hole web UI password. Written to the Pi's .env on deploy. */
+    /**
+     * Pi-hole web UI and API password. Written to the Pi-hole and monitoring
+     * stacks' .env files on deploy.
+     */
     webPassword?: string;
+  };
+  networkMonitoring?: {
+    /**
+     * Names for network devices, keyed by MAC address (e.g.
+     * `"d4:ad:fc:56:83:14": "Govee Hex Lights"`). Override the names Pi-hole
+     * learns from the router.
+     */
+    deviceNames?: Record<string, string>;
   };
   grafana?: {
     /** Grafana admin password. Written to the Pi's .env on deploy. */
@@ -109,18 +120,10 @@ export type MainScriptsConfigHomelab = {
     /** InfluxDB admin UI password. Written to the Pi's .env on deploy. */
     adminPassword?: string;
     /**
-     * InfluxDB admin token, shared with the traffic collector (writes) and
+     * InfluxDB admin token, shared with the Pi-hole collector (writes) and
      * Grafana (reads). Written to the Pi's .env on deploy.
      */
     adminToken?: string;
-  };
-  networkMonitoring?: {
-    /**
-     * Password for the operator-level `monitoring` router login the traffic
-     * collector reads Traffic Analysis stats with. Set on the router and written
-     * to the Pi's .env on deploy.
-     */
-    routerPassword?: string;
   };
   /**
    * Per-machine SSH credential overrides, keyed by the machine identifier (the
